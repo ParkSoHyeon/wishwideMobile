@@ -1,4 +1,4 @@
-package com.media.mobile.elin.wishwidemobile.Model;
+package com.media.mobile.elin.wishwidemobile;
 
 import java.util.ArrayList;
 
@@ -8,14 +8,14 @@ import java.util.ArrayList;
 
 public class Beacon_Marker {
     public String m_Macaddress;
-    public ArrayList<Marker_data> marker_datas;
+//    public ArrayList<Marker_data> marker_datas;
     public Beacon_Marker(String _Macaddress)
     {
         m_Macaddress = _Macaddress;
-        marker_datas = new ArrayList<>();
+//        marker_datas = new ArrayList<>();
     }
 
-    public void addList(Marker_data obj){
-        marker_datas.add(obj);
-    }
+//    public void addList(Marker_data obj){
+//        marker_datas.add(obj);
+//    }
 }
