@@ -361,7 +361,7 @@ public class SampleMath
     
     
     public static Vec3F linePlaneIntersection(Vec3F lineStart, Vec3F lineEnd,
-        Vec3F pointOnPlane, Vec3F planeNormal)
+                                              Vec3F pointOnPlane, Vec3F planeNormal)
     {
         Vec3F lineDir = Vec3FSub(lineEnd, lineStart);
         lineDir = Vec3FNormalize(lineDir);
@@ -386,8 +386,8 @@ public class SampleMath
     
     
     private static void projectScreenPointToPlane(Matrix44F inverseProjMatrix,
-        Matrix44F modelViewMatrix, float screenWidth, float screenHeight,
-        Vec2F point, Vec3F planeCenter, Vec3F planeNormal)
+                                                  Matrix44F modelViewMatrix, float screenWidth, float screenHeight,
+                                                  Vec2F point, Vec3F planeCenter, Vec3F planeNormal)
     {
         // Window Coordinates to Normalized Device Coordinates
         VideoBackgroundConfig config = Renderer.getInstance()
@@ -431,9 +431,9 @@ public class SampleMath
     
     
     public static Vec3F getPointToPlaneIntersection(
-        Matrix44F inverseProjMatrix, Matrix44F modelViewMatrix,
-        float screenWidth, float screenHeight, Vec2F point, Vec3F planeCenter,
-        Vec3F planeNormal)
+            Matrix44F inverseProjMatrix, Matrix44F modelViewMatrix,
+            float screenWidth, float screenHeight, Vec2F point, Vec3F planeCenter,
+            Vec3F planeNormal)
     {
         projectScreenPointToPlane(inverseProjMatrix, modelViewMatrix,
             screenWidth, screenHeight, point, planeCenter, planeNormal);
@@ -442,8 +442,8 @@ public class SampleMath
     
     
     public static Vec3F getPointToPlaneLineStart(Matrix44F inverseProjMatrix,
-        Matrix44F modelViewMatrix, float screenWidth, float screenHeight,
-        Vec2F point, Vec3F planeCenter, Vec3F planeNormal)
+                                                 Matrix44F modelViewMatrix, float screenWidth, float screenHeight,
+                                                 Vec2F point, Vec3F planeCenter, Vec3F planeNormal)
     {
         projectScreenPointToPlane(inverseProjMatrix, modelViewMatrix,
             screenWidth, screenHeight, point, planeCenter, planeNormal);
@@ -452,8 +452,8 @@ public class SampleMath
     
     
     public static Vec3F getPointToPlaneLineEnd(Matrix44F inverseProjMatrix,
-        Matrix44F modelViewMatrix, float screenWidth, float screenHeight,
-        Vec2F point, Vec3F planeCenter, Vec3F planeNormal)
+                                               Matrix44F modelViewMatrix, float screenWidth, float screenHeight,
+                                               Vec2F point, Vec3F planeCenter, Vec3F planeNormal)
     {
         projectScreenPointToPlane(inverseProjMatrix, modelViewMatrix,
             screenWidth, screenHeight, point, planeCenter, planeNormal);

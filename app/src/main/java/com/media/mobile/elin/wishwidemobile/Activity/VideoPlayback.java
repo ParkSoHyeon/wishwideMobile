@@ -12,13 +12,16 @@ package com.media.mobile.elin.wishwidemobile.Activity;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.os.*;
-import android.support.v7.app.AppCompatActivity;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnDoubleTapListener;
@@ -29,8 +32,11 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 import com.media.mobile.elin.wishwidemobile.Control.SampleApplicationControl_Video;
-import com.media.mobile.elin.wishwidemobile.Model.Beacon_Marker;
-import com.media.mobile.elin.wishwidemobile.Model.Marker_data;
+import com.media.mobile.elin.wishwidemobile.FileDownloader;
+import com.media.mobile.elin.wishwidemobile.FileFetcher;
+import com.media.mobile.elin.wishwidemobile.Model.GameBenefitVO;
+import com.media.mobile.elin.wishwidemobile.Model.GameCharacterFileVO;
+import com.media.mobile.elin.wishwidemobile.Model.MarkerVO;
 import com.media.mobile.elin.wishwidemobile.R;
 import com.media.mobile.elin.wishwidemobile.Renderer.VideoPlaybackRenderer;
 import com.media.mobile.elin.wishwidemobile.SampleAppMenu.SampleAppMenu;
@@ -42,30 +48,19 @@ import com.media.mobile.elin.wishwidemobile.utils.LoadingDialogHandler;
 import com.media.mobile.elin.wishwidemobile.utils.SampleApplicationGLView;
 import com.media.mobile.elin.wishwidemobile.utils.Texture;
 import com.vuforia.*;
-import com.wizturn.sdk.central.Central;
-import com.wizturn.sdk.central.CentralManager;
-import com.wizturn.sdk.peripheral.Peripheral;
-import com.wizturn.sdk.peripheral.PeripheralScanListener;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.Vector;
 
 
 // The AR activity for the VideoPlayback sample.
-public class VideoPlayback extends AppCompatActivity implements
+public class VideoPlayback extends Activity implements
         SampleApplicationControl_Video, SampleAppMenuInterface {
-    //hong
-    //check Beacons & one beacon targeting
-    public Beacon_Marker beacon_marker = null;
-//    boolean isTargetHolding = false;
-//    ArrayList<String> scanBeaconList = new ArrayList<>();
-//    ArrayList<String> notExistBeacon = new ArrayList<>();
-//    ScanResult scanResult = null;
-//    CentralManager centralManager;
 
     private static final String LOGTAG = "VideoPlayback";
 
@@ -77,13 +72,14 @@ public class VideoPlayback extends AppCompatActivity implements
     private GestureDetector mGestureDetector = null;
     private SimpleOnGestureListener mSimpleListener = null;
 
+    private Context mContext = this;
+
     //cpyoon
     //the Target markers:
     public static final int NUM_TARGETS = 2;
     public static final int STONES = 0;
     public static final int CHIPS = 1;
     public static final String TARGETNAME[] = {"Stone", "Chips"};
-
 
     private int mSeekPosition[] = null;
     private boolean mWasPlaying[] = null;
@@ -112,10 +108,15 @@ public class VideoPlayback extends AppCompatActivity implements
             this);
 
     // Alert Dialog used to display SDK errors
-    private AlertDialog mErrorDialog;
-    private AlertDialog mARGameDialog;
+    private AlertDialog mDialog;
 
     boolean mIsInitialized = false;
+
+    public MarkerVO mMarkerVO;
+
+    FileFetcher mFileFetcher;
+    private FileDownloader<GameCharacterFileVO> mFileDownloader;
+    public static int mCompletedFileCnt = 0;
 
     private Toast mToast;
 
@@ -125,54 +126,40 @@ public class VideoPlayback extends AppCompatActivity implements
         Log.d(LOGTAG, "onCreate");
         super.onCreate(savedInstanceState);
 
-        //비콘 더미
-        beacon_marker = new Beacon_Marker("C100470032D3");
-        Marker_data marker_data = new Marker_data("stones", 2, 5);
-        beacon_marker.addList(marker_data);
+        //GameSetting 위한 정보 parsing
+        mMarkerVO = parseJson(getIntent().getStringExtra("gameSetting"));
 
-        vuforiaAppSession = new SampleApplicationSession_Video(this);
-        mToast = Toast.makeText(this, "null", Toast.LENGTH_SHORT);
-        mActivity = this;
-
-        //프로그레스바로 로딩 애니메이션 보여줌
-        startLoadingAnimation();
-
-        //비콘 라이브러리 사용(비콘 스캔)
-//        centralManager = CentralManager.getInstance();
-//        centralManager.init(this);
-//        centralManager.setPeripheralScanListener(new PeripheralScanListener() {
+        //게임 캐릭터 파일 다운로드
+        mFileFetcher = new FileFetcher();
+//        downloadTextures();
+//        Handler responseHandler = new Handler();
+//        mFileDownloader = new FileDownloader<>(responseHandler);
+//        mFileDownloader.setFileDownloaderListner(new FileDownloader.FileDownloaderListener<GameCharacterFileVO>() {
 //            @Override
-//            public void onPeripheralScan(Central central, Peripheral peripheral) {
-//                Log.d(LOGTAG, "주변 비콘 스캔 중");
-//                Log.d(LOGTAG, "scanBeaconList 값 확인: " + scanBeaconList.toString());
-//                Log.d(LOGTAG, "notExistBeacon 값 확인: " + notExistBeacon.toString());
-//                if (peripheral.getDistance() < 20) {   //50cm 안에 있는지
-//                    String str = peripheral.getBDAddress().replace(":", "");
-//                    Log.d(LOGTAG, "맥주소 확인: " + peripheral.getBDAddress());
+//            public void onFileDownloaded(GameCharacterFileVO target, int responseCode) {
+//                if (responseCode == 1) {
+//                    mCompletedFileCnt++;
 //
-//                    if (beacon_marker == null && !isTargetHolding && !notExistBeacon.contains(str)) {
-//                        Log.d(LOGTAG, "처음 실행해서 들어왔다!!" + str);
-//                        //앱실행 후 처음 비콘이 스캔되었을 때, 제외 목록에 해당 비콘 맥주소가 없을 때
-//                        isTargetHolding = true;
-//                        new MarkerFileLoad().execute(str);
+//                    Log.d(LOGTAG, "캐릭터 수: " + mMarkerVO.getMarkerGameCharacterCnt());
+//                    Log.d(LOGTAG, "다운로드 완료 수: " + mCompletedFileCnt);
+//                    if (mMarkerVO.getMarkerGameCharacterCnt() == mCompletedFileCnt) {
+//
 //                    }
-//                    else {
-//                        if(beacon_marker.m_Macaddress.equals(str)) {
-//                            isTargetHolding = true;
-//                        }
-//                        else {
-//                            if(!scanBeaconList.contains(str)) {
-//                                scanBeaconList.add(str);
-//                            }
-//                        }
-//                    }
+//
+//                    return;
 //                }
+//
+//                mFileDownloader.queueFile(target, target.getCharacterFileUrl());
 //            }
 //        });
+//        mFileDownloader.start();
+//        mFileDownloader.getLooper();
 
+        vuforiaAppSession = new SampleApplicationSession_Video(this);
+        mToast = Toast.makeText(mContext, "null", Toast.LENGTH_SHORT);
+        mActivity = this;
 
-        vuforiaAppSession
-                .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        startLoadingAnimation();
 
         // Load any sample specific textures:
         mTextures = new Vector<Texture>();
@@ -200,80 +187,204 @@ public class VideoPlayback extends AppCompatActivity implements
                 return false;
             }
 
-            // Handle the single tap(한번 터치가 확실할 경우 발생)
+
+            // Handle the single tap
             public boolean onSingleTapConfirmed(MotionEvent e) {
-                Log.d(LOGTAG, "onSingleTapConfirmed()...");
                 //touch event must have beacon target
-                if (beacon_marker != null) {
-                    Log.d(LOGTAG, "타겟 비콘이 있을 때 마커 정보에 따른 AR setting");
-                    Beacon_Marker beaconobj = beacon_marker;
-                    final Handler autofocusHandler = new Handler();
-                    // Do not react if the StartupScreen is being displayed
-                    for (int i = 0; i < beaconobj.marker_datas.size(); i++) {
-                        Marker_data obj = beaconobj.marker_datas.get(i);
-                        //hong
-                        //marker event type 2 : screen touch event
-                        Log.d(LOGTAG, "type 확인: " + obj.type);
-                        if (obj.type == 2) {
-                            //cpyoon
-                            // Verify that the tap happened inside the object
-                            if (mRenderer != null) {
-                                int target = -1;
-                                if (obj.str_name.equals("stones"))
-                                    target = VideoPlayback.STONES;
-                                else
-                                    target = VideoPlayback.CHIPS;
-                                int result = mRenderer.isTapOnScreenInsideTarget(target, e.getX(), e.getY());
-                                Log.d("Touch Event", "touched : " + result);
-                                if (result >= 0) {
-//                                    mToast.setText("select target : " + TARGETNAME[target] + " objects : " + result);
-//                                    mToast.show();
-                                    //insert event code...
-                                    showDialog();
+                if (mMarkerVO != null) {
+                    if (mMarkerVO.getMarkerTouchEventCode().equals("R")) {
+                        //cpyoon
+                        // Verify that the tap happened inside the object
+                        if (mRenderer != null) {
+                            int target = -1;
+                            if (mMarkerVO.getMarkerVuforiaCode().equals("stones"))
+                                target = VideoPlayback.STONES;
+                            else
+                                target = VideoPlayback.CHIPS;
+                            int result = mRenderer.isTapOnScreenInsideTarget(target, e.getX(), e.getY());
+                            Log.d("Touch Event", "touched : " + result);
+                            if (result >= 0) {
+                                mToast.setText("select target : " + TARGETNAME[target] + " objects : " + result);
+                                mToast.show();
+                                //insert event code...
 
-                                    break;
+                                int gameCharacterNum = mMarkerVO.getMarkerGameCharacterCnt();
+                                int gameBenefitNum = mMarkerVO.getGameBenefitList().size();
+                                int randomNum = new Random().nextInt(gameCharacterNum) + 1;
+
+                                if (randomNum <= gameBenefitNum) {
+                                    //혜택
+                                    GameBenefitVO gameBenefitVO = mMarkerVO.getGameBenefitList().get(randomNum - 1);
+                                    showBenefitGainMessage(
+                                            gameBenefitVO.getGameBenefitTypeCode(),
+                                            "축하합니다!\\n" + gameBenefitVO.getGameBenefitTypeValue() + "를 획득하셨습니다.\\n내일 다시 도전해주세요.");
                                 }
-                            } else {
-                                Log.d(LOGTAG, "VideoPlaybackRenderer null일 때 실행");
-                                boolean result = CameraDevice.getInstance().setFocusMode(
-                                        CameraDevice.FOCUS_MODE.FOCUS_MODE_TRIGGERAUTO);
-                                if (!result)
-                                    Log.e("SingleTapConfirmed", "Unable to trigger focus");
+                                else {
+                                    //꽝
+                                    showBenefitGainMessage("BOOM", "꽝!\\n다시 도전해주세요.");
+                                }
 
-                                // Generates a Handler to trigger continuous auto-focus
-                                // after 1 second
-                                autofocusHandler.postDelayed(new Runnable() {
-                                    public void run() {
-                                        final boolean autofocusResult = CameraDevice.getInstance().setFocusMode(
-                                                CameraDevice.FOCUS_MODE.FOCUS_MODE_CONTINUOUSAUTO);
-
-                                        if (!autofocusResult)
-                                            Log.e("SingleTapConfirmed", "Unable to re-enable continuous auto-focus");
-                                    }
-                                }, 1000L);
-
+                                return true;
                             }
                         }
                     }
                 }
-
                 return true;
+            }
+
+        });
+
+        vuforiaAppSession
+                .initAR(mActivity, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+//        downloadTextures();
+    }
+
+    private void showBenefitGainMessage(final String type, final String msg) {
+        //축하합니다!\nㅌ를 획득하셨습니다.\n내일 다시 도전해주세요.
+        //꽝!\n다시 도전해주세요.
+        runOnUiThread(new Runnable() {
+            public void run() {
+                if (mDialog != null) {
+                    mDialog.dismiss();
+                }
+
+                // Generates an Alert Dialog to show the error message
+                AlertDialog.Builder builder = new AlertDialog.Builder(
+                        VideoPlayback.this);
+
+                if (type.equals("BOOM")) {
+                    builder
+                            .setMessage(msg)
+                            .setTitle("알림")
+                            .setIcon(0)
+                            .setPositiveButton("도전",
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {
+
+                                        }
+                                    })
+                            .setNegativeButton("나가기",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            stopAR();
+                                            finish();
+                                        }
+                                    });
+                }
+                else {
+                    builder
+                            .setMessage(msg)
+                            .setTitle("알림")
+                            .setIcon(0)
+                            .setPositiveButton("확인",
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {
+                                            stopAR();
+                                            finish();
+                                            finish();
+                                        }
+                                    });
+                }
+
+                mDialog = builder.create();
+                mDialog.show();
             }
         });
     }
 
+    private MarkerVO parseJson(String jsonData) {
+        MarkerVO markerVO = new MarkerVO();
+
+        try {
+            JSONObject gameSetting = new JSONObject(jsonData);
+
+            markerVO.setMarkerNo(gameSetting.optInt("markerNo"));
+            markerVO.setWwNo(gameSetting.optInt("wwNo"));
+            markerVO.setWideManagerId(gameSetting.optString("wideManagerId"));
+            markerVO.setMarkerGameCharacterCnt(gameSetting.optInt("markerGameCharacterCnt"));
+            markerVO.setMarkerGameTypeCode(gameSetting.optString("markerGameTypeCode"));
+            markerVO.setMarkerTouchEventCode(gameSetting.optString("markerTouchEventCode"));
+            markerVO.setMarkerVuforiaCode(gameSetting.optString("markerVuforiaCode"));
+
+            List<GameBenefitVO> gameBenefitList = new ArrayList<>();
+            List<GameCharacterFileVO> gameCharacterFileList = new ArrayList<>();
+            JSONArray arrGameBenefit = gameSetting.getJSONArray("gameBenefitList");
+            JSONArray arrGameCharacterFile = gameSetting.getJSONArray("gameCharacterFileList");
+
+            for (int i = 0; i < arrGameBenefit.length(); i++) {
+                JSONObject objGameBenefit = arrGameBenefit.getJSONObject(i);
+                GameBenefitVO gameBenefitVO = new GameBenefitVO();
+
+                gameBenefitVO.setGameBenefitNo(objGameBenefit.getInt("gameBenefitNo"));
+                gameBenefitVO.setMarkerNo(objGameBenefit.getInt("markerNo"));
+                gameBenefitVO.setWwNo(objGameBenefit.getInt("wwNo"));
+                gameBenefitVO.setWideManagerId(objGameBenefit.getString("wideManagerId"));
+                gameBenefitVO.setMarkerGameTypeCode(objGameBenefit.getString("markerGameTypeCode"));
+                gameBenefitVO.setGameBenefitGradeTypeCode(objGameBenefit.getString("gameBenefitGradeTypeCode"));
+                gameBenefitVO.setGameBenefitTypeCode(objGameBenefit.getString("gameBenefitTypeCode"));
+                gameBenefitVO.setGameBenefitTypeValue(objGameBenefit.getInt("gameBenefitTypeValue"));
+
+                gameBenefitList.add(gameBenefitVO);
+            }
+
+            for (int i = 0; i < arrGameCharacterFile.length(); i++) {
+                JSONObject objGameBenefit = arrGameCharacterFile.getJSONObject(i);
+                GameCharacterFileVO gameCharacterFileVO = new GameCharacterFileVO();
+
+                gameCharacterFileVO.setCharacterFileNo(objGameBenefit.getInt("characterFileNo"));
+                gameCharacterFileVO.setMarkerNo(objGameBenefit.getInt("markerNo"));
+                gameCharacterFileVO.setWideManagerId(objGameBenefit.getString("wideManagerId"));
+                gameCharacterFileVO.setMarkerGameTypeCode(objGameBenefit.getString("markerGameTypeCode"));
+                gameCharacterFileVO.setCharacterFileDataType(objGameBenefit.getString("characterFileDataType"));
+                gameCharacterFileVO.setCharacterFileSeq(objGameBenefit.getInt("characterFileSeq"));
+                gameCharacterFileVO.setCharacterFileSize(objGameBenefit.getInt("characterFileSize"));
+                gameCharacterFileVO.setCharacterFileName(objGameBenefit.getString("characterFileName"));
+                gameCharacterFileVO.setCharacterDbFile(objGameBenefit.getString("characterDbFile"));
+                gameCharacterFileVO.setCharacterFileUrl(objGameBenefit.getString("characterFileUrl"));
+                gameCharacterFileVO.setCharacterFileThumbnailName(objGameBenefit.getString("characterFileThumbnailName"));
+                gameCharacterFileVO.setCharacterFileThumbnailUrl(objGameBenefit.getString("characterFileThumbnailUrl"));
+                gameCharacterFileVO.setCharacterFileSession(objGameBenefit.getString("characterFileSession"));
+
+                gameCharacterFileList.add(gameCharacterFileVO);
+            }
+
+            markerVO.setGameBenefitList(gameBenefitList);
+            markerVO.setGameCharacterFileList(gameCharacterFileList);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return markerVO;
+    }
+
+    private void downloadTextures() {
+        List<GameCharacterFileVO> gameCharacterFileList = mMarkerVO.getGameCharacterFileList();
+
+        for (GameCharacterFileVO vo : gameCharacterFileList) {
+            mFileFetcher.downloadFile(vo);
+//            mFileDownloader.queueFile(vo, vo.getCharacterFileUrl());
+        }
+
+    }
 
     // We want to load specific textures from the APK, which we will later
     // use for rendering.
     private void loadTextures() {
         //cpyoon
         //Load texture file (png, jpg, etc)
-        mTextures.add(Texture.loadTextureFromApk("VideoPlayback/testar.png", getAssets()));
-        mTextures.add(Texture.loadTextureFromApk("VideoPlayback/testar1.png", getAssets()));
-        mTextures.add(Texture.loadTextureFromApk("VideoPlayback/testar2.png", getAssets()));
-        mTextures.add(Texture.loadTextureFromApk("VideoPlayback/testar3.png", getAssets()));
-        mTextures.add(Texture.loadTextureFromApk("VideoPlayback/testar4.png", getAssets()));
 
+        List<String> filePaths = mFileFetcher.getFilePaths();
+
+        for (String filePath : filePaths) {
+
+            mTextures.add(Texture.loadTextureFromInputStream(filePath));
+        }
+
+        Log.d(LOGTAG, "이미지 통합: " + mTextures);
+        for (int i = 0; i < mTextures.size(); i++) {
+           Log.d(LOGTAG, "이미지 정보 확인: " + mTextures.get(i)) ;
+        }
     }
 
 
@@ -317,6 +428,11 @@ public class VideoPlayback extends AppCompatActivity implements
 
 //        scanResult.isCon = false;
 //        centralManager.stopScanning();
+
+        stopAR();
+    }
+
+    private void stopAR() {
         if (mGlView != null) {
             mGlView.setVisibility(View.INVISIBLE);
             mGlView.onPause();
@@ -337,6 +453,10 @@ public class VideoPlayback extends AppCompatActivity implements
         Log.d(LOGTAG, "onDestroy");
         super.onDestroy();
 
+//        if (mFileDownloader != null) {
+//            mFileDownloader.clearQueue();
+//            mFileDownloader.quit();
+//        }
 
         try {
             vuforiaAppSession.stopAR();
@@ -367,12 +487,11 @@ public class VideoPlayback extends AppCompatActivity implements
 
 
     private void startLoadingAnimation() {
-        Log.d(LOGTAG, "로딩바");
         mUILayout = (RelativeLayout) View.inflate(this, R.layout.camera_overlay,
                 null);
 
         mUILayout.setVisibility(View.VISIBLE);
-        mUILayout.setBackgroundColor(Color.BLUE);
+        mUILayout.setBackgroundColor(Color.BLACK);
 
         // Gets a reference to the loading dialog
         loadingDialogHandler.mLoadingDialogContainer = mUILayout
@@ -473,6 +592,22 @@ public class VideoPlayback extends AppCompatActivity implements
             return false;
         }
 
+        int numTrackables = dataSetStonesAndChips.getNumTrackables();
+        Log.d(LOGTAG, "numTrackables 확인: " + numTrackables);
+        for (int count = 0; count < numTrackables; count++) {
+            Trackable trackable = dataSetStonesAndChips.getTrackable(count);
+//            if(isExtendedTrackingActive())
+//            {
+//                trackable.startExtendedTracking();
+//            }
+            trackable.startExtendedTracking();
+
+            String name = "Current Dataset : " + trackable.getName();
+            trackable.setUserData(name);
+            Log.d(LOGTAG, "UserData:Set the following user data "
+                    + (String) trackable.getUserData());
+        }
+
         Log.d(LOGTAG, "Successfully loaded and activated data set.");
         return true;
     }
@@ -559,8 +694,10 @@ public class VideoPlayback extends AppCompatActivity implements
         return result;
     }
 
+
     @Override
     public void onInitARDone(SampleApplicationException exception) {
+
         if (exception == null) {
             initApplicationAR();
 
@@ -595,6 +732,7 @@ public class VideoPlayback extends AppCompatActivity implements
             Log.e(LOGTAG, exception.getString());
             showInitializationErrorMessage(exception.getString());
         }
+
     }
 
     @Override
@@ -638,8 +776,8 @@ public class VideoPlayback extends AppCompatActivity implements
         final String errorMessage = message;
         runOnUiThread(new Runnable() {
             public void run() {
-                if (mErrorDialog != null) {
-                    mErrorDialog.dismiss();
+                if (mDialog != null) {
+                    mDialog.dismiss();
                 }
 
                 // Generates an Alert Dialog to show the error message
@@ -657,41 +795,8 @@ public class VideoPlayback extends AppCompatActivity implements
                                     }
                                 });
 
-                mErrorDialog = builder.create();
-                mErrorDialog.show();
-            }
-        });
-    }
-
-    // Shows initialization error messages as System dialogs
-    public void showDialog() {
-        runOnUiThread(new Runnable() {
-            public void run() {
-                if (mARGameDialog != null) {
-                    mARGameDialog.dismiss();
-                }
-
-                // Generates an Alert Dialog to show the error message
-                AlertDialog.Builder builder = new AlertDialog.Builder(
-                        VideoPlayback.this);
-                builder
-                        .setMessage("축하합니다.\n쿠폰을 획득하셨습니다!!")
-                        .setTitle("혜택")
-                        .setCancelable(false)
-                        .setIcon(0)
-                        .setPositiveButton("OK",
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        finish();
-
-                                        Intent intent = new Intent(VideoPlayback.this, MainActivity.class);
-                                        intent.putExtra("loadUrl", "http://220.230.113.159:8080/");
-                                        startActivity(intent);
-                                    }
-                                });
-
-                mARGameDialog = builder.create();
-                mARGameDialog.show();
+                mDialog = builder.create();
+                mDialog.show();
             }
         });
     }
@@ -724,6 +829,7 @@ public class VideoPlayback extends AppCompatActivity implements
 
     @Override
     public boolean menuProcess(int command) {
+
         boolean result = true;
 
         switch (command) {
@@ -732,6 +838,7 @@ public class VideoPlayback extends AppCompatActivity implements
                 break;
 
             case CMD_FULLSCREEN_VIDEO:
+
                 break;
 
         }
@@ -744,80 +851,9 @@ public class VideoPlayback extends AppCompatActivity implements
         @Override
         public void handleMessage(Message msg) {
             //here insert virtual touch handling
-//            mToast.setText("Virtual Touch Event : " + msg.obj.toString() + ", " + msg.arg2 + " touched");
-//            mToast.show();
+            mToast.setText("Virtual Touch Event : " + msg.obj.toString() + ", " + msg.arg2 + " touched");
+            mToast.show();
 
-            showDialog();
         }
     };
-
-    //hong
-    //check the target beacon
-//    public class ScanResult extends Thread {
-//        public boolean isCon = true;
-//
-//        @Override
-//        public void run() {
-//            while (isCon) {
-//
-//                try {
-//                    Log.d(LOGTAG, "scanBeaconList 값 확인: " + scanBeaconList );
-//                    Thread.sleep(3000);
-//                    if (!isTargetHolding && scanBeaconList.size() > 0) {
-//                        beacon_marker = new Beacon_Marker(scanBeaconList.get(0));
-//                        Log.d(LOGTAG, "ScanResult, MarkerFileLoad 실행 직전 " + beacon_marker.m_Macaddress);
-//                        new MarkerFileLoad().execute(beacon_marker.m_Macaddress);
-//                    }
-//                    scanBeaconList.clear();
-//                    isTargetHolding = false;
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
-//    }
-
-    public class MarkerFileLoad extends AsyncTask<String, Void, Void> {
-        @Override
-        protected Void doInBackground(String... params) {
-            try {
-                FileInputStream fis = new FileInputStream(getFilesDir().getAbsolutePath() + params[0] + ".txt");
-                InputStreamReader bis = new InputStreamReader(fis);
-                BufferedReader br = new BufferedReader(bis);
-
-                String line;
-                String page = "";
-
-                while ((line = br.readLine()) != null) {
-                    page += line;
-                }
-
-//                isTargetHolding = true;
-                Log.e("marker", params[0]);
-                beacon_marker = new Beacon_Marker(params[0]);
-                JSONArray ja = new JSONArray(page);
-                for (int i = 0; i < ja.length(); i++) {
-                    JSONObject jo = ja.getJSONObject(i);
-                    Log.d(LOGTAG, "마커명: " + jo.getString("ww_marker_name"));
-                    Log.d(LOGTAG, "이벤트타입: " + jo.getString("ww_marker_eventtype"));
-                    Log.d(LOGTAG, "오브젝트수: " + jo.getString("ww_marker_num"));
-                    Marker_data obj = new Marker_data(jo.getString("ww_marker_name"), jo.getInt("ww_marker_eventtype"), jo.getInt("ww_marker_num"));
-                    beacon_marker.addList(obj);
-                    Log.d(LOGTAG, "beacon_marker에 넣었는지 확인:" + beacon_marker.m_Macaddress);
-                }
-
-            } catch (FileNotFoundException e) {
-                Log.e(LOGTAG, "파일 못 찾는 에러");
-                e.printStackTrace();
-//                notExistBeacon.add(params[0]);
-//                isTargetHolding = false;
-                beacon_marker = null;
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-    }
 }

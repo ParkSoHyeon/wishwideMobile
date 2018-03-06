@@ -33,7 +33,7 @@ import android.webkit.*;
 import android.widget.ProgressBar;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
-import com.media.mobile.elin.wishwidemobile.Beacon_Marker;
+import com.media.mobile.elin.wishwidemobile.Model.Beacon_Marker;
 import com.media.mobile.elin.wishwidemobile.R;
 import com.media.mobile.elin.wishwidemobile.WebUrlConstance;
 import com.wizturn.sdk.central.Central;
@@ -50,9 +50,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, WebUrlConstance{
@@ -72,6 +69,7 @@ public class MainActivity extends AppCompatActivity
     //WebView 관련 멤버변수
     private WebView mWebView;
     private ProgressBar mProgressBar;
+    WebAndAppBridge mWebAndAppBridge;
 
     //위치서비스 관련 멤버변수
     LocationManager mLocationManager;
@@ -87,24 +85,27 @@ public class MainActivity extends AppCompatActivity
     ScanResult scanResult = null;
     CentralManager centralManager;
 
+    final PermissionListener mLocationPermissionListener = new PermissionListener() {
+        @Override
+        public void onPermissionGranted() {
+            Log.d(TAG, "권한 허용");
+
+            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 100, mLocationListener);
+            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 100, mLocationListener);
+        }
+
+        @Override
+        public void onPermissionDenied(ArrayList<String> deniedPermissions) {
+            Log.d(TAG, "권한 거부");
+            mWebAndAppBridge.requestCurrentLocation("denied");
+        }
+    };
+
     @SuppressLint("JavascriptInterface")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        final PermissionListener permissionListener = new PermissionListener() {
-            @Override
-            public void onPermissionGranted() {
-                Log.d(TAG, "권한 허용");
-                requestLocationUpdate();
-            }
-
-            @Override
-            public void onPermissionDenied(ArrayList<String> deniedPermissions) {
-                Log.d(TAG, "권한 거부");
-            }
-        };
 
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
@@ -123,6 +124,7 @@ public class MainActivity extends AppCompatActivity
         mARFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                new GameSettingTask().execute();
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
 
@@ -137,7 +139,10 @@ public class MainActivity extends AppCompatActivity
             public void onLocationChanged(Location location) {
                 Log.d(TAG, "위치 확인:" + location.getLatitude() + ", " + location.getLongitude());
 
-                //현재 위치 주변에 위시와이드 매장 있는지 확인
+                mWebAndAppBridge.setLatitude(location.getLatitude());
+                mWebAndAppBridge.setLongitude(location.getLongitude());
+                mWebAndAppBridge.requestCurrentLocation("granted");
+
                 new WebGET().execute(location.getLatitude(),location.getLongitude());
                 requestRemoveUpdate();
 
@@ -186,15 +191,15 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-
-
         Log.d("main","isGPSEnabled=" + mIsGPSEnabled);
         Log.d("main","isNetworkEnabled=" + mIsNetworkEnabled);
 
 
         mWebView = (WebView) findViewById(R.id.web_view);
         mWebView.getSettings().setJavaScriptEnabled(true);
-        mWebView.addJavascriptInterface(new WebAndAppBridge(mWebView), "ContactSelector");
+        mWebAndAppBridge = new WebAndAppBridge(mWebView);
+        mWebView.addJavascriptInterface(mWebAndAppBridge, "WebAndAppBridge");
+
 
         mWebView.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -237,30 +242,18 @@ public class MainActivity extends AppCompatActivity
 
                 mARFloatingActionButton.setVisibility(View.GONE);
 
-//                int locationPermissionCheck = ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION);
-//
-//                if(locationPermissionCheck == PackageManager.PERMISSION_GRANTED) {
-//                    //위치 권한 있음
-//                    requestLocationUpdate();
-//                }
-//                else {
-//                    requestPermission(permissionListener, Manifest.permission.ACCESS_FINE_LOCATION);
-//                }
+
 
                 switch (url) {
                     case DOMAIN_NAME + VISITED_STORE_LIST_PATH: //방문한 매장
                         //위치기반 서비스 + 블루투스 on
                         //AR 게임 아이콘 visible
-                        requestPermission(permissionListener, Manifest.permission.ACCESS_FINE_LOCATION);
-                        requestLocationUpdate();
-                        mARFloatingActionButton.setVisibility(View.VISIBLE);
 
                         break;
                     case DOMAIN_NAME + NEARBY_STORE_LIST_PATH:  //주변 매장
-                        //위치기반 서비스 + 블루투스 on
-                        //AR 게임 아이콘 visible
-                        requestLocationUpdate();
-                        mARFloatingActionButton.setVisibility(View.VISIBLE);
+                        //현재 위치 주변에 위시와이드 매장 있는지 확인
+
+
                         break;
                     case DOMAIN_NAME + GIFT_DETAIL_PATH:
 
@@ -280,11 +273,14 @@ public class MainActivity extends AppCompatActivity
         private final WebView mWebView;
         private int mGiftProductNo;
 
+        private double mLatitude;
+        private double mLongitude;
+
         public WebAndAppBridge(WebView webView) {
             mWebView = webView;
         }
 
-        final PermissionListener permissionListener = new PermissionListener() {
+        final PermissionListener contactPermissionListener = new PermissionListener() {
             @Override
             public void onPermissionGranted() {
                 Log.d(TAG, "권한 허용");
@@ -304,12 +300,13 @@ public class MainActivity extends AppCompatActivity
         public void getAndroidContactList(String event, int giftProductNo) {
             Log.d(TAG, "연락처 가져오기");
 
+
             JSONObject objRoot = new JSONObject();
 
             try {
                 switch (event) {
                     case REQUEST_EVENT:
-                        requestPermission(permissionListener, Manifest.permission.READ_CONTACTS);
+                        requestPermission(contactPermissionListener, Manifest.permission.READ_CONTACTS);
                         mGiftProductNo = giftProductNo;
                         objRoot.put("responseCode", "HOLD");
                         break;
@@ -334,6 +331,21 @@ public class MainActivity extends AppCompatActivity
                 e.printStackTrace();
             }
 
+        }
+
+        @JavascriptInterface
+        public void requestCurrentLocation(String event) {
+            switch (event) {
+                case REQUEST_EVENT:
+                    requestLocationUpdate();
+                    break;
+                case PERMISSION_GRANTED_EVENT:
+                    mWebView.loadUrl(DOMAIN_NAME + NEARBY_STORE_LIST_PATH + "?lat=" + mLatitude + "&lng=" + mLongitude);
+                    break;
+                case PERMISSION_DENIED_EVENT:
+                    mWebView.loadUrl(DOMAIN_NAME + NEARBY_STORE_LIST_PATH + "?lat=0&lng=0");
+                    break;
+            }
         }
 
         private JSONArray getContactAll() {
@@ -380,6 +392,14 @@ public class MainActivity extends AppCompatActivity
             }
 
             return arrContacts;
+        }
+
+        public void setLatitude(double latitude) {
+            mLatitude = latitude;
+        }
+
+        public void setLongitude(double longitude) {
+            mLongitude = longitude;
         }
     }
 
@@ -442,7 +462,7 @@ public class MainActivity extends AppCompatActivity
                 mWebView.loadUrl(DOMAIN_NAME + VISITED_STORE_LIST_PATH);
                 break;
             case R.id.nav_nearby_stores:    //주변매장
-                mWebView.loadUrl(DOMAIN_NAME + NEARBY_STORE_LIST_PATH);
+                requestLocationUpdate();
                 break;
             case R.id.nav_gift_store:   //선물가게
                 mWebView.loadUrl(DOMAIN_NAME + GIFT_STORE_LIST_PATH);
@@ -479,28 +499,46 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void requestLocationUpdate() {
-        mIsGPSEnabled = mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        //isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        int locationPermissionCheck1 = ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION);
+        int locationPermissionCheck2 = ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_COARSE_LOCATION);
 
-        if(!mIsGPSEnabled) {
-            new AlertDialog.Builder(mContext)
-                    .setTitle("안내")
-                    .setMessage("현재 매장 위치를 더욱 쉽게 찾기 위해 위치 서비스를 켜주세요.")
-                    .setPositiveButton("설정", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
+        if(locationPermissionCheck1 == PackageManager.PERMISSION_GRANTED && locationPermissionCheck2 == PackageManager.PERMISSION_GRANTED) {
+            //위치 권한 있음
+            if (mLocationManager == null) {
+                mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            }
 
-                            startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-                        }
-                    })
-                    .setNegativeButton("다음에",  null).show();
-        }
-        else {
-            mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            mIsGPSEnabled = mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            //isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+            if(!mIsGPSEnabled) {
+                new AlertDialog.Builder(mContext)
+                        .setTitle("안내")
+                        .setMessage("현재 매장 위치를 더욱 쉽게 찾기 위해 위치 서비스를 켜주세요.")
+                        .setPositiveButton("설정", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                                startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                            }
+                        })
+                        .setNegativeButton("다음에", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                mWebAndAppBridge.requestCurrentLocation("denied");
+                            }
+                        }).show();
+            }
 
             mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 100, mLocationListener);
             mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 100, mLocationListener);
         }
+        else {
+            requestPermission(mLocationPermissionListener, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_CHECKIN_PROPERTIES);
+        }
+
+
+
     }
 
     private void requestRemoveUpdate() {
@@ -681,6 +719,81 @@ public class MainActivity extends AppCompatActivity
                     }
 
                 } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public class GameSettingTask extends AsyncTask<String,Void,String> {
+        @Override
+        protected String doInBackground(String... params) {
+            HttpURLConnection urlConn = null;
+            StringBuffer sbParams = new StringBuffer();
+
+            sbParams.append("wideManagerId").append("=").append("starbucksJuk");
+
+            try {
+                URL url = new URL("http://192.168.0.23:8080/mobile/game/searchGameSetting");
+                urlConn = (HttpURLConnection)url.openConnection();
+
+                urlConn.setRequestMethod("POST");
+                urlConn.setRequestProperty("Accept-Charset", "UTF-8");
+
+                String strParams = sbParams.toString();
+                OutputStream os = urlConn.getOutputStream();
+                os.write(strParams.getBytes("UTF-8"));
+                os.flush();
+                os.close();
+                if (urlConn.getResponseCode() != HttpURLConnection.HTTP_OK)
+                    return null;
+
+                // [2-4]. 읽어온 결과물 리턴.
+                // 요청한 URL의 출력물을 BufferedReader로 받는다.
+                BufferedReader reader = new BufferedReader(new InputStreamReader(urlConn.getInputStream(), "UTF-8"));
+
+                // 출력물의 라인과 그 합에 대한 변수.
+                String line;
+                String page = "";
+
+                // 라인을 받아와 합친다.
+                while ((line = reader.readLine()) != null){
+                    page += line;
+                }
+
+                return page;
+
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            if (s != null){
+                Log.e(TAG, s);
+                try {
+                    JSONObject objRoot = new JSONObject(s);
+
+                    String responseCode = objRoot.optString("responseCode");
+
+                    Log.d(TAG, "응답코드 확인: " + responseCode);
+                    if (responseCode.equals("0")) {
+                        //게임실행오류 alert;
+                        return;
+                    }
+
+                    String gameSetting = objRoot.getString("gameSetting");
+                    Log.d(TAG, "게임설정 확인: " + gameSetting.toString());
+
+                    //게임 실행!
+                    Intent intent = new Intent(MainActivity.this, VideoPlayback.class);
+                    intent.putExtra("gameSetting", gameSetting);
+                    startActivity(intent);
+                } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }

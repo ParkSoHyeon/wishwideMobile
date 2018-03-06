@@ -69,8 +69,8 @@ public class SampleAppMenu
     // listView - Parent view where the settings layout will be attached
     // additionalViewToHide - Additional view to move with openGl view
     public SampleAppMenu(SampleAppMenuInterface menuInterface,
-                         Activity activity, String menuTitle, GLSurfaceView movableView,
-                         RelativeLayout parentView, ArrayList<View> additionalViewsToHide)
+        Activity activity, String menuTitle, GLSurfaceView movableView,
+        RelativeLayout parentView, ArrayList<View> additionalViewsToHide)
     {
         mMenuInterface = menuInterface;
         mActivity = activity;
@@ -354,7 +354,7 @@ public class SampleAppMenu
         // Called when dragging
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2,
-                                float distanceX, float distanceY)
+            float distanceX, float distanceY)
         {
             if (Math.abs(distanceX) > DISTANCE_TRESHOLD && !mSwipingMenu)
             {
@@ -414,7 +414,7 @@ public class SampleAppMenu
         
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
-                               float velocityY)
+            float velocityY)
         {
             if (velocityX > VELOCITY_TRESHOLD && !isMenuDisplaying())
             {

@@ -24,7 +24,7 @@ public class KeyFrameShaders
         + "   texCoord = vertexTexCoord; \n"
         + "} \n";
     
-    public static final String KEY_FRAME_FRAGMENT_SHADER = " \n"
+    public static final String KEY_FRAME_FRAGMENT_SHADER = " \n" 
         + "\n"
         + "precision mediump float; \n" 
         + "varying vec2 texCoord; \n"

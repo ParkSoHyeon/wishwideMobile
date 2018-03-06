@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.media.mobile.elin.wishwidemobile">
+          package="com.media.mobile.elin.wishwidemobile"
+          android:versionCode="600"
+          android:versionName="6.0">
     <!--
         The application's compatibility with one or more versions of the Android
         platform.
@@ -8,9 +10,11 @@
         android:minSdkVersion = application's required minimum API level to run
         android:targetSdkVersion = application's targeted API level
     -->
-    <uses-sdk android:minSdkVersion="9" android:targetSdkVersion="25" />
+    <uses-sdk
+            android:minSdkVersion="19"
+            android:targetSdkVersion="22"/>
 
-    <uses-feature android:glEsVersion="0x00020000" />
+    <uses-feature android:glEsVersion="0x00020000"/>
 
     <!--
          The application requires a camera.
@@ -26,30 +30,30 @@
          other camera features that you do not request will no longer be
          assumed as required.
     -->
-    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera"/>
 
-    <!--
-        Add this permission to get access to the camera.
-    -->
-    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Add this permission to get access to the camera. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
 
-    <!--
-        Add this permission to allow opening network sockets.
-    -->
+    <!-- Add this permission to allow opening network sockets. -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <!--
         Add this permission to check which network access properties (e.g.
         active type: 3G/WiFi).
-     -->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+
     <!--
       NOTE: The setting 'android:launchMode="singleTask"' makes sure
       that the activity can begin only one task and the device can hold only
@@ -60,37 +64,43 @@
       If this attribute is not set, the default value 'standard' is used, which
       would allow the activity to be launched multiple times.
     -->
-
     <application
             android:allowBackup="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
-            android:roundIcon="@mipmap/ic_launcher_round"
             android:launchMode="singleTask"
+            android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true">
-        <activity
-                android:name=".Activity.VideoPlayback"
-                android:configChanges="orientation|keyboardHidden|screenSize"
-                android:theme="@style/Theme.AppCompat.NoActionBar"
-                android:launchMode="singleTask"
-        >
-        </activity>
 
+        <!-- <activity -->
+        <!-- android:name=".Activity.VideoPlayback" -->
+        <!-- android:configChanges="orientation|keyboardHidden|screenSize" -->
+        <!-- android:launchMode="singleTask" -->
+        <!-- android:theme="@style/Theme.AppCompat.NoActionBar"> -->
+        <!-- </activity> -->
+        <!-- <activity -->
+        <!-- android:name=".Activity.ActivityBeacon" -->
+        <!-- android:theme="@style/Theme.AppCompat.NoActionBar"> -->
+        <!-- </activity> -->
         <activity
-                android:name=".Activity.ActivityBeacon"
+                android:name=".Activity.LoadingActivity"
                 android:theme="@style/Theme.AppCompat.NoActionBar">
-
         </activity>
-
         <activity
                 android:name=".Activity.MainActivity"
                 android:configChanges="keyboardHidden|orientation|screenSize"
+                android:launchMode="singleTask"
                 android:theme="@style/Theme.AppCompat.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+
+        </activity>
+        <activity android:name=".Activity.ContactActivity"
+                  android:theme="@style/Theme.AppCompat.NoActionBar">
+
         </activity>
     </application>
 

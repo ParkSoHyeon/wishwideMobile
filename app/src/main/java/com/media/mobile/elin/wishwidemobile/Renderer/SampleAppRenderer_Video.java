@@ -50,7 +50,7 @@ public class SampleAppRenderer_Video {
     // Stores orientation
     private boolean mIsPortrait = false;
 
-    public SampleAppRenderer_Video(VideoPlaybackRenderer renderingInterface, Activity activity, int deviceMode,
+    public SampleAppRenderer_Video(SampleAppRendererControl renderingInterface, Activity activity, int deviceMode,
                                    boolean stereo, float nearPlane, float farPlane)
     {
         mActivity = activity;
@@ -166,7 +166,7 @@ public class SampleAppRenderer_Video {
 
             // Get projection matrix for the current view. COORDINATE_SYSTEM_CAMERA used for AR and
             // COORDINATE_SYSTEM_WORLD for VR
-            Matrix34F projMatrix = mRenderingPrimitives.getProjectionMatrix(viewID, COORDINATE_SYSTEM_TYPE.COORDINATE_SYSTEM_CAMERA);
+            Matrix34F projMatrix = mRenderingPrimitives.getProjectionMatrix(viewID, COORDINATE_SYSTEM_TYPE.COORDINATE_SYSTEM_CAMERA, state.getCameraCalibration());
 
             // Create GL matrix setting up the near and far planes
             float rawProjectionMatrixGL[] = Tool.convertPerspectiveProjection2GLMatrix(

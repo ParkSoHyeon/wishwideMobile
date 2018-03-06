@@ -13,7 +13,7 @@ package com.media.mobile.elin.wishwidemobile.utils;
 public class VideoBackgroundShader
 {
     
-    public static final String VB_VERTEX_SHADER =
+    public static final String VB_VERTEX_SHADER =          
         "attribute vec4 vertexPosition;\n" +
         "attribute vec2 vertexTexCoord;\n" +
         "uniform mat4 projectionMatrix;\n" +

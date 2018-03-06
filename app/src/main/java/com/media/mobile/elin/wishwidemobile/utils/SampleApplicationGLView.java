@@ -72,13 +72,13 @@ public class SampleApplicationGLView extends GLSurfaceView
     
     // Creates OpenGL contexts.
     private static class ContextFactory implements
-        GLSurfaceView.EGLContextFactory
+        EGLContextFactory
     {
         private static int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
 
 
         public EGLContext createContext(EGL10 egl, EGLDisplay display,
-                                        EGLConfig eglConfig)
+            EGLConfig eglConfig)
         {
             EGLContext context;
 
@@ -95,7 +95,7 @@ public class SampleApplicationGLView extends GLSurfaceView
 
 
         public void destroyContext(EGL10 egl, EGLDisplay display,
-                                   EGLContext context)
+            EGLContext context)
         {
             egl.eglDestroyContext(display, context);
         }
@@ -114,7 +114,7 @@ public class SampleApplicationGLView extends GLSurfaceView
 
     // The config chooser.
     private static class ConfigChooser implements
-        GLSurfaceView.EGLConfigChooser
+        EGLConfigChooser
     {
         public ConfigChooser(int r, int g, int b, int a, int depth, int stencil)
         {
@@ -128,7 +128,7 @@ public class SampleApplicationGLView extends GLSurfaceView
         
         
         private EGLConfig getMatchingConfig(EGL10 egl, EGLDisplay display,
-                                            int[] configAttribs)
+            int[] configAttribs)
         {
             // Get the number of minimally matching EGL configurations
             int[] num_config = new int[1];
@@ -165,7 +165,7 @@ public class SampleApplicationGLView extends GLSurfaceView
         
         
         public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display,
-                                      EGLConfig[] configs)
+            EGLConfig[] configs)
         {
             for (EGLConfig config : configs)
             {
@@ -198,7 +198,7 @@ public class SampleApplicationGLView extends GLSurfaceView
         
         
         private int findConfigAttrib(EGL10 egl, EGLDisplay display,
-                                     EGLConfig config, int attribute, int defaultValue)
+            EGLConfig config, int attribute, int defaultValue)
         {
             
             if (egl.eglGetConfigAttrib(display, config, attribute, mValue))

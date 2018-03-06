@@ -51,8 +51,8 @@ public class SampleAppMenuGroup
     
     @SuppressLint("InflateParams")
     public SampleAppMenuGroup(SampleAppMenuInterface menuInterface,
-                              Activity context, SampleAppMenu parent, boolean hasTitle, String title,
-                              int width)
+        Activity context, SampleAppMenu parent, boolean hasTitle, String title,
+        int width)
     {
         mActivity = context;
         mMenuInterface = menuInterface;

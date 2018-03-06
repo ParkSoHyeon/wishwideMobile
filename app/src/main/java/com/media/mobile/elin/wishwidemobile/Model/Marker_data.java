@@ -9,7 +9,7 @@ public class Marker_data {
     public int type;
     public int object_num;
 
-    public Marker_data(String _name, int _type, int _num)
+    public Marker_data(String _name, int _type,int _num)
     {
         str_name = _name;
         type = _type;

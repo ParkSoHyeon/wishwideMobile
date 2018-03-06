@@ -61,6 +61,20 @@ public class Texture
             return null;
         }
     }
+
+    public static Texture loadTextureFromInputStream(String filePath)
+    {
+//        BufferedInputStream bufferedStream = new BufferedInputStream(
+//                inputStream);
+        Bitmap bitMap = BitmapFactory.decodeFile(filePath);
+
+        int[] data = new int[bitMap.getWidth() * bitMap.getHeight()];
+        bitMap.getPixels(data, 0, bitMap.getWidth(), 0, 0,
+                bitMap.getWidth(), bitMap.getHeight());
+
+        return loadTextureFromIntBuffer(data, bitMap.getWidth(),
+                bitMap.getHeight());
+    }
     
     
     public static Texture loadTextureFromIntBuffer(int[] data, int width,
@@ -100,4 +114,5 @@ public class Texture
         texture.mSuccess = true;
         return texture;
     }
+
 }

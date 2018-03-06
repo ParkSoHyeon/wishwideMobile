@@ -5,7 +5,7 @@ def NATIVE_LIB_DIR = 'build\\lib'
 def JAR_DIR = 'build/java/vuforia'
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 25
     buildToolsVersion "27.0.1"
     sourceSets.main {
         jni.srcDirs = []
@@ -14,13 +14,19 @@ android {
     defaultConfig {
         applicationId "com.media.mobile.elin.wishwidemobile"
         minSdkVersion 19
-        targetSdkVersion 26
-        versionCode 1
-        versionName "1.0"
+        targetSdkVersion 25
+        versionCode 600
+        versionName "6.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     archivesBaseName = rootProject.projectDir.getName()
+
+    // Ensure that Vuforia datasets placed in the assets folder do not get compressed as
+    // this can significantly increase their loading time
+    aaptOptions {
+        noCompress 'dat'
+    }
 
     buildTypes {
         release {
@@ -45,10 +51,21 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
+
+    //비콘
     compile project(':wizturn-beacon-sdk-2.1.0')
+
+    //Vuforia
     compile project(':Vuforia')
-    compile 'com.android.support:appcompat-v7:26.+'
-    compile 'com.android.support:design:26.+'
+
+    // https://mvnrepository.com/artifact/org.apache.httpcomponents/httpcore
+    compile 'org.apache.httpcomponents:httpcore:4.4.6'
+
+
+    //권한 허용
+    compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.android.support:design:25.3.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile 'gun0912.ted:tedpermission:2.1.0'
     testCompile 'junit:junit:4.12'
 }
