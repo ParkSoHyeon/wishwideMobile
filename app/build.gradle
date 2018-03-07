@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
-def VUFORIA_SDK_DIR = 'D:\\Dev\\API\\vuforia-sdk-android-6-5-19'
-def NATIVE_LIB_DIR = 'build\\lib'
+def VUFORIA_SDK_DIR = 'D:/Dev/Projects/ARProject 20180209/vuforia-sdk-android-7-0-47'
+def NATIVE_LIB_DIR = 'build/lib'
 def JAR_DIR = 'build/java/vuforia'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "27.0.1"
+    buildToolsVersion "25.0.3"
     sourceSets.main {
         jni.srcDirs = []
         jniLibs.srcDir "$VUFORIA_SDK_DIR\\$NATIVE_LIB_DIR\\"
@@ -14,10 +14,11 @@ android {
     defaultConfig {
         applicationId "com.media.mobile.elin.wishwidemobile"
         minSdkVersion 19
-        targetSdkVersion 25
+        targetSdkVersion 22
         versionCode 600
         versionName "6.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
     }
 
     archivesBaseName = rootProject.projectDir.getName()
