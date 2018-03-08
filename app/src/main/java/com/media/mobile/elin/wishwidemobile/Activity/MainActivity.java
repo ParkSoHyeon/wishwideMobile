@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onPermissionDenied(ArrayList<String> deniedPermissions) {
             Log.d(TAG, "권한 거부");
-            mWebAndAppBridge.requestCurrentLocation("denied");
+            mWebView.loadUrl(DOMAIN_NAME + NEARBY_STORE_LIST_PATH + "?lat=0&lng=0");
         }
     };
 
@@ -128,7 +128,6 @@ public class MainActivity extends AppCompatActivity
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
 
-//                startActivity(new Intent(MainActivity.this, VideoPlayback.class));
             }
         });
 
@@ -139,14 +138,15 @@ public class MainActivity extends AppCompatActivity
             public void onLocationChanged(Location location) {
                 Log.d(TAG, "위치 확인:" + location.getLatitude() + ", " + location.getLongitude());
 
-                mWebAndAppBridge.setLatitude(location.getLatitude());
-                mWebAndAppBridge.setLongitude(location.getLongitude());
-                mWebAndAppBridge.requestCurrentLocation("granted");
+//                mWebAndAppBridge.setLatitude(location.getLatitude());
+//                mWebAndAppBridge.setLongitude(location.getLongitude());
+                mWebView.loadUrl(DOMAIN_NAME + NEARBY_STORE_LIST_PATH + "?lat=" + location.getLatitude() + "&lng=" + location.getLongitude());
+//                mWebAndAppBridge.requestCurrentLocation("granted");
 
-                new WebGET().execute(location.getLatitude(),location.getLongitude());
+//                new WebGET().execute(location.getLatitude(),location.getLongitude());
                 requestRemoveUpdate();
 
-                startBeaconScan();
+//                startBeaconScan();
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -242,21 +242,25 @@ public class MainActivity extends AppCompatActivity
 
                 mARFloatingActionButton.setVisibility(View.GONE);
 
-
-
                 switch (url) {
                     case DOMAIN_NAME + VISITED_STORE_LIST_PATH: //방문한 매장
-                        //위치기반 서비스 + 블루투스 on
-                        //AR 게임 아이콘 visible
+                        mWebView.clearHistory();
 
                         break;
                     case DOMAIN_NAME + NEARBY_STORE_LIST_PATH:  //주변 매장
                         //현재 위치 주변에 위시와이드 매장 있는지 확인
 
-
                         break;
-                    case DOMAIN_NAME + GIFT_DETAIL_PATH:
+                    case DOMAIN_NAME + STORE_DETAIL_PATH:
+                        mARFloatingActionButton.setVisibility(View.VISIBLE);
+                        break;
 
+                }
+
+                //AR 게임 실행 버튼 visible
+                Log.d(TAG, "상세화면: " + DOMAIN_NAME + STORE_DETAIL_PATH + ", " + url.contains(DOMAIN_NAME + STORE_DETAIL_PATH));
+                if (url.contains(DOMAIN_NAME + STORE_DETAIL_PATH)) {
+                    mARFloatingActionButton.setVisibility(View.VISIBLE);
                 }
             }
 
@@ -338,12 +342,6 @@ public class MainActivity extends AppCompatActivity
             switch (event) {
                 case REQUEST_EVENT:
                     requestLocationUpdate();
-                    break;
-                case PERMISSION_GRANTED_EVENT:
-                    mWebView.loadUrl(DOMAIN_NAME + NEARBY_STORE_LIST_PATH + "?lat=" + mLatitude + "&lng=" + mLongitude);
-                    break;
-                case PERMISSION_DENIED_EVENT:
-                    mWebView.loadUrl(DOMAIN_NAME + NEARBY_STORE_LIST_PATH + "?lat=0&lng=0");
                     break;
             }
         }
@@ -480,7 +478,7 @@ public class MainActivity extends AppCompatActivity
                 mWebView.loadUrl(DOMAIN_NAME + STAMP_AND_POINT_LIST_PATH);
                 break;
             case R.id.nav_setting:  //환경설정
-                mWebView.loadUrl(DOMAIN_NAME + SETTING_PATH);
+                //setting activity 이동
                 break;
             default:
                 break;
@@ -525,7 +523,7 @@ public class MainActivity extends AppCompatActivity
                         .setNegativeButton("다음에", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                mWebAndAppBridge.requestCurrentLocation("denied");
+                                mWebView.loadUrl(DOMAIN_NAME + NEARBY_STORE_LIST_PATH + "?lat=0&lng=0");
                             }
                         }).show();
             }
@@ -536,9 +534,6 @@ public class MainActivity extends AppCompatActivity
         else {
             requestPermission(mLocationPermissionListener, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_CHECKIN_PROPERTIES);
         }
-
-
-
     }
 
     private void requestRemoveUpdate() {
@@ -610,7 +605,7 @@ public class MainActivity extends AppCompatActivity
             sbParams.append("maxlo").append("=").append(maxlo);
 
             try {
-                URL url = new URL("http://192.168.0.23:3000/databeacon");
+                URL url = new URL("http://192.168.0.23:8080/databeacon");
                 urlConn = (HttpURLConnection)url.openConnection();
 
                 urlConn.setRequestMethod("POST");
@@ -734,7 +729,7 @@ public class MainActivity extends AppCompatActivity
             sbParams.append("wideManagerId").append("=").append("starbucksJuk");
 
             try {
-                URL url = new URL("http://192.168.0.23:8080/mobile/game/searchGameSetting");
+                URL url = new URL(DOMAIN_NAME + GAME_SETTING_PATH);
                 urlConn = (HttpURLConnection)url.openConnection();
 
                 urlConn.setRequestMethod("POST");

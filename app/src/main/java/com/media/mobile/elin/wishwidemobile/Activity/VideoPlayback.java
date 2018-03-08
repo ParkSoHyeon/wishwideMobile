@@ -104,8 +104,7 @@ public class VideoPlayback extends Activity implements
 
     private SampleAppMenu mSampleAppMenu;
 
-    private LoadingDialogHandler loadingDialogHandler = new LoadingDialogHandler(
-            this);
+    private LoadingDialogHandler loadingDialogHandler = new LoadingDialogHandler(this);
 
     // Alert Dialog used to display SDK errors
     private AlertDialog mDialog;
@@ -129,31 +128,95 @@ public class VideoPlayback extends Activity implements
         //GameSetting 위한 정보 parsing
         mMarkerVO = parseJson(getIntent().getStringExtra("gameSetting"));
 
-        //게임 캐릭터 파일 다운로드
-        mFileFetcher = new FileFetcher();
-//        downloadTextures();
-//        Handler responseHandler = new Handler();
-//        mFileDownloader = new FileDownloader<>(responseHandler);
-//        mFileDownloader.setFileDownloaderListner(new FileDownloader.FileDownloaderListener<GameCharacterFileVO>() {
-//            @Override
-//            public void onFileDownloaded(GameCharacterFileVO target, int responseCode) {
-//                if (responseCode == 1) {
-//                    mCompletedFileCnt++;
-//
-//                    Log.d(LOGTAG, "캐릭터 수: " + mMarkerVO.getMarkerGameCharacterCnt());
-//                    Log.d(LOGTAG, "다운로드 완료 수: " + mCompletedFileCnt);
-//                    if (mMarkerVO.getMarkerGameCharacterCnt() == mCompletedFileCnt) {
-//
-//                    }
-//
-//                    return;
-//                }
-//
-//                mFileDownloader.queueFile(target, target.getCharacterFileUrl());
-//            }
-//        });
-//        mFileDownloader.start();
-//        mFileDownloader.getLooper();
+        Handler responseHandler = new Handler();
+        mFileDownloader = new FileDownloader<>(responseHandler);
+        mFileDownloader.setFileDownloaderListener(new FileDownloader.FileDownloaderListener<GameCharacterFileVO>() {
+            @Override
+            public void onFileDownloaded() {
+                if (mCompletedFileCnt == mMarkerVO.getMarkerGameCharacterCnt()) {
+
+                    // Load any sample specific textures:
+                    mTextures = new Vector<Texture>();
+                    loadTextures();
+
+                    // Create the gesture detector that will handle the single and
+                    // double taps:
+                    mSimpleListener = new SimpleOnGestureListener();
+                    mGestureDetector = new GestureDetector(getApplicationContext(),
+                            mSimpleListener);
+
+                    mSeekPosition = new int[NUM_TARGETS];
+                    mWasPlaying = new boolean[NUM_TARGETS];
+
+                    // Set the double tap listener:
+                    mGestureDetector.setOnDoubleTapListener(new OnDoubleTapListener() {
+                        public boolean onDoubleTap(MotionEvent e) {
+                            // We do not react to this event
+                            return false;
+                        }
+
+
+                        public boolean onDoubleTapEvent(MotionEvent e) {
+                            // We do not react to this event
+                            return false;
+                        }
+
+
+                        // Handle the single tap
+                        public boolean onSingleTapConfirmed(MotionEvent e) {
+                            //touch event must have beacon target
+                            if (mMarkerVO != null) {
+                                if (mMarkerVO.getMarkerTouchEventCode().equals("R")) {
+                                    //cpyoon
+                                    // Verify that the tap happened inside the object
+                                    if (mRenderer != null) {
+                                        int target = -1;
+                                        if (mMarkerVO.getMarkerVuforiaCode().equals("stones"))
+                                            target = VideoPlayback.STONES;
+                                        else
+                                            target = VideoPlayback.CHIPS;
+                                        int result = mRenderer.isTapOnScreenInsideTarget(target, e.getX(), e.getY());
+                                        Log.d("Touch Event", "touched : " + result);
+                                        if (result >= 0) {
+                                            mToast.setText("select target : " + TARGETNAME[target] + " objects : " + result);
+                                            mToast.show();
+                                            //insert event code...
+
+                                            int gameCharacterNum = mMarkerVO.getMarkerGameCharacterCnt();
+                                            int gameBenefitNum = mMarkerVO.getGameBenefitList().size();
+                                            int randomNum = new Random().nextInt(gameCharacterNum) + 1;
+
+                                            if (randomNum <= gameBenefitNum) {
+                                                //혜택
+                                                GameBenefitVO gameBenefitVO = mMarkerVO.getGameBenefitList().get(randomNum - 1);
+                                                showBenefitGainMessage(
+                                                        gameBenefitVO.getGameBenefitTypeCode(),
+                                                        "축하합니다!\\n" + gameBenefitVO.getGameBenefitTypeValue() + "를 획득하셨습니다.\\n내일 다시 도전해주세요.");
+                                            }
+                                            else {
+                                                //꽝
+                                                showBenefitGainMessage("BOOM", "꽝!\\n다시 도전해주세요.");
+                                            }
+
+                                            return true;
+                                        }
+                                    }
+                                }
+                            }
+                            return true;
+                        }
+
+                    });
+
+                    vuforiaAppSession
+                            .initAR(mActivity, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                }
+
+                mFileDownloader.queueFile();
+            }
+        });
+        mFileDownloader.start();
+        mFileDownloader.getLooper();
 
         vuforiaAppSession = new SampleApplicationSession_Video(this);
         mToast = Toast.makeText(mContext, "null", Toast.LENGTH_SHORT);
@@ -161,82 +224,9 @@ public class VideoPlayback extends Activity implements
 
         startLoadingAnimation();
 
-        // Load any sample specific textures:
-        mTextures = new Vector<Texture>();
-        loadTextures();
-
-        // Create the gesture detector that will handle the single and
-        // double taps:
-        mSimpleListener = new SimpleOnGestureListener();
-        mGestureDetector = new GestureDetector(getApplicationContext(),
-                mSimpleListener);
-
-        mSeekPosition = new int[NUM_TARGETS];
-        mWasPlaying = new boolean[NUM_TARGETS];
-
-        // Set the double tap listener:
-        mGestureDetector.setOnDoubleTapListener(new OnDoubleTapListener() {
-            public boolean onDoubleTap(MotionEvent e) {
-                // We do not react to this event
-                return false;
-            }
-
-
-            public boolean onDoubleTapEvent(MotionEvent e) {
-                // We do not react to this event
-                return false;
-            }
-
-
-            // Handle the single tap
-            public boolean onSingleTapConfirmed(MotionEvent e) {
-                //touch event must have beacon target
-                if (mMarkerVO != null) {
-                    if (mMarkerVO.getMarkerTouchEventCode().equals("R")) {
-                        //cpyoon
-                        // Verify that the tap happened inside the object
-                        if (mRenderer != null) {
-                            int target = -1;
-                            if (mMarkerVO.getMarkerVuforiaCode().equals("stones"))
-                                target = VideoPlayback.STONES;
-                            else
-                                target = VideoPlayback.CHIPS;
-                            int result = mRenderer.isTapOnScreenInsideTarget(target, e.getX(), e.getY());
-                            Log.d("Touch Event", "touched : " + result);
-                            if (result >= 0) {
-                                mToast.setText("select target : " + TARGETNAME[target] + " objects : " + result);
-                                mToast.show();
-                                //insert event code...
-
-                                int gameCharacterNum = mMarkerVO.getMarkerGameCharacterCnt();
-                                int gameBenefitNum = mMarkerVO.getGameBenefitList().size();
-                                int randomNum = new Random().nextInt(gameCharacterNum) + 1;
-
-                                if (randomNum <= gameBenefitNum) {
-                                    //혜택
-                                    GameBenefitVO gameBenefitVO = mMarkerVO.getGameBenefitList().get(randomNum - 1);
-                                    showBenefitGainMessage(
-                                            gameBenefitVO.getGameBenefitTypeCode(),
-                                            "축하합니다!\\n" + gameBenefitVO.getGameBenefitTypeValue() + "를 획득하셨습니다.\\n내일 다시 도전해주세요.");
-                                }
-                                else {
-                                    //꽝
-                                    showBenefitGainMessage("BOOM", "꽝!\\n다시 도전해주세요.");
-                                }
-
-                                return true;
-                            }
-                        }
-                    }
-                }
-                return true;
-            }
-
-        });
-
-        vuforiaAppSession
-                .initAR(mActivity, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-//        downloadTextures();
+        //게임 캐릭터 파일 다운로드
+        mFileFetcher = new FileFetcher();
+        downloadTextures();
     }
 
     private void showBenefitGainMessage(final String type, final String msg) {
@@ -363,9 +353,9 @@ public class VideoPlayback extends Activity implements
 
         for (GameCharacterFileVO vo : gameCharacterFileList) {
             mFileFetcher.downloadFile(vo);
-//            mFileDownloader.queueFile(vo, vo.getCharacterFileUrl());
         }
 
+        mFileDownloader.queueFile();
     }
 
     // We want to load specific textures from the APK, which we will later
@@ -397,7 +387,7 @@ public class VideoPlayback extends Activity implements
 //        centralManager.startScanning();
 
         showProgressIndicator(true);
-        vuforiaAppSession.onResume();
+//        vuforiaAppSession.onResume();
 
         mReturningFromFullScreen = false;
     }

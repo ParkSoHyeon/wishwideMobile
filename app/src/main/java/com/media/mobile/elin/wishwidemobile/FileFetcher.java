@@ -3,6 +3,8 @@ package com.media.mobile.elin.wishwidemobile;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
+import com.media.mobile.elin.wishwidemobile.Activity.MainActivity;
+import com.media.mobile.elin.wishwidemobile.Activity.VideoPlayback;
 import com.media.mobile.elin.wishwidemobile.Model.GameCharacterFileVO;
 
 import java.io.*;
@@ -144,11 +146,17 @@ public class FileFetcher {
                 } catch (IOException e) {
                 }
             }
-            return null;
+            return strAppPath + mGameCharacterFileVO.getCharacterFileName();
         }
 
         @Override
         protected void onPostExecute(String s) {
+            Log.d(TAG, "캐릭터 파일 저장 경로 확인: " + s);
+
+            while (!checkCompleteFile(s, mGameCharacterFileVO.getCharacterFileSize())) {
+            }
+
+            VideoPlayback.mCompletedFileCnt++;
         }
     }
 

@@ -19,6 +19,7 @@ android {
         versionName "6.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+        vectorDrawables.useSupportLibrary = true
     }
 
     archivesBaseName = rootProject.projectDir.getName()
@@ -60,8 +61,6 @@ dependencies {
     compile project(':Vuforia')
 
     // https://mvnrepository.com/artifact/org.apache.httpcomponents/httpcore
-    compile 'org.apache.httpcomponents:httpcore:4.4.6'
-
 
     //권한 허용
     compile 'com.android.support:appcompat-v7:25.3.1'
@@ -69,4 +68,5 @@ dependencies {
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile 'gun0912.ted:tedpermission:2.1.0'
     testCompile 'junit:junit:4.12'
+    compile 'org.apache.httpcomponents:httpcore:4.4.6'
 }

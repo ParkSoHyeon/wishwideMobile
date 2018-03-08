@@ -18,7 +18,7 @@ public class FileDownloader<T> extends HandlerThread {
     private static final int MSG_FILE_FAILED = 4;
 
     private Handler mRequestHandler;
-    private ConcurrentMap<T, String> mRequestMap = new ConcurrentHashMap();
+//    private ConcurrentMap<T, String> mRequestMap = new ConcurrentHashMap();
     private Handler mResponseHandler;
     private FileDownloaderListener<T> mFileDownloaderListener;
 
@@ -31,26 +31,19 @@ public class FileDownloader<T> extends HandlerThread {
     }
 
     public interface FileDownloaderListener<T> {
-        void onFileDownloaded(T target, int responseCode);
+        void onFileDownloaded();
     }
 
-    public void setFileDownloaderListner(FileDownloaderListener<T> listener) {
+    public void setFileDownloaderListener(FileDownloaderListener<T> listener) {
         mFileDownloaderListener = listener;
     }
 
-    public void queueFile(T target, String url) {
-        if (url == null) {
-            mRequestMap.remove(target);
-        }
-        else {
-            mRequestMap.put(target, url);
-            Log.d(TAG, "target: " + target);
-            Log.d(TAG, "들어옴");
-            mRequestHandler
-                    .obtainMessage(MSG_FILE_DOWNLOAD, target)
-                    .sendToTarget();
+    public void queueFile() {
+        Log.d(TAG, "들어옴");
+        mRequestHandler
+                .obtainMessage(MSG_FILE_DOWNLOAD)
+                .sendToTarget();
 
-        }
     }
 
     public void clearQueue() {
@@ -63,42 +56,19 @@ public class FileDownloader<T> extends HandlerThread {
             @Override
             public void handleMessage(Message msg) {
                 if (msg.what == MSG_FILE_DOWNLOAD) {
-                    T target = (T) msg.obj;
-                    Log.d(TAG,"들어옴2");
-                    handleRequest(target);
+
+                    mResponseHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            mFileDownloaderListener.onFileDownloaded();
+                        }
+                    }, 100);
                 }
             }
         };
     }
 
     private void handleRequest(final T target) {
-        final String url = mRequestMap.get(target);
-        GameCharacterFileVO gameCharacterFileVO = (GameCharacterFileVO) target;
 
-        final int responseCode;
-        if (url == null) return;
-
-        mFileFetcher.downloadFile(gameCharacterFileVO);
-
-        responseCode = 1;
-
-//        if (mFileFetcher.checkCompleteFile(gameCharacterFileVO.getCharacterFileName(), gameCharacterFileVO.getCharacterFileSize())) {
-//            responseCode = 1;
-//        }
-//        else {
-//            responseCode = 0;
-//        }
-
-        mResponseHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (mRequestMap.get(target) != url) {
-                    return;
-                }
-
-                mRequestMap.remove(target);
-                mFileDownloaderListener.onFileDownloaded(target, responseCode);
-            }
-        }, 30000);
     }
 }
