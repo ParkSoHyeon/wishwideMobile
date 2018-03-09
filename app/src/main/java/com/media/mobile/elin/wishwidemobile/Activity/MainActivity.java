@@ -12,12 +12,12 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.TabLayout;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -52,7 +52,8 @@ import java.net.URL;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, WebUrlConstance{
+        implements NavigationView.OnNavigationItemSelectedListener,
+        WebUrlConstance{
     private static final String TAG = "MainActivity";
 
     private final Context mContext = this;
@@ -62,8 +63,9 @@ public class MainActivity extends AppCompatActivity
     DrawerLayout mDrawerLayout;
     ActionBarDrawerToggle mActionBarDrawerToggle;
     NavigationView mNavigationView;
+    TabLayout mTabLayout;
 
-    //FloatingActionButton 관련 멤버 변수
+    //AR 게임 관련 멤버 변수
     FloatingActionButton mARFloatingActionButton;
 
     //WebView 관련 멤버변수
@@ -82,7 +84,7 @@ public class MainActivity extends AppCompatActivity
     ArrayList<Double> scanBeaconDistance = new ArrayList<>();
     ArrayList<String> notExistBeacon = new ArrayList<>();
     ArrayList<String> scanBeaconAll = new ArrayList<>();
-    ScanResult scanResult = null;
+    BeaconScanResult beaconScanResult = null;
     CentralManager centralManager;
 
     final PermissionListener mLocationPermissionListener = new PermissionListener() {
@@ -97,7 +99,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onPermissionDenied(ArrayList<String> deniedPermissions) {
             Log.d(TAG, "권한 거부");
-            mWebView.loadUrl(DOMAIN_NAME + NEARBY_STORE_LIST_PATH + "?lat=0&lng=0");
+            mWebView.loadUrl(DOMAIN_NAME + HOME_PATH + "?lat=0&lng=0");
         }
     };
 
@@ -107,45 +109,67 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(mToolbar);
-
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mActionBarDrawerToggle = new ActionBarDrawerToggle(
-                this, mDrawerLayout, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        mDrawerLayout.setDrawerListener(mActionBarDrawerToggle);
-        mActionBarDrawerToggle.syncState();
-
-        mNavigationView = (NavigationView) findViewById(R.id.nav_view);
-        mNavigationView.setNavigationItemSelectedListener(this);
+        //View 초기화
+        initializeView();
 
 
-        mARFloatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
+        //메뉴탭 Listener
+        mTabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                Log.d(TAG, "onTabSelected()..."+ tab.getText());
+
+                switch (tab.getText().toString()) {
+                    case "홈":
+                        requestLocationUpdate();
+                        break;
+                    case "방문한 매장":
+                        mWebView.loadUrl(DOMAIN_NAME + VISITED_STORE_LIST_PATH);
+                        break;
+                    case "선물가게":
+                        mWebView.loadUrl(DOMAIN_NAME + GIFT_STORE_LIST_PATH);
+                        break;
+                    case "도장/포인트":
+                        mWebView.loadUrl(DOMAIN_NAME + STAMP_AND_POINT_LIST_PATH);
+                        break;
+                    case "쿠폰":
+                        mWebView.loadUrl(DOMAIN_NAME + COUPON_LIST_PATH);
+                        break;
+                }
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+                Log.d(TAG, "onTabUnselected()..." + tab.getText());
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+                Log.d(TAG, "onTabReselected()...");
+            }
+        });
+
+
+        //AR 게임 실행 버튼 Listener
         mARFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 new GameSettingTask().execute();
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
-
             }
         });
 
-        mProgressBar = (ProgressBar) findViewById(R.id.pb_web_loading);
-        mProgressBar.setMax(100);
 
+        //위치 Listener
         mLocationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 Log.d(TAG, "위치 확인:" + location.getLatitude() + ", " + location.getLongitude());
 
-//                mWebAndAppBridge.setLatitude(location.getLatitude());
-//                mWebAndAppBridge.setLongitude(location.getLongitude());
-                mWebView.loadUrl(DOMAIN_NAME + NEARBY_STORE_LIST_PATH + "?lat=" + location.getLatitude() + "&lng=" + location.getLongitude());
-//                mWebAndAppBridge.requestCurrentLocation("granted");
-
-//                new WebGET().execute(location.getLatitude(),location.getLongitude());
+                mWebView.loadUrl(DOMAIN_NAME + HOME_PATH + "?lat=" + location.getLatitude() + "&lng=" + location.getLongitude());
                 requestRemoveUpdate();
 
+//                new WebGET().execute(location.getLatitude(),location.getLongitude());
 //                startBeaconScan();
             }
 
@@ -156,26 +180,11 @@ public class MainActivity extends AppCompatActivity
             }
 
             public void onProviderDisabled(String provider) {
-//                Log.d(TAG, "위치 서비스 on 요청 dialog 띄움");
-//                new AlertDialog.Builder(mContext)
-//                        .setTitle("안내")
-//                        .setMessage("현재 매장 위치를 더욱 쉽게 찾기 위해 위치 서비스를 켜주세요.")
-//                        .setPositiveButton("설정", new DialogInterface.OnClickListener() {
-//                            @Override
-//                            public void onClick(DialogInterface dialog, int which) {
-//
-//                                startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-//                            }
-//                        })
-//                        .setNegativeButton("다음에", new DialogInterface.OnClickListener() {
-//                            @Override
-//                            public void onClick(DialogInterface dialog, int which) {
-//                                dialog.dismiss();
-//                            }
-//                        }).show();
             }
         };
 
+
+        //비콘 스캔 설정 및 Listener
         centralManager = CentralManager.getInstance();
         centralManager.init(this);
         centralManager.setPeripheralScanListener(new PeripheralScanListener() {
@@ -190,15 +199,6 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         });
-
-        Log.d("main","isGPSEnabled=" + mIsGPSEnabled);
-        Log.d("main","isNetworkEnabled=" + mIsNetworkEnabled);
-
-
-        mWebView = (WebView) findViewById(R.id.web_view);
-        mWebView.getSettings().setJavaScriptEnabled(true);
-        mWebAndAppBridge = new WebAndAppBridge(mWebView);
-        mWebView.addJavascriptInterface(mWebAndAppBridge, "WebAndAppBridge");
 
 
         mWebView.setWebChromeClient(new WebChromeClient() {
@@ -219,13 +219,10 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+
         mWebView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-
-                }
-
                 return super.shouldOverrideUrlLoading(view, request);
             }
 
@@ -241,18 +238,22 @@ public class MainActivity extends AppCompatActivity
                 super.onPageFinished(view, url);
 
                 mARFloatingActionButton.setVisibility(View.GONE);
+                mTabLayout.setVisibility(View.VISIBLE);
 
                 switch (url) {
                     case DOMAIN_NAME + VISITED_STORE_LIST_PATH: //방문한 매장
                         mWebView.clearHistory();
 
                         break;
-                    case DOMAIN_NAME + NEARBY_STORE_LIST_PATH:  //주변 매장
+                    case DOMAIN_NAME + HOME_PATH:  //주변 매장
                         //현재 위치 주변에 위시와이드 매장 있는지 확인
 
                         break;
-                    case DOMAIN_NAME + STORE_DETAIL_PATH:
+                    case DOMAIN_NAME + STORE_DETAIL_PATH:   //매장상세
                         mARFloatingActionButton.setVisibility(View.VISIBLE);
+                        break;
+                    default:
+                        mTabLayout.setVisibility(View.VISIBLE);
                         break;
 
                 }
@@ -266,9 +267,43 @@ public class MainActivity extends AppCompatActivity
 
         });
 
+
+        //로그인 url 이동
         mWebView.loadUrl(DOMAIN_NAME);
     }
 
+
+    //View 초기화
+    private void initializeView() {
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mActionBarDrawerToggle = new ActionBarDrawerToggle(
+                this, mDrawerLayout, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        mDrawerLayout.setDrawerListener(mActionBarDrawerToggle);
+        mActionBarDrawerToggle.syncState();
+        mActionBarDrawerToggle.setDrawerIndicatorEnabled(true);    //menu(navigation) visible/gone setting
+
+        mTabLayout = (TabLayout) findViewById(R.id.tabs);
+
+        mNavigationView = (NavigationView) findViewById(R.id.nav_view);
+        mNavigationView.setNavigationItemSelectedListener(this);
+
+        mProgressBar = (ProgressBar) findViewById(R.id.pb_web_loading);
+        mProgressBar.setMax(100);
+
+        mARFloatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
+
+        mWebView = (WebView) findViewById(R.id.web_view);
+        mWebView.getSettings().setJavaScriptEnabled(true);
+        mWebAndAppBridge = new WebAndAppBridge(mWebView);
+        mWebView.addJavascriptInterface(mWebAndAppBridge, "WebAndAppBridge");
+    }
+
+
+    //Web의 javascript와 앱을 연결해주는 클래스
     private class WebAndAppBridge {
         private static final String REQUEST_EVENT = "request";
         private static final String PERMISSION_DENIED_EVENT = "denied";
@@ -401,10 +436,12 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+
     @Override
     protected void onResume() {
         super.onResume();
     }
+
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -439,6 +476,7 @@ public class MainActivity extends AppCompatActivity
         return super.onKeyDown(keyCode, event);
     }
 
+
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -448,6 +486,7 @@ public class MainActivity extends AppCompatActivity
 
         super.onBackPressed();
     }
+
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -459,7 +498,7 @@ public class MainActivity extends AppCompatActivity
             case R.id.nav_visited_store:    //방문한매장
                 mWebView.loadUrl(DOMAIN_NAME + VISITED_STORE_LIST_PATH);
                 break;
-            case R.id.nav_nearby_stores:    //주변매장
+            case R.id.nav_nearby_stores:    //홈
                 requestLocationUpdate();
                 break;
             case R.id.nav_gift_store:   //선물가게
@@ -489,6 +528,7 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -496,6 +536,8 @@ public class MainActivity extends AppCompatActivity
 //        stopBeaconScan();
     }
 
+
+    //위치 서비스 요청
     private void requestLocationUpdate() {
         int locationPermissionCheck1 = ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION);
         int locationPermissionCheck2 = ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_COARSE_LOCATION);
@@ -523,7 +565,7 @@ public class MainActivity extends AppCompatActivity
                         .setNegativeButton("다음에", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                mWebView.loadUrl(DOMAIN_NAME + NEARBY_STORE_LIST_PATH + "?lat=0&lng=0");
+                                mWebView.loadUrl(DOMAIN_NAME + HOME_PATH + "?lat=0&lng=0");
                             }
                         }).show();
             }
@@ -536,10 +578,14 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+
+    //위치 서비스 종료
     private void requestRemoveUpdate() {
         mLocationManager.removeUpdates(mLocationListener);
     }
 
+
+    //권한 요청
     private void requestPermission(PermissionListener permissionListener, String... permissions) {
         TedPermission.with(this)
                 .setPermissionListener(permissionListener)
@@ -549,7 +595,8 @@ public class MainActivity extends AppCompatActivity
                 .check();
     }
 
-    public class FileRead extends AsyncTask<Void,Void,String> {
+
+    public class BeaconFileRead extends AsyncTask<Void,Void,String> {
 
         @Override
         protected String doInBackground(Void... params) {
@@ -592,7 +639,8 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public class WebGET extends AsyncTask<Double,Void,String> {
+
+    public class NearbyBeaonListTask extends AsyncTask<Double,Void,String> {
         @Override
         protected String doInBackground(Double... params) {
             double minla = params[0]-1,maxla = params[0]+1, minlo = params[1]-1,maxlo= params[1]+1;
@@ -656,26 +704,29 @@ public class MainActivity extends AppCompatActivity
                     e.printStackTrace();
                 }
 
-                new FileRead().execute();
+                new BeaconFileRead().execute();
             }
         }
     }
 
+
     //비콘 스캔 시작
     private void startBeaconScan() {
-        scanResult = new ScanResult();
-        scanResult.start();
+        beaconScanResult = new BeaconScanResult();
+        beaconScanResult.start();
         centralManager.startScanning();
     }
 
+
     //비콘 스캔 종료 및 자원 반납
     private void stopBeaconScan() {
-        scanResult.isCon=false;
-        scanResult = null;
+        beaconScanResult.isCon=false;
+        beaconScanResult = null;
         centralManager.stopScanning();
     }
 
-    public class ScanResult extends Thread {
+
+    public class BeaconScanResult extends Thread {
         public boolean isCon = true;
         @Override
         public void run() {
@@ -719,6 +770,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
+
 
     public class GameSettingTask extends AsyncTask<String,Void,String> {
         @Override

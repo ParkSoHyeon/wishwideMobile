@@ -8,7 +8,7 @@ public interface WebUrlConstance {
     public static final String DOMAIN_NAME = "http://192.168.1.100:8080/";  //테스트 서버2
 
     public static final String VISITED_STORE_LIST_PATH = "mobile/store/listVisitedStore";
-    public static final String NEARBY_STORE_LIST_PATH = "mobile/store/listNearbyStore";
+    public static final String HOME_PATH = "mobile/store/listNearbyStore";
     public static final String GIFT_STORE_LIST_PATH = "mobile/gift/listGiftStore";
     public static final String RECEIVED_GIFT_LIST_PATH = "mobile/benefit/listReceiveGift";
     public static final String SEND_GIFT_LIST_PATH = "mobile/benefit/listSendGift";
