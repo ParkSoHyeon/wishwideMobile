@@ -11,6 +11,7 @@ public class GameBenefitVO {
     private String  gameBenefitGradeTypeCode;   //게임혜택등급타입코드
     private String gameBenefitTypeCode;  //게임혜택타입코드
     private int gameBenefitTypeValue;    //게임혜택타입값
+    private String gameBenefitTitle;    //게임혜택명
     private Timestamp gameBenefitRegDate;    //게임혜택등록일시
     private Timestamp gameBenefitUpdateDate; //게임혜택수정일시
 
@@ -94,6 +95,14 @@ public class GameBenefitVO {
         this.gameBenefitUpdateDate = gameBenefitUpdateDate;
     }
 
+    public String getGameBenefitTitle() {
+        return gameBenefitTitle;
+    }
+
+    public void setGameBenefitTitle(String gameBenefitTitle) {
+        this.gameBenefitTitle = gameBenefitTitle;
+    }
+
     @Override
     public String toString() {
         return "GameBenefitVO{" +
@@ -104,6 +113,7 @@ public class GameBenefitVO {
                 ", gameBenefitGradeTypeCode='" + gameBenefitGradeTypeCode + '\'' +
                 ", gameBenefitTypeCode='" + gameBenefitTypeCode + '\'' +
                 ", gameBenefitTypeValue='" + gameBenefitTypeValue + '\'' +
+                ", gameBenefitTitle='" + gameBenefitTitle + '\'' +
                 ", gameBenefitRegDate='" + gameBenefitRegDate + '\'' +
                 ", gameBenefitUpdateDate='" + gameBenefitUpdateDate + '\'' +
                 ", markerNo='" + markerNo + '\'' +

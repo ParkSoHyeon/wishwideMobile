@@ -37,6 +37,7 @@ import com.media.mobile.elin.wishwidemobile.FileFetcher;
 import com.media.mobile.elin.wishwidemobile.Model.GameBenefitVO;
 import com.media.mobile.elin.wishwidemobile.Model.GameCharacterFileVO;
 import com.media.mobile.elin.wishwidemobile.Model.MarkerVO;
+import com.media.mobile.elin.wishwidemobile.Model.MembershipCustomerVO;
 import com.media.mobile.elin.wishwidemobile.R;
 import com.media.mobile.elin.wishwidemobile.Renderer.VideoPlaybackRenderer;
 import com.media.mobile.elin.wishwidemobile.SampleAppMenu.SampleAppMenu;
@@ -112,6 +113,7 @@ public class VideoPlayback extends Activity implements
     boolean mIsInitialized = false;
 
     public MarkerVO mMarkerVO;
+    public MembershipCustomerVO membershipCustomerVO;
 
     FileFetcher mFileFetcher;
     private FileDownloader<GameCharacterFileVO> mFileDownloader;
@@ -126,7 +128,8 @@ public class VideoPlayback extends Activity implements
         super.onCreate(savedInstanceState);
 
         //GameSetting 위한 정보 parsing
-        mMarkerVO = parseJson(getIntent().getStringExtra("gameSetting"));
+        mMarkerVO = parseJsonGameSetting(getIntent().getStringExtra("gameSetting"));
+        membershipCustomerVO = parseJsonMembershipCustomer(getIntent().getStringExtra("membershipCustomerVO"));
 
         Handler responseHandler = new Handler();
         mFileDownloader = new FileDownloader<>(responseHandler);
@@ -197,27 +200,51 @@ public class VideoPlayback extends Activity implements
                                 target = VideoPlayback.STONES;
                             else
                                 target = VideoPlayback.CHIPS;
+
                             int result = mRenderer.isTapOnScreenInsideTarget(target, e.getX(), e.getY());
-                            Log.d("Touch Event", "touched : " + result);
+
                             if (result >= 0) {
-                                mToast.setText("select target : " + TARGETNAME[target] + " objects : " + result);
-                                mToast.show();
-                                //insert event code...
+//                                mToast.setText("select target : " + TARGETNAME[target] + " objects : " + result);
+//                                mToast.show();
 
                                 int gameCharacterNum = mMarkerVO.getMarkerGameCharacterCnt();
-                                int gameBenefitNum = mMarkerVO.getGameBenefitList().size();
-                                int randomNum = new Random().nextInt(gameCharacterNum) + 1;
+                                int gameBenefitNum = 0;
+                                int randomNum = new Random().nextInt(gameCharacterNum);
+                                List<GameBenefitVO> gameBenefitList = new ArrayList();
 
-                                if (randomNum <= gameBenefitNum) {
+                                for (int i = 0; i < mMarkerVO.getGameBenefitList().size(); i++) {
+                                    Log.d(LOGTAG, "게임혜택등급" + i + ": " + mMarkerVO.getGameBenefitList().get(i).getGameBenefitGradeTypeCode());
+                                    Log.d(LOGTAG, "멤버쉽등급: " + membershipCustomerVO.getMembershipCustomerGrade());
+                                    if (mMarkerVO.getGameBenefitList().get(i).getGameBenefitGradeTypeCode().equals(membershipCustomerVO.getMembershipCustomerGrade())) {
+                                        gameBenefitList.add(mMarkerVO.getGameBenefitList().get(i));
+                                        gameBenefitNum++;
+                                    }
+                                }
+
+                                Log.d(LOGTAG, "유효혜택 수: " + gameBenefitNum);
+                                Log.d(LOGTAG, "선택된 값: " + randomNum);
+                                Log.d(LOGTAG, "결과: " + (randomNum < gameBenefitNum));
+
+                                if (randomNum < gameBenefitNum) {
                                     //혜택
-                                    GameBenefitVO gameBenefitVO = mMarkerVO.getGameBenefitList().get(randomNum - 1);
-                                    showBenefitGainMessage(
-                                            gameBenefitVO.getGameBenefitTypeCode(),
-                                            "축하합니다!\\n" + gameBenefitVO.getGameBenefitTypeValue() + "를 획득하셨습니다.\\n내일 다시 도전해주세요.");
+                                    GameBenefitVO gameBenefitVO = gameBenefitList.get(randomNum);
+                                    if (gameBenefitVO.getGameBenefitTypeCode().equals("P")) {
+                                        showBenefitGainMessage(
+                                                gameBenefitVO.getGameBenefitTypeCode(),
+                                                gameBenefitVO.getGameBenefitTypeValue(),
+                                                "축하합니다!\\n" + gameBenefitVO.getGameBenefitTypeValue() + "p를 획득하셨습니다.\\n내일 다시 도전해주세요.");
+                                    }
+                                    else {
+                                        showBenefitGainMessage(
+                                                gameBenefitVO.getGameBenefitTypeCode(),
+                                                gameBenefitVO.getGameBenefitTypeValue(),
+                                                "축하합니다!\\n" + gameBenefitVO.getGameBenefitTitle() + "를 획득하셨습니다.\\n내일 다시 도전해주세요.");
+                                    }
+
                                 }
                                 else {
                                     //꽝
-                                    showBenefitGainMessage("BOOM", "꽝!\\n다시 도전해주세요.");
+                                    showBenefitGainMessage("BOOM", 0,"꽝!\\n다시 도전해주세요.");
                                 }
 
                                 return true;
@@ -234,7 +261,7 @@ public class VideoPlayback extends Activity implements
                 .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 
-    private void showBenefitGainMessage(final String type, final String msg) {
+    private void showBenefitGainMessage(final String type, final int value, final String msg) {
         //축하합니다!\nㅌ를 획득하셨습니다.\n내일 다시 도전해주세요.
         //꽝!\n다시 도전해주세요.
         runOnUiThread(new Runnable() {
@@ -275,8 +302,17 @@ public class VideoPlayback extends Activity implements
                             .setPositiveButton("확인",
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int id) {
+                                            Intent intent = new Intent();
+                                            intent.putExtra("wideManagerId", mMarkerVO.getWideManagerId());
+                                            intent.putExtra("wwNo", mMarkerVO.getWwNo());
+                                            intent.putExtra("markerNo", mMarkerVO.getMarkerNo());
+                                            intent.putExtra("gameBenefitTypeCode", type);
+                                            intent.putExtra("gameBenefitTypeValue", value);
+                                            intent.putExtra("membershipCustomerNo", membershipCustomerVO.getMembershipCustomerNo());
+
+                                            setResult(1, intent);
+
                                             stopAR();
-                                            finish();
                                             finish();
                                         }
                                     });
@@ -288,7 +324,7 @@ public class VideoPlayback extends Activity implements
         });
     }
 
-    private MarkerVO parseJson(String jsonData) {
+    private MarkerVO parseJsonGameSetting(String jsonData) {
         MarkerVO markerVO = new MarkerVO();
 
         try {
@@ -319,6 +355,7 @@ public class VideoPlayback extends Activity implements
                 gameBenefitVO.setGameBenefitGradeTypeCode(objGameBenefit.getString("gameBenefitGradeTypeCode"));
                 gameBenefitVO.setGameBenefitTypeCode(objGameBenefit.getString("gameBenefitTypeCode"));
                 gameBenefitVO.setGameBenefitTypeValue(objGameBenefit.getInt("gameBenefitTypeValue"));
+                gameBenefitVO.setGameBenefitTitle(objGameBenefit.getString("gameBenefitTitle"));
 
                 gameBenefitList.add(gameBenefitVO);
             }
@@ -351,6 +388,26 @@ public class VideoPlayback extends Activity implements
         }
 
         return markerVO;
+    }
+
+    private MembershipCustomerVO parseJsonMembershipCustomer(String jsonData) {
+        MembershipCustomerVO membershipCustomerVO = new MembershipCustomerVO();
+
+        try {
+            JSONObject gameSetting = new JSONObject(jsonData);
+
+            membershipCustomerVO.setMembershipCustomerNo(gameSetting.optInt("membershipCustomerNo"));
+            membershipCustomerVO.setWideCustomerNo(gameSetting.optInt("wideCustomerNo"));
+            membershipCustomerVO.setMembershipCustomerPhone(gameSetting.optString("membershipCustomerPhone"));
+            membershipCustomerVO.setMembershipCustomerBenefitType(gameSetting.optString("membershipCustomerBenefitType"));
+            membershipCustomerVO.setMembershipCustomerBenefitValue(gameSetting.optInt("membershipCustomerBenefitValue"));
+            membershipCustomerVO.setMembershipCustomerGrade(gameSetting.optString("membershipCustomerGrade"));
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return membershipCustomerVO;
     }
 
     private void downloadTextures() {
@@ -435,6 +492,8 @@ public class VideoPlayback extends Activity implements
 
         mReturningFromFullScreen = false;
 
+        mFileFetcher.removeFileAll();
+
         try {
             vuforiaAppSession.pauseAR();
         } catch (SampleApplicationException e) {
@@ -460,8 +519,10 @@ public class VideoPlayback extends Activity implements
         }
 
         // Unload texture:
-        mTextures.clear();
-        mTextures = null;
+        if (mTextures != null) {
+            mTextures.clear();
+            mTextures = null;
+        }
 
         System.gc();
     }
