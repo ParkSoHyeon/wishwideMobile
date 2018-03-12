@@ -1,32 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-            android:icon="@drawable/ic_menu_manage"
+            android:icon="@drawable/img_pikachu"
             android:id="@+id/nav_nearby_stores"
+            android:textSize="50px"
             android:title="홈"/>
     <item
-            android:icon="@drawable/ic_menu_manage"
+            android:icon="@drawable/img_pikachu"
             android:id="@+id/nav_visited_store"
             android:title="방문한 매장"/>
 
     <item
-            android:icon="@drawable/ic_menu_manage"
+            android:icon="@drawable/img_pikachu"
             android:title="선물가게"
             android:id="@+id/nav_gift_store"/>
     <item
-            android:icon="@drawable/ic_menu_manage"
+            android:icon="@drawable/img_pikachu"
             android:id="@+id/nav_received_gift"
             android:title="받은 선물"/>
     <item
-            android:icon="@drawable/ic_menu_manage"
+            android:icon="@drawable/img_pikachu"
             android:id="@+id/nav_send_gift"
             android:title="보낸 선물"/>
     <item
-            android:icon="@drawable/ic_menu_manage"
+            android:icon="@drawable/img_pikachu"
             android:id="@+id/nav_coupon"
             android:title="쿠폰"/>
     <item
-            android:icon="@drawable/ic_menu_manage"
+            android:icon="@drawable/img_pikachu"
             android:id="@+id/nav_point_and_stamp"
             android:title="도장/포인트"/>
 

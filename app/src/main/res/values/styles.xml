@@ -16,4 +16,8 @@
 
     <style name="AppTheme.AppBarOverlay" parent="AppTheme"/>
     <style name="AppTheme.PopupOverlay"/>
+
+    <style name="NavigationDrawerStyle">
+        <item name="android:textSize">12sp</item>
+    </style>
 </resources>

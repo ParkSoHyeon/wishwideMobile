@@ -21,6 +21,7 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -34,6 +35,7 @@ import android.widget.ProgressBar;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 import com.media.mobile.elin.wishwidemobile.Model.Beacon_Marker;
+import com.media.mobile.elin.wishwidemobile.Model.WideCustomerVO;
 import com.media.mobile.elin.wishwidemobile.R;
 import com.media.mobile.elin.wishwidemobile.WebUrlConstance;
 import com.wizturn.sdk.central.Central;
@@ -58,12 +60,14 @@ public class MainActivity extends AppCompatActivity
 
     private final Context mContext = this;
 
+    private WideCustomerVO wideCustomerVO;
+
     //TopBar 관련 멤버변수
-    Toolbar mToolbar;
-    DrawerLayout mDrawerLayout;
-    ActionBarDrawerToggle mActionBarDrawerToggle;
-    NavigationView mNavigationView;
-    TabLayout mTabLayout;
+    private Toolbar mToolbar;
+    private DrawerLayout mDrawerLayout;
+    private ActionBarDrawerToggle mActionBarDrawerToggle;
+    private NavigationView mNavigationView;
+    private TabLayout mTabLayout;
 
     //AR 게임 관련 멤버 변수
     FloatingActionButton mARFloatingActionButton;
@@ -71,23 +75,24 @@ public class MainActivity extends AppCompatActivity
     //WebView 관련 멤버변수
     private WebView mWebView;
     private ProgressBar mProgressBar;
-    WebAndAppBridge mWebAndAppBridge;
+    private SwipeRefreshLayout mSwipeRefresh;
+    private WebAndAppBridge mWebAndAppBridge;
 
     //위치서비스 관련 멤버변수
-    LocationManager mLocationManager;
+    private LocationManager mLocationManager;
     boolean mIsGPSEnabled, mIsNetworkEnabled;
-    LocationListener mLocationListener;
+    private LocationListener mLocationListener;
 
     //beacon list
     public Beacon_Marker beacon_marker = null;
-    ArrayList<String> scanBeaconList = new ArrayList<>();
-    ArrayList<Double> scanBeaconDistance = new ArrayList<>();
-    ArrayList<String> notExistBeacon = new ArrayList<>();
-    ArrayList<String> scanBeaconAll = new ArrayList<>();
-    BeaconScanResult beaconScanResult = null;
-    CentralManager centralManager;
+    private ArrayList<String> scanBeaconList = new ArrayList<>();
+    private ArrayList<Double> scanBeaconDistance = new ArrayList<>();
+    private ArrayList<String> notExistBeacon = new ArrayList<>();
+    private ArrayList<String> scanBeaconAll = new ArrayList<>();
+    private BeaconScanResult beaconScanResult = null;
+    private CentralManager centralManager;
 
-    final PermissionListener mLocationPermissionListener = new PermissionListener() {
+    private final PermissionListener mLocationPermissionListener = new PermissionListener() {
         @Override
         public void onPermissionGranted() {
             Log.d(TAG, "권한 허용");
@@ -237,25 +242,27 @@ public class MainActivity extends AppCompatActivity
                 Log.d(TAG, "onPageFinished()..." + url);
                 super.onPageFinished(view, url);
 
+                mSwipeRefresh.setRefreshing(false);
+
                 mARFloatingActionButton.setVisibility(View.GONE);
                 mTabLayout.setVisibility(View.VISIBLE);
+                mActionBarDrawerToggle.setDrawerIndicatorEnabled(true);
 
                 switch (url) {
+                    case DOMAIN_NAME:   //로그인
+                        mActionBarDrawerToggle.setDrawerIndicatorEnabled(false);    //menu(navigation) gone setting
+                        mTabLayout.setVisibility(View.GONE);    //tab menu gone setting
+                        break;
+
                     case DOMAIN_NAME + VISITED_STORE_LIST_PATH: //방문한 매장
-                        mWebView.clearHistory();
-
                         break;
-                    case DOMAIN_NAME + HOME_PATH:  //주변 매장
-                        //현재 위치 주변에 위시와이드 매장 있는지 확인
 
-                        break;
                     case DOMAIN_NAME + STORE_DETAIL_PATH:   //매장상세
                         mARFloatingActionButton.setVisibility(View.VISIBLE);
                         break;
-                    default:
-                        mTabLayout.setVisibility(View.VISIBLE);
-                        break;
 
+                    default:
+                        break;
                 }
 
                 //AR 게임 실행 버튼 visible
@@ -263,8 +270,19 @@ public class MainActivity extends AppCompatActivity
                 if (url.contains(DOMAIN_NAME + STORE_DETAIL_PATH)) {
                     mARFloatingActionButton.setVisibility(View.VISIBLE);
                 }
+                else if (url.contains(DOMAIN_NAME + HOME_PATH)) {
+                    mWebView.clearHistory();
+                }
             }
 
+        });
+
+
+        mSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                mWebView.reload();
+            }
         });
 
 
@@ -297,6 +315,7 @@ public class MainActivity extends AppCompatActivity
         mARFloatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
 
         mWebView = (WebView) findViewById(R.id.web_view);
+        mSwipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebAndAppBridge = new WebAndAppBridge(mWebView);
         mWebView.addJavascriptInterface(mWebAndAppBridge, "WebAndAppBridge");
@@ -338,7 +357,6 @@ public class MainActivity extends AppCompatActivity
         @JavascriptInterface
         public void getAndroidContactList(String event, int giftProductNo) {
             Log.d(TAG, "연락처 가져오기");
-
 
             JSONObject objRoot = new JSONObject();
 
@@ -427,6 +445,28 @@ public class MainActivity extends AppCompatActivity
             return arrContacts;
         }
 
+        @JavascriptInterface
+        public void setWideCustomer(String data) {
+            try {
+                JSONObject objRoot = new JSONObject(data);
+
+                if (wideCustomerVO == null) {
+                    wideCustomerVO = new WideCustomerVO();
+                }
+
+                wideCustomerVO.setWideCustomerNo(objRoot.optInt("wideCustomerNo"));
+                wideCustomerVO.setWideCustomerPhone(objRoot.optString("wideCustomerPhone"));
+                wideCustomerVO.setWideCustomerBirth(objRoot.optString("wideCustomerBirth"));
+                wideCustomerVO.setWideCustomerSex(objRoot.optInt("wideCustomerSex"));
+                wideCustomerVO.setWideCustomerEmail(objRoot.optString("wideCustomerEmail"));
+                wideCustomerVO.setWideCustomerName(objRoot.optString("wideCustomerName"));
+
+                Log.d(TAG, "고객 정보 확인: " +  wideCustomerVO.toString());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
         public void setLatitude(double latitude) {
             mLatitude = latitude;
         }
@@ -493,16 +533,23 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
+        TabLayout.Tab tab;
 
         switch (id) {
             case R.id.nav_visited_store:    //방문한매장
-                mWebView.loadUrl(DOMAIN_NAME + VISITED_STORE_LIST_PATH);
+//                mWebView.loadUrl(DOMAIN_NAME + VISITED_STORE_LIST_PATH);
+                tab = mTabLayout.getTabAt(1);
+                tab.select();
                 break;
             case R.id.nav_nearby_stores:    //홈
                 requestLocationUpdate();
+                tab = mTabLayout.getTabAt(0);
+                tab.select();
                 break;
             case R.id.nav_gift_store:   //선물가게
-                mWebView.loadUrl(DOMAIN_NAME + GIFT_STORE_LIST_PATH);
+//                mWebView.loadUrl(DOMAIN_NAME + GIFT_STORE_LIST_PATH);
+                tab = mTabLayout.getTabAt(2);
+                tab.select();
                 break;
             case R.id.nav_received_gift:    //받은선물내역(선물함)
                 mWebView.loadUrl(DOMAIN_NAME + RECEIVED_GIFT_LIST_PATH);
@@ -511,10 +558,14 @@ public class MainActivity extends AppCompatActivity
                 mWebView.loadUrl(DOMAIN_NAME + SEND_GIFT_LIST_PATH);
                 break;
             case R.id.nav_coupon:   //쿠폰함내역(쿠폰함)
-                mWebView.loadUrl(DOMAIN_NAME + COUPON_LIST_PATH);
+//                mWebView.loadUrl(DOMAIN_NAME + COUPON_LIST_PATH);
+                tab = mTabLayout.getTabAt(3);
+                tab.select();
                 break;
             case R.id.nav_point_and_stamp:  //도장/포인트내역
-                mWebView.loadUrl(DOMAIN_NAME + STAMP_AND_POINT_LIST_PATH);
+//                mWebView.loadUrl(DOMAIN_NAME + STAMP_AND_POINT_LIST_PATH);
+                tab = mTabLayout.getTabAt(4);
+                tab.select();
                 break;
             case R.id.nav_setting:  //환경설정
                 //setting activity 이동

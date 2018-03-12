@@ -15,10 +15,18 @@
             android:visibility="gone"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_alignParentTop="true"/>
-    <WebView
-            android:id="@+id/web_view"
+
+    <android.support.v4.widget.SwipeRefreshLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_alignParentBottom="true"
-            android:layout_below="@+id/pb_web_loading"/>
+            android:id="@+id/swipe_refresh">
+
+        <WebView
+                android:id="@+id/web_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentBottom="true"
+                android:layout_below="@+id/pb_web_loading"/>
+    </android.support.v4.widget.SwipeRefreshLayout>
+
 </RelativeLayout>

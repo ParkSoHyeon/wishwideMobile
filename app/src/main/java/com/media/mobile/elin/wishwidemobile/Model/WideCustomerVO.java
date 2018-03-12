@@ -113,11 +113,11 @@ public class WideCustomerVO {
                 ", wideCustomerEmail='" + wideCustomerEmail + '\'' +
                 ", wideCustomerName='" + wideCustomerName + '\'' +
                 ", wideCustomerPhone='" + wideCustomerPhone + '\'' +
-                ", wideCustomerMemo='" + wideCustomerMemo + '\'' +
+//                ", wideCustomerMemo='" + wideCustomerMemo + '\'' +
                 ", wideCustomerSex='" + (wideCustomerSex == 0 ? "남자" : "여자") + '\'' +
                 ", wideCustomerVisibleCode='" + wideCustomerVisibleCode + '\'' +
-                ", wideCustomerRegDate='" + wideCustomerRegDate + '\'' +
-                ", wideCustomerUpdateDate=" + wideCustomerUpdateDate +
+//                ", wideCustomerRegDate='" + wideCustomerRegDate + '\'' +
+//                ", wideCustomerUpdateDate=" + wideCustomerUpdateDate +
 //                ", membershipCustomers=" + membershipCustomers.toArray() +
                 '}';
     }
