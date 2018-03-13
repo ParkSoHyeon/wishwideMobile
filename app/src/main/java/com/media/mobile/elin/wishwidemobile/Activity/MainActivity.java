@@ -273,7 +273,6 @@ public class MainActivity extends AppCompatActivity
                 }
                 else if (url.contains(DOMAIN_NAME + HOME_PATH)) {
                     mWebView.clearHistory();
-                    requestLocationUpdate();
                 }
             }
 
