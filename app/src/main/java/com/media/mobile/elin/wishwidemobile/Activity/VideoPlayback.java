@@ -232,19 +232,19 @@ public class VideoPlayback extends Activity implements
                                         showBenefitGainMessage(
                                                 gameBenefitVO.getGameBenefitTypeCode(),
                                                 gameBenefitVO.getGameBenefitTypeValue(),
-                                                "축하합니다!\\n" + gameBenefitVO.getGameBenefitTypeValue() + "p를 획득하셨습니다.\\n내일 다시 도전해주세요.");
+                                                "축하합니다!\n" + gameBenefitVO.getGameBenefitTypeValue() + "p를 획득하셨습니다.\n내일 다시 도전해주세요.");
                                     }
                                     else {
                                         showBenefitGainMessage(
                                                 gameBenefitVO.getGameBenefitTypeCode(),
                                                 gameBenefitVO.getGameBenefitTypeValue(),
-                                                "축하합니다!\\n" + gameBenefitVO.getGameBenefitTitle() + "를 획득하셨습니다.\\n내일 다시 도전해주세요.");
+                                                "축하합니다!\n" + gameBenefitVO.getGameBenefitTitle() + "를 획득하셨습니다.\n내일 다시 도전해주세요.");
                                     }
 
                                 }
                                 else {
                                     //꽝
-                                    showBenefitGainMessage("BOOM", 0,"꽝!\\n다시 도전해주세요.");
+                                    showBenefitGainMessage("BOOM", 0,"꽝!\n다시 도전해주세요.");
                                 }
 
                                 return true;
