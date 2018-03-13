@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -37,6 +38,7 @@ import com.gun0912.tedpermission.TedPermission;
 import com.media.mobile.elin.wishwidemobile.Model.Beacon_Marker;
 import com.media.mobile.elin.wishwidemobile.Model.WideCustomerVO;
 import com.media.mobile.elin.wishwidemobile.R;
+import com.media.mobile.elin.wishwidemobile.SharedPreferencesConstant;
 import com.media.mobile.elin.wishwidemobile.WebUrlConstance;
 import com.wizturn.sdk.central.Central;
 import com.wizturn.sdk.central.CentralManager;
@@ -55,11 +57,12 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-        WebUrlConstance {
+        WebUrlConstance, SharedPreferencesConstant{
     private static final String TAG = "MainActivity";
 
     private final Context mContext = this;
 
+    private SharedPreferences mSharedPreferences;
     private WideCustomerVO wideCustomerVO;
 
     //TopBar 관련 멤버변수
@@ -265,11 +268,12 @@ public class MainActivity extends AppCompatActivity
                 }
 
                 //AR 게임 실행 버튼 visible
-                Log.d(TAG, "상세화면: " + DOMAIN_NAME + STORE_DETAIL_PATH + ", " + url.contains(DOMAIN_NAME + STORE_DETAIL_PATH));
                 if (url.contains(DOMAIN_NAME + STORE_DETAIL_PATH)) {
                     mARFloatingActionButton.setVisibility(View.VISIBLE);
-                } else if (url.contains(DOMAIN_NAME + HOME_PATH)) {
+                }
+                else if (url.contains(DOMAIN_NAME + HOME_PATH)) {
                     mWebView.clearHistory();
+                    requestLocationUpdate();
                 }
             }
 
@@ -283,9 +287,28 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        String responseCode = getIntent().getStringExtra("responseCode");
+        mSharedPreferences = this.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE);
 
-        //로그인 url 이동
-        mWebView.loadUrl(DOMAIN_NAME);
+        if (responseCode.equals("AUTO")) {
+            JSONObject objRoot = new JSONObject();
+            try {
+                Log.d(TAG, "전화번호 확인: " + getIntent().getStringExtra("wideCustomerPhone"));
+                objRoot.put("wideCustomerPhone", getIntent().getStringExtra("wideCustomerPhone"));
+
+                mWebView.postUrl(DOMAIN_NAME + AUTO_LOGIN_PATH, EncodingUtils.getBytes(objRoot.toString(), "UTF-8"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+        }
+        else if (responseCode.equals("LOGIN")) {
+            //로그인 url 이동
+            mWebView.loadUrl(DOMAIN_NAME);
+        }
+
+
+
     }
 
 
@@ -458,6 +481,10 @@ public class MainActivity extends AppCompatActivity
                 wideCustomerVO.setWideCustomerEmail(objRoot.optString("wideCustomerEmail"));
                 wideCustomerVO.setWideCustomerName(objRoot.optString("wideCustomerName"));
 
+                SharedPreferences.Editor editor = mSharedPreferences.edit();
+                editor.putString(WIDE_CUSTOMER_PHONE_KEY, String.valueOf("0" + objRoot.optInt("wideCustomerPhone")));
+                editor.commit();
+
                 Log.d(TAG, "고객 정보 확인: " + wideCustomerVO.toString());
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -489,7 +516,7 @@ public class MainActivity extends AppCompatActivity
 
             switch (mWebView.getUrl()) {
                 case DOMAIN_NAME + GIFT_DETAIL_PATH:
-                    mWebView.goBackOrForward(-2);
+                    mWebView.goBackOrForward(-1);
                     // history 삭제
                     mWebView.clearHistory();
                     break;
