@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+ >
+
+    <item
+            android:id="@+id/nav_nearby_stores"
+            android:title="내주변" android:icon="@drawable/home">
+    </item>
+
+    <item
+            android:id="@+id/nav_visited_store"
+            android:title="방문한 매장"
+            android:icon="@drawable/home_visiting">
+    </item>
+
+    <item
+            android:id="@+id/nav_gift_store"
+            android:title="선물가게"
+            android:icon="@drawable/gift">
+    </item>
+
+    <item
+            android:id="@+id/nav_received_gift"
+            android:title="받은 선물"
+            android:icon="@drawable/gift2">
+    </item>
+
+    <item
+            android:id="@+id/nav_send_gift"
+            android:title="보낸 선물"
+            android:icon="@drawable/gift2">
+    </item>
+
+    <item
+            android:id="@+id/nav_point_and_stamp"
+            android:title="도장/포인트"
+            android:icon="@drawable/wallet">
+    </item>
+
+    <item
+            android:id="@+id/nav_coupon"
+            android:title="쿠폰"
+            android:icon="@drawable/discount">
+    </item>
+
+    <item
+            android:id="@+id/nav_alarm"
+            android:title="알람"
+            android:icon="@drawable/alarm">
+    </item>
+
+    <item
+            android:id="@+id/nav_setting"
+            android:title="설정"
+            android:icon="@drawable/settings">
+    </item>
+</menu>

@@ -18,6 +18,7 @@
     <style name="AppTheme.PopupOverlay"/>
 
     <style name="NavigationDrawerStyle">
-        <item name="android:textSize">12sp</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:listPreferredItemHeightLarge">2dp</item>
     </style>
 </resources>

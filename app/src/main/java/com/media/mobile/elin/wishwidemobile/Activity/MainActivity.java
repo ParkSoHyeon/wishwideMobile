@@ -33,6 +33,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.webkit.*;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 import com.media.mobile.elin.wishwidemobile.Model.Beacon_Marker;
@@ -71,6 +72,7 @@ public class MainActivity extends AppCompatActivity
     private ActionBarDrawerToggle mActionBarDrawerToggle;
     private NavigationView mNavigationView;
     private TabLayout mTabLayout;
+    private TextView mTvProfile;
 
     //AR 게임 관련 멤버 변수
     FloatingActionButton mARFloatingActionButton;
@@ -128,7 +130,7 @@ public class MainActivity extends AppCompatActivity
                 Log.d(TAG, "onTabSelected()..." + tab.getText());
 
                 switch (tab.getText().toString()) {
-                    case "홈":
+                    case "내주변":
                         requestLocationUpdate();
                         break;
                     case "방문한 매장":
@@ -320,7 +322,7 @@ public class MainActivity extends AppCompatActivity
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mActionBarDrawerToggle = new ActionBarDrawerToggle(
                 this, mDrawerLayout, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        mDrawerLayout.setDrawerListener(mActionBarDrawerToggle);
+        mDrawerLayout.addDrawerListener(mActionBarDrawerToggle);
         mActionBarDrawerToggle.syncState();
         mActionBarDrawerToggle.setDrawerIndicatorEnabled(true);    //menu(navigation) visible/gone setting
 
@@ -328,6 +330,8 @@ public class MainActivity extends AppCompatActivity
 
         mNavigationView = (NavigationView) findViewById(R.id.nav_view);
         mNavigationView.setNavigationItemSelectedListener(this);
+
+        mTvProfile = (TextView) findViewById(R.id.tv_profile);
 
         mProgressBar = (ProgressBar) findViewById(R.id.pb_web_loading);
         mProgressBar.setMax(100);
@@ -484,6 +488,8 @@ public class MainActivity extends AppCompatActivity
                 editor.putString(WIDE_CUSTOMER_PHONE_KEY, String.valueOf("0" + objRoot.optInt("wideCustomerPhone")));
                 editor.commit();
 
+                mTvProfile.setText(wideCustomerVO.getWideCustomerName());
+
                 Log.d(TAG, "고객 정보 확인: " + wideCustomerVO.toString());
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -574,6 +580,7 @@ public class MainActivity extends AppCompatActivity
                 tab.select();
                 break;
             case R.id.nav_received_gift:    //받은선물내역(선물함)
+                mTabLayout.removeAllTabs();
                 mWebView.loadUrl(DOMAIN_NAME + RECEIVED_GIFT_LIST_PATH);
                 break;
             case R.id.nav_send_gift:    //보낸선물내역

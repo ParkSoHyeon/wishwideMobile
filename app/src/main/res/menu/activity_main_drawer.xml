@@ -4,7 +4,7 @@
             android:icon="@drawable/img_pikachu"
             android:id="@+id/nav_nearby_stores"
             android:textSize="50px"
-            android:title="홈"/>
+            android:title="내주변"/>
     <item
             android:icon="@drawable/img_pikachu"
             android:id="@+id/nav_visited_store"
@@ -30,6 +30,14 @@
             android:icon="@drawable/img_pikachu"
             android:id="@+id/nav_point_and_stamp"
             android:title="도장/포인트"/>
+    <item
+            android:icon="@drawable/img_pikachu"
+            android:id="@+id/nav_alarm"
+            android:title="알림"/>
+    <item
+            android:icon="@drawable/img_pikachu"
+            android:id="@+id/nav_setting"
+            android:title="설정"/>
 
 
 
