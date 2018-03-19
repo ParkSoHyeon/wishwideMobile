@@ -916,10 +916,12 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        JSONObject objRoot = new JSONObject();
+
         switch (requestCode) {
             case 7:
                 Log.d(TAG, "게임1 종료");
-                JSONObject objRoot = new JSONObject();
+
 
                 try {
                     if (resultCode == 1) {
@@ -941,6 +943,23 @@ public class MainActivity extends AppCompatActivity
                 break;
             case 77:
                 Log.d(TAG, "게임2 종료");
+
+                try {
+                    if (resultCode == 1) {
+                        objRoot.put("responseCode", "SUCCESS");
+                        objRoot.put("wideManagerId", data.getStringExtra("wideManagerId"));
+                        objRoot.put("wwNo", data.getIntExtra("wwNo", 0));
+                        objRoot.put("markerNo", data.getIntExtra("markerNo", 0));
+                        objRoot.put("gameBenefitTypeCode", data.getStringExtra("gameBenefitTypeCode"));
+                        objRoot.put("membershipCustomerNo", data.getIntExtra("membershipCustomerNo", 0));
+                        objRoot.put("gameBenefitTypeValue", data.getIntExtra("gameBenefitTypeValue", 0));
+
+                        Log.d(TAG, "혜택 insert: " + objRoot.toString());
+                        mWebView.postUrl(DOMAIN_NAME + GAME_BENEFIT_REGISTER_PATH, EncodingUtils.getBytes(objRoot.toString(), "UTF-8"));
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
                 break;
         }
     }
@@ -951,7 +970,7 @@ public class MainActivity extends AppCompatActivity
             HttpURLConnection urlConn = null;
             StringBuffer sbParams = new StringBuffer();
 
-            sbParams.append("wideManagerId").append("=").append("starbucksMi");
+            sbParams.append("wideManagerId").append("=").append("starbucksJuk");
             sbParams.append("&");
             sbParams.append("wideCustomerNo").append("=").append(wideCustomerVO.getWideCustomerNo());
             sbParams.append("&");

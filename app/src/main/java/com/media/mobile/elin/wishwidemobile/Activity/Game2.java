@@ -17,19 +17,20 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.view.GestureDetector;
+import android.view.*;
 import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.GestureDetector.SimpleOnGestureListener;
-import android.view.MotionEvent;
-import android.view.View;
 import android.view.ViewGroup.LayoutParams;
-import android.widget.RelativeLayout;
-import android.widget.Toast;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.*;
 import com.media.mobile.elin.wishwidemobile.Control.SampleApplicationControl_Video;
 import com.media.mobile.elin.wishwidemobile.FileDownloader;
 import com.media.mobile.elin.wishwidemobile.FileFetcher;
@@ -65,6 +66,10 @@ public class Game2 extends Activity implements
     SampleApplicationSession_Video vuforiaAppSession;
 
     Activity mActivity;
+
+    private View mGame2ContentView;
+    private LinearLayout mLlCorrectView;
+    private TextView mTvGame2Guide;
 
     // Helpers to detect events such as double tapping:
     private GestureDetector mGestureDetector = null;
@@ -111,6 +116,7 @@ public class Game2 extends Activity implements
 
     public MarkerVO mMarkerVO;
     public MembershipCustomerVO membershipCustomerVO;
+    public List<String> mCharacterSeq;
 
     FileFetcher mFileFetcher;
     private FileDownloader<GameCharacterFileVO> mFileDownloader;
@@ -207,6 +213,15 @@ public class Game2 extends Activity implements
                                 int gameCharacterNum = mMarkerVO.getMarkerGameCharacterCnt();
 
                                 if (Game2Renderer.mReadyCharacterSeq == result) {
+                                    ImageView image = new ImageView(mContext);
+                                    image.setLayoutParams(new android.view.ViewGroup.LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.MATCH_PARENT));
+                                    image.setMaxHeight(40);
+                                    image.setMaxWidth(30);
+                                    image.setImageBitmap(BitmapFactory.decodeFile(mCharacterSeq.get(Game2Renderer.mReadyCharacterSeq)));
+
+                                    // Adds the view to the layout
+                                    mLlCorrectView.addView(image);
+
                                     Game2Renderer.mReadyCharacterSeq++;
                                     Game2Renderer.mCorrectedCharacterCnt++;
 
@@ -238,8 +253,62 @@ public class Game2 extends Activity implements
 
         });
 
+        ViewGroup.LayoutParams layoutParamsControl = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        LayoutInflater inflater = getLayoutInflater();
+        mGame2ContentView = inflater.inflate(R.layout.content_game2, null);
+        mGame2ContentView.setVisibility(View.GONE);
+
+        addContentView(mGame2ContentView, layoutParamsControl);
+
+        mTvGame2Guide = (TextView) mGame2ContentView.findViewById(R.id.tv_game2_guide);
+        mLlCorrectView = (LinearLayout) mGame2ContentView.findViewById(R.id.ll_correct_view);
+
         vuforiaAppSession
                 .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+    }
+
+    public void showGame2Guide(final String msg) {
+        final Context context = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // if scard is already visible with same VuMark, do nothing
+                if ((mGame2ContentView.getVisibility() == View.VISIBLE) && (mTvGame2Guide.getText().equals(msg))) {
+                    return;
+                }
+                Animation bottomDown = AnimationUtils.loadAnimation(context,
+                        R.anim.bottom_down);
+
+
+                mTvGame2Guide.setText(msg);
+
+                mGame2ContentView.bringToFront();
+                mGame2ContentView.setVisibility(View.VISIBLE);
+                mGame2ContentView.startAnimation(bottomDown);
+                // mUILayout.invalidate();
+            }
+        });
+    }
+
+    public void hideGame2Guide() {
+        final Context context = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // if card not visible, do nothing
+                if (mGame2ContentView.getVisibility() != View.VISIBLE) {
+                    return;
+                }
+                mTvGame2Guide.setText("");
+
+                Animation bottomUp = AnimationUtils.loadAnimation(context,
+                        R.anim.bottom_up);
+
+                mGame2ContentView.startAnimation(bottomUp);
+                mGame2ContentView.setVisibility(View.INVISIBLE);
+                // mUILayout.invalidate();
+            }
+        });
     }
 
     private void showBenefitGainMessage(final String type, final int value, final String msg) {
@@ -386,16 +455,34 @@ public class Game2 extends Activity implements
         //Load texture file (png, jpg, etc)
 
         List<String> filePaths = mFileFetcher.getFilePaths();
+        mCharacterSeq = new ArrayList<>();
 
-        for (String filePath : filePaths) {
+        List<GameCharacterFileVO> gameCharacterFileList = mMarkerVO.getGameCharacterFileList();
 
-            mTextures.add(Texture.loadTextureFromInputStream(filePath));
+        for (int i = 1; i <= mMarkerVO.getMarkerGameCharacterCnt(); i++) {
+            for (int j = 0; j < mMarkerVO.getMarkerGameCharacterCnt(); j++) {
+
+                Log.d(LOGTAG, i + " == " + gameCharacterFileList.get(j).getCharacterFileSeq() + ", " + (gameCharacterFileList.get(j).getCharacterFileSeq() == i));
+                if (gameCharacterFileList.get(j).getCharacterFileSeq() == i) {
+                    for (int k = 0; k < filePaths.size(); k++) {
+                        Log.d(LOGTAG, gameCharacterFileList.get(j).getCharacterFileName() + " == " + filePaths.get(k) + ", " + (filePaths.get(k).contains(gameCharacterFileList.get(j).getCharacterFileName())));
+                        if (filePaths.get(k).contains(gameCharacterFileList.get(j).getCharacterFileName())) {
+                            mTextures.add(Texture.loadTextureFromInputStream(filePaths.get(k)));
+
+                            mCharacterSeq.add(filePaths.get(k));
+
+                            break;
+                        }
+                    }
+
+                    continue;
+                }
+
+            }
+
+
         }
 
-        Log.d(LOGTAG, "이미지 통합: " + mTextures);
-        for (int i = 0; i < mTextures.size(); i++) {
-           Log.d(LOGTAG, "이미지 정보 확인: " + mTextures.get(i)) ;
-        }
     }
 
 

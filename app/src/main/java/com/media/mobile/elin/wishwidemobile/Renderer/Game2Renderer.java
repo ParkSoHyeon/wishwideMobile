@@ -18,6 +18,10 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
 import com.media.mobile.elin.wishwidemobile.Activity.Game2;
 import com.media.mobile.elin.wishwidemobile.Activity.Game2;
 import com.media.mobile.elin.wishwidemobile.Control.SampleAppRendererControl;
@@ -279,7 +283,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         quadTexCoords = fillBuffer(quadTexCoordsArray);
         quadIndices = fillBuffer(quadIndicesArray);
         quadNormals = fillBuffer(quadNormalsArray);
-        
+
     }
 
 
@@ -350,6 +354,8 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         // "inside out" models.
         GLES20.glEnable(GLES20.GL_CULL_FACE);
         GLES20.glCullFace(GLES20.GL_BACK);
+
+        mActivity.showGame2Guide("매장 테이블 위에 있는 마커를 인식해주세요.");
 
         if(tappingProjectionMatrix == null)
         {
@@ -423,9 +429,11 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             //cpyoon
             //make objects
             //if you want to create an object selectively, must change for syntax
-            for(int trans=0; trans < characterNum; trans++) {
+            for(int trans=mCorrectedCharacterCnt; trans < characterNum; trans++) {
                 // If the movie is ready to start playing or it has reached the end
                 // of playback we render the keyframe
+
+                mActivity.showGame2Guide("글자를 터치해 순서를 맞추세요.");
 
                 float[] modelViewMatrixKeyframe = Tool.convertPose2GLMatrix(trackableResult.getPose()).getData();
                 float[] modelViewProjectionKeyframe = new float[16];

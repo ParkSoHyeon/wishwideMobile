@@ -22,13 +22,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.view.GestureDetector;
+import android.view.*;
 import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.GestureDetector.SimpleOnGestureListener;
-import android.view.MotionEvent;
-import android.view.View;
 import android.view.ViewGroup.LayoutParams;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 import com.media.mobile.elin.wishwidemobile.Control.SampleApplicationControl_Video;
 import com.media.mobile.elin.wishwidemobile.FileDownloader;
@@ -65,6 +67,9 @@ public class Game1 extends Activity implements
     SampleApplicationSession_Video vuforiaAppSession;
 
     Activity mActivity;
+
+    private View mGame1ContentView;
+    private TextView mTvGame1Guide;
 
     // Helpers to detect events such as double tapping:
     private GestureDetector mGestureDetector = null;
@@ -254,6 +259,15 @@ public class Game1 extends Activity implements
 
         });
 
+        ViewGroup.LayoutParams layoutParamsControl = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        LayoutInflater inflater = getLayoutInflater();
+        mGame1ContentView = inflater.inflate(R.layout.content_game1, null);
+        mGame1ContentView.setVisibility(View.GONE);
+
+        addContentView(mGame1ContentView, layoutParamsControl);
+
+        mTvGame1Guide = (TextView) mGame1ContentView.findViewById(R.id.tv_game1_guide);
+
         vuforiaAppSession
                 .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
@@ -317,6 +331,50 @@ public class Game1 extends Activity implements
 
                 mDialog = builder.create();
                 mDialog.show();
+            }
+        });
+    }
+
+    public void showGame1Guide(final String msg) {
+        final Context context = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // if scard is already visible with same VuMark, do nothing
+                if ((mGame1ContentView.getVisibility() == View.VISIBLE) && (mTvGame1Guide.getText().equals(msg))) {
+                    return;
+                }
+                Animation bottomDown = AnimationUtils.loadAnimation(context,
+                        R.anim.bottom_down);
+
+
+                mTvGame1Guide.setText(msg);
+
+                mGame1ContentView.bringToFront();
+                mGame1ContentView.setVisibility(View.VISIBLE);
+                mGame1ContentView.startAnimation(bottomDown);
+                // mUILayout.invalidate();
+            }
+        });
+    }
+
+    public void hideGame1Guide() {
+        final Context context = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // if card not visible, do nothing
+                if (mGame1ContentView.getVisibility() != View.VISIBLE) {
+                    return;
+                }
+                mTvGame1Guide.setText("");
+
+                Animation bottomUp = AnimationUtils.loadAnimation(context,
+                        R.anim.bottom_up);
+
+                mGame1ContentView.startAnimation(bottomUp);
+                mGame1ContentView.setVisibility(View.INVISIBLE);
+                // mUILayout.invalidate();
             }
         });
     }

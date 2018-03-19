@@ -347,6 +347,8 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         GLES20.glEnable(GLES20.GL_CULL_FACE);
         GLES20.glCullFace(GLES20.GL_BACK);
 
+        mActivity.showGame1Guide("매장 테이블 위에 있는 마커를 인식해주세요.");
+
         if(tappingProjectionMatrix == null)
         {
             tappingProjectionMatrix = new Matrix44F();
@@ -422,6 +424,7 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             for(int trans=0; trans < characterNum; trans++) {
                 // If the movie is ready to start playing or it has reached the end
                 // of playback we render the keyframe
+                mActivity.showGame1Guide("캐릭터를 하나 잡으세요.");
 
                 float[] modelViewMatrixKeyframe = Tool.convertPose2GLMatrix(trackableResult.getPose()).getData();
                 float[] modelViewProjectionKeyframe = new float[16];
