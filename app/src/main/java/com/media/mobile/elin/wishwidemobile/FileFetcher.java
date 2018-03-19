@@ -3,8 +3,7 @@ package com.media.mobile.elin.wishwidemobile;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
-import com.media.mobile.elin.wishwidemobile.Activity.MainActivity;
-import com.media.mobile.elin.wishwidemobile.Activity.VideoPlayback;
+import com.media.mobile.elin.wishwidemobile.Activity.Game1;
 import com.media.mobile.elin.wishwidemobile.Model.GameCharacterFileVO;
 
 import java.io.*;
@@ -156,7 +155,7 @@ public class FileFetcher {
             while (!checkCompleteFile(s, mGameCharacterFileVO.getCharacterFileSize())) {
             }
 
-            VideoPlayback.mCompletedFileCnt++;
+            Game1.mCompletedFileCnt++;
         }
     }
 

@@ -57,12 +57,12 @@ public class FileDownloader<T> extends HandlerThread {
             public void handleMessage(Message msg) {
                 if (msg.what == MSG_FILE_DOWNLOAD) {
 
-                    mResponseHandler.postDelayed(new Runnable() {
+                    mResponseHandler.post(new Runnable() {
                         @Override
                         public void run() {
                             mFileDownloaderListener.onFileDownloaded();
                         }
-                    }, 100);
+                    });
                 }
             }
         };

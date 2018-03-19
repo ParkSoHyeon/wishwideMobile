@@ -18,7 +18,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import com.media.mobile.elin.wishwidemobile.Activity.VideoPlayback;
+import com.media.mobile.elin.wishwidemobile.Activity.Game1;
 import com.media.mobile.elin.wishwidemobile.Control.SampleAppRendererControl;
 import com.media.mobile.elin.wishwidemobile.Model.MarkerVO;
 import com.media.mobile.elin.wishwidemobile.Session.SampleApplicationSession_Video;
@@ -36,9 +36,9 @@ import java.util.Vector;
 
 
 // The renderer class for the VideoPlayback sample.
-public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppRendererControl
+public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererControl
 {
-    private static final String LOGTAG = "VideoPlaybackRenderer";
+    private static final String LOGTAG = "Game1Renderer";
     
     SampleApplicationSession_Video vuforiaAppSession;
     SampleAppRenderer_Video mSampleAppRendererVideo;
@@ -51,7 +51,7 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
     private int videoPlaybackTexSamplerOESHandle = 0;
 
     // Video Playback Textures for the two targets
-    int videoPlaybackTextureID[] = new int[VideoPlayback.NUM_TARGETS];
+    int videoPlaybackTextureID[] = new int[Game1.NUM_TARGETS];
     
     // Keyframe and icon rendering specific
     private int keyframeShaderID = 0;
@@ -70,7 +70,7 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
     private float videoQuadTextureCoordsTransformedChips[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, };
     
     // Trackable dimensions
-    Vec3F targetPositiveDimensions[] = new Vec3F[VideoPlayback.NUM_TARGETS];
+    Vec3F targetPositiveDimensions[] = new Vec3F[Game1.NUM_TARGETS];
     
     static int NUM_QUAD_VERTEX = 4;
     static int NUM_QUAD_INDEX = 6;
@@ -99,12 +99,12 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
     private boolean mIsActive = false;
     private Matrix44F tappingProjectionMatrix = null;
 
-    VideoPlayback mActivity;
+    Game1 mActivity;
     
     // Needed to calculate whether a screen tap is inside the target
-    Matrix44F modelViewMatrix[] = new Matrix44F[VideoPlayback.NUM_TARGETS];
+    Matrix44F modelViewMatrix[] = new Matrix44F[Game1.NUM_TARGETS];
     //The Object ModelViewMatrix corresponding to the target marker
-    Matrix44F m_objectsmodelViewMatrix[][]= new Matrix44F[VideoPlayback.NUM_TARGETS][5];
+    Matrix44F m_objectsmodelViewMatrix[][]= new Matrix44F[Game1.NUM_TARGETS][5];
 
     //cpyoon
     //objects position setting {x,y,z}
@@ -124,11 +124,11 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
 
     // These hold the aspect ratio of both the video and the
     // keyframe
-    float videoQuadAspectRatio[] = new float[VideoPlayback.NUM_TARGETS];
-    float keyframeQuadAspectRatio[] = new float[VideoPlayback.NUM_TARGETS];
+    float videoQuadAspectRatio[] = new float[Game1.NUM_TARGETS];
+    float keyframeQuadAspectRatio[] = new float[Game1.NUM_TARGETS];
     
     
-    public VideoPlaybackRenderer(VideoPlayback activity, SampleApplicationSession_Video session)
+    public Game1Renderer(Game1 activity, SampleApplicationSession_Video session)
     {
         
         mActivity = activity;
@@ -139,13 +139,13 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
         mSampleAppRendererVideo = new SampleAppRenderer_Video(this, mActivity, Device.MODE.MODE_AR, false, 0.01f, 5f);
 
 
-        for (int i = 0; i < VideoPlayback.NUM_TARGETS; i++)
+        for (int i = 0; i < Game1.NUM_TARGETS; i++)
             targetPositiveDimensions[i] = new Vec3F();
         
-        for (int i = 0; i < VideoPlayback.NUM_TARGETS; i++)
+        for (int i = 0; i < Game1.NUM_TARGETS; i++)
             modelViewMatrix[i] = new Matrix44F();
 
-        for(int i=0;i<VideoPlayback.NUM_TARGETS;i++)
+        for(int i=0;i<Game1.NUM_TARGETS;i++)
             for( int j=0;j<5;j++)
                 m_objectsmodelViewMatrix[i][j] = new Matrix44F();
     }
@@ -236,9 +236,9 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
         // Notice that the textures are not typical GL_TEXTURE_2D textures
         // but instead are GL_TEXTURE_EXTERNAL_OES extension textures
         // This is required by the Android SurfaceTexture
-        for (int i = 0; i < VideoPlayback.NUM_TARGETS; i++)
+        for (int i = 0; i < Game1.NUM_TARGETS; i++)
         {
-            GLES20.glGenTextures(VideoPlayback.NUM_TARGETS-1, videoPlaybackTextureID, i);
+            GLES20.glGenTextures(Game1.NUM_TARGETS-1, videoPlaybackTextureID, i);
             GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, videoPlaybackTextureID[i]);
             GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
             GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
@@ -268,8 +268,8 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
         keyframeTexSampler2DHandle = GLES20.glGetUniformLocation(keyframeShaderID, "texSampler2D");
 
         //put marker size
-        keyframeQuadAspectRatio[VideoPlayback.STONES] = (float) mTextures.get(0).mHeight / (float) mTextures.get(0).mWidth;
-        keyframeQuadAspectRatio[VideoPlayback.CHIPS] = (float) mTextures.get(1).mHeight / (float) mTextures.get(1).mWidth;
+        keyframeQuadAspectRatio[Game1.STONES] = (float) mTextures.get(0).mHeight / (float) mTextures.get(0).mWidth;
+        keyframeQuadAspectRatio[Game1.CHIPS] = (float) mTextures.get(1).mHeight / (float) mTextures.get(1).mWidth;
 
         quadVertices = fillBuffer(quadVerticesArray);
         quadTexCoords = fillBuffer(quadTexCoordsArray);
@@ -354,7 +354,7 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
         }
 
         float temp[] = { 0.0f, 0.0f, 0.0f };
-        for (int i = 0; i < VideoPlayback.NUM_TARGETS; i++)
+        for (int i = 0; i < Game1.NUM_TARGETS; i++)
         {
             targetPositiveDimensions[i].setData(temp);
         }
@@ -401,9 +401,9 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
             // We store the modelview matrix to be used later by the tap
             // calculation
             if (imageTarget.getName().compareTo("stones") == 0)
-                currentTarget = VideoPlayback.STONES;
+                currentTarget = Game1.STONES;
             else
-                currentTarget = VideoPlayback.CHIPS;
+                currentTarget = Game1.CHIPS;
 
             modelViewMatrix[currentTarget] = Tool.convertPose2GLMatrix(trackableResult.getPose());
             
@@ -523,7 +523,7 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
         float mtx[] = textureCoordMatrix;
         float tempUVMultRes[] = new float[2];
         
-        if (target == VideoPlayback.STONES)
+        if (target == Game1.STONES)
         {
             tempUVMultRes = uvMultMat4f(
                 videoQuadTextureCoordsTransformedStones[0],

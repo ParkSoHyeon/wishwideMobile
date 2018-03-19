@@ -18,7 +18,6 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -39,9 +38,7 @@ import com.media.mobile.elin.wishwidemobile.Model.GameCharacterFileVO;
 import com.media.mobile.elin.wishwidemobile.Model.MarkerVO;
 import com.media.mobile.elin.wishwidemobile.Model.MembershipCustomerVO;
 import com.media.mobile.elin.wishwidemobile.R;
-import com.media.mobile.elin.wishwidemobile.Renderer.VideoPlaybackRenderer;
-import com.media.mobile.elin.wishwidemobile.SampleAppMenu.SampleAppMenu;
-import com.media.mobile.elin.wishwidemobile.SampleAppMenu.SampleAppMenuGroup;
+import com.media.mobile.elin.wishwidemobile.Renderer.Game1Renderer;
 import com.media.mobile.elin.wishwidemobile.SampleAppMenu.SampleAppMenuInterface;
 import com.media.mobile.elin.wishwidemobile.Session.SampleApplicationException;
 import com.media.mobile.elin.wishwidemobile.Session.SampleApplicationSession_Video;
@@ -60,10 +57,10 @@ import java.util.Vector;
 
 
 // The AR activity for the VideoPlayback sample.
-public class VideoPlayback extends Activity implements
+public class Game1 extends Activity implements
         SampleApplicationControl_Video, SampleAppMenuInterface {
 
-    private static final String LOGTAG = "VideoPlayback";
+    private static final String LOGTAG = "Game1";
 
     SampleApplicationSession_Video vuforiaAppSession;
 
@@ -92,7 +89,7 @@ public class VideoPlayback extends Activity implements
     private SampleApplicationGLView mGlView;
 
     // Our renderer:
-    private VideoPlaybackRenderer mRenderer;
+    private Game1Renderer mRenderer;
 
     // The textures we will use for rendering:
     private Vector<Texture> mTextures;
@@ -197,9 +194,9 @@ public class VideoPlayback extends Activity implements
                         if (mRenderer != null) {
                             int target = -1;
                             if (mMarkerVO.getMarkerVuforiaCode().equals("stones"))
-                                target = VideoPlayback.STONES;
+                                target = Game1.STONES;
                             else
-                                target = VideoPlayback.CHIPS;
+                                target = Game1.CHIPS;
 
                             int result = mRenderer.isTapOnScreenInsideTarget(target, e.getX(), e.getY());
 
@@ -272,7 +269,7 @@ public class VideoPlayback extends Activity implements
 
                 // Generates an Alert Dialog to show the error message
                 AlertDialog.Builder builder = new AlertDialog.Builder(
-                        VideoPlayback.this);
+                        Game1.this);
 
                 if (type.equals("BOOM")) {
                     builder
@@ -512,6 +509,14 @@ public class VideoPlayback extends Activity implements
 //            mFileDownloader.quit();
 //        }
 
+        if (mGlView != null) {
+            mGlView = null;
+        }
+
+        if (mRenderer != null) {
+            mRenderer = null;
+        }
+
         try {
             vuforiaAppSession.stopAR();
         } catch (SampleApplicationException e) {
@@ -573,7 +578,7 @@ public class VideoPlayback extends Activity implements
         mGlView = new SampleApplicationGLView(this);
         mGlView.init(translucent, depthSize, stencilSize);
 
-        mRenderer = new VideoPlaybackRenderer(this, vuforiaAppSession);
+        mRenderer = new Game1Renderer(this, vuforiaAppSession);
         mRenderer.setTextures(mTextures);
         mRenderer.setmHandler(m_Handler);
 
@@ -838,7 +843,7 @@ public class VideoPlayback extends Activity implements
 
                 // Generates an Alert Dialog to show the error message
                 AlertDialog.Builder builder = new AlertDialog.Builder(
-                        VideoPlayback.this);
+                        Game1.this);
                 builder
                         .setMessage(errorMessage)
                         .setTitle(getString(R.string.INIT_ERROR))

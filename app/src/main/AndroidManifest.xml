@@ -99,11 +99,12 @@
 
         </activity>
         <activity
-                android:name=".Activity.VideoPlayback"
+                android:name=".Activity.Game1"
                 android:theme="@style/Theme.AppCompat.NoActionBar">
         </activity>
         <activity
                 android:name=".Activity.SettingsActivity"
+                android:theme="@style/Theme.AppCompat.NoActionBar"
                 android:label="@string/title_activity_settings">
         </activity>
     </application>

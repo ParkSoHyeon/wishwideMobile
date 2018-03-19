@@ -34,6 +34,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.webkit.*;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.gun0912.tedpermission.PermissionListener;
@@ -76,6 +77,7 @@ public class MainActivity extends AppCompatActivity
 //    private TabLayout mTabLayout;
     private TextView mTvProfile;
     private Button mBtn1, mBtn2, mBtn3, mBtn4, mBtn5;
+    private LinearLayout mLlTabs;
 
     //AR 게임 관련 멤버 변수
     FloatingActionButton mARFloatingActionButton;
@@ -164,6 +166,8 @@ public class MainActivity extends AppCompatActivity
 
 
         //AR 게임 실행 버튼 Listener
+
+
         mARFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -253,11 +257,13 @@ public class MainActivity extends AppCompatActivity
 
                 mARFloatingActionButton.setVisibility(View.GONE);
 //                mTabLayout.setVisibility(View.VISIBLE);
+                mLlTabs.setVisibility(View.VISIBLE);
                 mActionBarDrawerToggle.setDrawerIndicatorEnabled(true);
 
                 switch (url) {
                     case DOMAIN_NAME:   //로그인
                         mActionBarDrawerToggle.setDrawerIndicatorEnabled(false);    //menu(navigation) gone setting
+                        mLlTabs.setVisibility(View.GONE);
 //                        mTabLayout.setVisibility(View.GONE);    //tab menu gone setting
                         break;
 
@@ -330,6 +336,8 @@ public class MainActivity extends AppCompatActivity
         mActionBarDrawerToggle.setDrawerIndicatorEnabled(true);    //menu(navigation) visible/gone setting
 
 //        mTabLayout = (TabLayout) findViewById(R.id.tabs);
+
+        mLlTabs = (LinearLayout) findViewById(R.id.ll_tabs);
 
         mBtn1 = (Button) findViewById(R.id.btn_1);
         mBtn2 = (Button) findViewById(R.id.btn_2);
@@ -1004,7 +1012,7 @@ public class MainActivity extends AppCompatActivity
                     Log.d(TAG, "멤버십고객 확인: " + membershipCustomerVO);
 
                     //게임 실행!
-                    Intent intent = new Intent(MainActivity.this, VideoPlayback.class);
+                    Intent intent = new Intent(MainActivity.this, Game1.class);
                     intent.putExtra("gameSetting", gameSetting);
                     intent.putExtra("membershipCustomerVO", membershipCustomerVO);
 
