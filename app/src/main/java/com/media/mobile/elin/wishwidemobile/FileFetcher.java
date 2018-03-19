@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 import com.media.mobile.elin.wishwidemobile.Activity.Game1;
+import com.media.mobile.elin.wishwidemobile.Activity.Game2;
 import com.media.mobile.elin.wishwidemobile.Model.GameCharacterFileVO;
 
 import java.io.*;
@@ -20,71 +21,17 @@ public class FileFetcher {
 
 
     //Cloud에서 다운로드한 파일을 콘텐츠 폴더에 파일명을 "콘텐츠명.확장자"로 저장
-    public void downloadFile(GameCharacterFileVO gameCharacterFileVO) {
-//        Log.i(TAG, "콘텐츠 아이템 확인 : " + gameCharacterFileVO);
-//        File contentsDir = new File(strAppPath);
-//        int readByte = 0;
-//
-//        //콘텐츠 관리 폴더 존재 확인, 없으면 생성
-//        boolean isContentExist = checkDirectory(contentsDir);
-//
-//        Log.d(TAG, "폴더 존재 확인: " + isContentExist);
-//        if (!isContentExist) {
-//            makeDirectory(contentsDir);
-//        } else {
-//            removeFileAll();
-//        }
-//
-//        HttpURLConnection connection = null;
-//        InputStream inputStream = null;
-//        FileOutputStream outputStream = null;
-//        try {
-//            //인터넷 연결
-//            URL url = new URL(gameCharacterFileVO.getCharacterFileUrl());
-//            connection = (HttpURLConnection) url.openConnection();
-//            connection.connect();
-//
-//            inputStream = new BufferedInputStream(connection.getInputStream());
-//
-//            outputStream = new FileOutputStream(strAppPath + gameCharacterFileVO.getCharacterFileName());
-//            byte[] buffer = new byte[connection.getContentLength()];
-//            Log.d(TAG, "크기 확인: "+ connection.getContentLength());
-//
-//            while ((readByte = inputStream.read(buffer)) != -1) {
-//                outputStream.write(buffer, 0, readByte);
-//            }
-//        } catch (MalformedURLException e) {
-//            e.printStackTrace();
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        } finally {
-//
-//            try {
-//                if (outputStream != null) {
-//                    outputStream.close();
-//                }
-//
-//                if (inputStream != null) {
-//                    inputStream.close();
-//                }
-//
-//                if (connection != null) {
-//                    connection.disconnect();
-//                }
-//
-//            } catch (IOException e) {
-//            }
-//        }
-        new FileDownloadTask(gameCharacterFileVO).execute();
+    public void downloadFile(GameCharacterFileVO gameCharacterFileVO, String gameType) {
+        new FileDownloadTask(gameCharacterFileVO, gameType).execute();
     }
 
     public class FileDownloadTask extends AsyncTask<String, Void, String> {
         private final GameCharacterFileVO mGameCharacterFileVO;
+        private final String mGameType;
 
-        public FileDownloadTask(GameCharacterFileVO gameCharacterFileVO) {
+        public FileDownloadTask(GameCharacterFileVO gameCharacterFileVO, String gameType) {
             mGameCharacterFileVO = gameCharacterFileVO;
+            mGameType = gameType;
         }
 
         @Override
@@ -155,7 +102,13 @@ public class FileFetcher {
             while (!checkCompleteFile(s, mGameCharacterFileVO.getCharacterFileSize())) {
             }
 
-            Game1.mCompletedFileCnt++;
+            if (mGameType.equals("1")) {
+                Game1.mCompletedFileCnt++;
+            }
+            else if (mGameType.equals("2")) {
+                Game2.mCompletedFileCnt++;
+            }
+
         }
     }
 

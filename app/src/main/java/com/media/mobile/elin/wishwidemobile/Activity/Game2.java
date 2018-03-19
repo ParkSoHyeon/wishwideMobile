@@ -38,7 +38,7 @@ import com.media.mobile.elin.wishwidemobile.Model.GameCharacterFileVO;
 import com.media.mobile.elin.wishwidemobile.Model.MarkerVO;
 import com.media.mobile.elin.wishwidemobile.Model.MembershipCustomerVO;
 import com.media.mobile.elin.wishwidemobile.R;
-import com.media.mobile.elin.wishwidemobile.Renderer.Game1Renderer;
+import com.media.mobile.elin.wishwidemobile.Renderer.Game2Renderer;
 import com.media.mobile.elin.wishwidemobile.SampleAppMenu.SampleAppMenuInterface;
 import com.media.mobile.elin.wishwidemobile.Session.SampleApplicationException;
 import com.media.mobile.elin.wishwidemobile.Session.SampleApplicationSession_Video;
@@ -57,10 +57,10 @@ import java.util.Vector;
 
 
 // The AR activity for the VideoPlayback sample.
-public class Game1 extends Activity implements
+public class Game2 extends Activity implements
         SampleApplicationControl_Video, SampleAppMenuInterface {
 
-    private static final String LOGTAG = "Game1";
+    private static final String LOGTAG = "Game2";
 
     SampleApplicationSession_Video vuforiaAppSession;
 
@@ -89,7 +89,7 @@ public class Game1 extends Activity implements
     private SampleApplicationGLView mGlView;
 
     // Our renderer:
-    private Game1Renderer mRenderer;
+    private Game2Renderer mRenderer;
 
     // The textures we will use for rendering:
     private Vector<Texture> mTextures;
@@ -194,9 +194,9 @@ public class Game1 extends Activity implements
                         if (mRenderer != null) {
                             int target = -1;
                             if (mMarkerVO.getMarkerVuforiaCode().equals("stones"))
-                                target = Game1.STONES;
+                                target = Game2.STONES;
                             else
-                                target = Game1.CHIPS;
+                                target = Game2.CHIPS;
 
                             int result = mRenderer.isTapOnScreenInsideTarget(target, e.getX(), e.getY());
 
@@ -205,45 +205,29 @@ public class Game1 extends Activity implements
 //                                mToast.show();
 
                                 int gameCharacterNum = mMarkerVO.getMarkerGameCharacterCnt();
-                                int gameBenefitNum = 0;
-                                int randomNum = new Random().nextInt(gameCharacterNum);
-                                List<GameBenefitVO> gameBenefitList = new ArrayList();
 
-                                for (int i = 0; i < mMarkerVO.getGameBenefitList().size(); i++) {
-                                    Log.d(LOGTAG, "게임혜택등급" + i + ": " + mMarkerVO.getGameBenefitList().get(i).getGameBenefitGradeTypeCode());
-                                    Log.d(LOGTAG, "멤버쉽등급: " + membershipCustomerVO.getMembershipCustomerGrade());
-                                    if (mMarkerVO.getGameBenefitList().get(i).getGameBenefitGradeTypeCode().equals(membershipCustomerVO.getMembershipCustomerGrade())) {
-                                        gameBenefitList.add(mMarkerVO.getGameBenefitList().get(i));
-                                        gameBenefitNum++;
+                                if (Game2Renderer.mReadyCharacterSeq == result) {
+                                    Game2Renderer.mReadyCharacterSeq++;
+                                    Game2Renderer.mCorrectedCharacterCnt++;
+
+                                    if (Game2Renderer.mCorrectedCharacterCnt == gameCharacterNum) {
+                                        //혜택 보여주기
+
+                                        GameBenefitVO gameBenefitVO = mMarkerVO.getGameBenefitList().get(0);
+                                        if (gameBenefitVO.getGameBenefitTypeCode().equals("P")) {
+                                            showBenefitGainMessage(
+                                                    gameBenefitVO.getGameBenefitTypeCode(),
+                                                    gameBenefitVO.getGameBenefitTypeValue(),
+                                                    "축하합니다!\n" + gameBenefitVO.getGameBenefitTypeValue() + "p를 획득하셨습니다.\n내일 다시 도전해주세요.");
+                                        }
+                                        else {
+                                            showBenefitGainMessage(
+                                                    gameBenefitVO.getGameBenefitTypeCode(),
+                                                    gameBenefitVO.getGameBenefitTypeValue(),
+                                                    "축하합니다!\n" + gameBenefitVO.getGameBenefitTitle() + "를 획득하셨습니다.\n내일 다시 도전해주세요.");
+                                        }
                                     }
                                 }
-
-                                Log.d(LOGTAG, "유효혜택 수: " + gameBenefitNum);
-                                Log.d(LOGTAG, "선택된 값: " + randomNum);
-                                Log.d(LOGTAG, "결과: " + (randomNum < gameBenefitNum));
-
-                                if (randomNum < gameBenefitNum) {
-                                    //혜택
-                                    GameBenefitVO gameBenefitVO = gameBenefitList.get(randomNum);
-                                    if (gameBenefitVO.getGameBenefitTypeCode().equals("P")) {
-                                        showBenefitGainMessage(
-                                                gameBenefitVO.getGameBenefitTypeCode(),
-                                                gameBenefitVO.getGameBenefitTypeValue(),
-                                                "축하합니다!\n" + gameBenefitVO.getGameBenefitTypeValue() + "p를 획득하셨습니다.\n내일 다시 도전해주세요.");
-                                    }
-                                    else {
-                                        showBenefitGainMessage(
-                                                gameBenefitVO.getGameBenefitTypeCode(),
-                                                gameBenefitVO.getGameBenefitTypeValue(),
-                                                "축하합니다!\n" + gameBenefitVO.getGameBenefitTitle() + "를 획득하셨습니다.\n내일 다시 도전해주세요.");
-                                    }
-
-                                }
-                                else {
-                                    //꽝
-                                    showBenefitGainMessage("BOOM", 0,"꽝!\n다시 도전해주세요.");
-                                }
-
                                 return true;
                             }
                         }
@@ -269,51 +253,29 @@ public class Game1 extends Activity implements
 
                 // Generates an Alert Dialog to show the error message
                 AlertDialog.Builder builder = new AlertDialog.Builder(
-                        Game1.this);
+                        Game2.this);
 
-                if (type.equals("BOOM")) {
-                    builder
-                            .setMessage(msg)
-                            .setTitle("알림")
-                            .setIcon(0)
-                            .setPositiveButton("도전",
-                                    new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface dialog, int id) {
+                builder
+                        .setMessage(msg)
+                        .setTitle("알림")
+                        .setIcon(0)
+                        .setPositiveButton("확인",
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int id) {
+                                        Intent intent = new Intent();
+                                        intent.putExtra("wideManagerId", mMarkerVO.getWideManagerId());
+                                        intent.putExtra("wwNo", mMarkerVO.getWwNo());
+                                        intent.putExtra("markerNo", mMarkerVO.getMarkerNo());
+                                        intent.putExtra("gameBenefitTypeCode", type);
+                                        intent.putExtra("gameBenefitTypeValue", value);
+                                        intent.putExtra("membershipCustomerNo", membershipCustomerVO.getMembershipCustomerNo());
 
-                                        }
-                                    })
-                            .setNegativeButton("나가기",
-                                    new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            stopAR();
-                                            finish();
-                                        }
-                                    });
-                }
-                else {
-                    builder
-                            .setMessage(msg)
-                            .setTitle("알림")
-                            .setIcon(0)
-                            .setPositiveButton("확인",
-                                    new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface dialog, int id) {
-                                            Intent intent = new Intent();
-                                            intent.putExtra("wideManagerId", mMarkerVO.getWideManagerId());
-                                            intent.putExtra("wwNo", mMarkerVO.getWwNo());
-                                            intent.putExtra("markerNo", mMarkerVO.getMarkerNo());
-                                            intent.putExtra("gameBenefitTypeCode", type);
-                                            intent.putExtra("gameBenefitTypeValue", value);
-                                            intent.putExtra("membershipCustomerNo", membershipCustomerVO.getMembershipCustomerNo());
+                                        setResult(1, intent);
 
-                                            setResult(1, intent);
-
-                                            stopAR();
-                                            finish();
-                                        }
-                                    });
-                }
+                                        stopAR();
+                                        finish();
+                                    }
+                                });
 
                 mDialog = builder.create();
                 mDialog.show();
@@ -578,7 +540,7 @@ public class Game1 extends Activity implements
         mGlView = new SampleApplicationGLView(this);
         mGlView.init(translucent, depthSize, stencilSize);
 
-        mRenderer = new Game1Renderer(this, vuforiaAppSession);
+        mRenderer = new Game2Renderer(this, vuforiaAppSession);
         mRenderer.setTextures(mTextures);
         mRenderer.setmHandler(m_Handler);
 
@@ -843,7 +805,7 @@ public class Game1 extends Activity implements
 
                 // Generates an Alert Dialog to show the error message
                 AlertDialog.Builder builder = new AlertDialog.Builder(
-                        Game1.this);
+                        Game2.this);
                 builder
                         .setMessage(errorMessage)
                         .setTitle(getString(R.string.INIT_ERROR))

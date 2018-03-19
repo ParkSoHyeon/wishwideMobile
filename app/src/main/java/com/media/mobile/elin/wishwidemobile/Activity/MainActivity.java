@@ -918,6 +918,7 @@ public class MainActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case 7:
+                Log.d(TAG, "게임1 종료");
                 JSONObject objRoot = new JSONObject();
 
                 try {
@@ -938,6 +939,9 @@ public class MainActivity extends AppCompatActivity
                 }
 
                 break;
+            case 77:
+                Log.d(TAG, "게임2 종료");
+                break;
         }
     }
 
@@ -947,7 +951,7 @@ public class MainActivity extends AppCompatActivity
             HttpURLConnection urlConn = null;
             StringBuffer sbParams = new StringBuffer();
 
-            sbParams.append("wideManagerId").append("=").append("starbucksJuk");
+            sbParams.append("wideManagerId").append("=").append("starbucksMi");
             sbParams.append("&");
             sbParams.append("wideCustomerNo").append("=").append(wideCustomerVO.getWideCustomerNo());
             sbParams.append("&");
@@ -1011,12 +1015,27 @@ public class MainActivity extends AppCompatActivity
                     Log.d(TAG, "게임설정 확인: " + gameSetting);
                     Log.d(TAG, "멤버십고객 확인: " + membershipCustomerVO);
 
-                    //게임 실행!
-                    Intent intent = new Intent(MainActivity.this, Game1.class);
-                    intent.putExtra("gameSetting", gameSetting);
-                    intent.putExtra("membershipCustomerVO", membershipCustomerVO);
+                    Intent intent = null;
 
-                    startActivityForResult(intent, 7);
+                    switch (objRoot.getJSONObject("gameSetting").optString("markerGameTypeCode")) {
+                        case "1":
+                            //게임 실행!
+                            intent = new Intent(MainActivity.this, Game1.class);
+                            intent.putExtra("gameSetting", gameSetting);
+                            intent.putExtra("membershipCustomerVO", membershipCustomerVO);
+
+                            startActivityForResult(intent, 7);
+                            break;
+                        case "2":
+                            //게임 실행!
+                            intent = new Intent(MainActivity.this, Game2.class);
+                            intent.putExtra("gameSetting", gameSetting);
+                            intent.putExtra("membershipCustomerVO", membershipCustomerVO);
+
+                            startActivityForResult(intent, 77);
+                            break;
+                    }
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
