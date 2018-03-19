@@ -16,7 +16,7 @@
             android:id="@+id/nav_view"
             android:layout_width="200dp"
             android:layout_height="match_parent"
-            android:background="#FFFFE0"
+            android:background="@color/white"
             app:itemTextColor="@color/black"
             app:itemIconTint="@color/black"
             android:layout_gravity="start"

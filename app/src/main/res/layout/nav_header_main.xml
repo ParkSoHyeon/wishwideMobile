@@ -16,6 +16,7 @@
             android:layout_height="wrap_content">
         <TextView
                 android:paddingLeft="20dp"
+                android:text="안향"
                 android:id="@+id/tv_profile"
                 android:textSize="15dp"
                 android:layout_gravity="center_vertical"

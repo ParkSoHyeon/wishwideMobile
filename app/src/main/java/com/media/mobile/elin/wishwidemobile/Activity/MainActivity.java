@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -32,6 +33,7 @@ import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.webkit.*;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.gun0912.tedpermission.PermissionListener;
@@ -58,7 +60,7 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-        WebUrlConstance, SharedPreferencesConstant{
+        WebUrlConstance, SharedPreferencesConstant, Button.OnClickListener {
     private static final String TAG = "MainActivity";
 
     private final Context mContext = this;
@@ -71,8 +73,9 @@ public class MainActivity extends AppCompatActivity
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mActionBarDrawerToggle;
     private NavigationView mNavigationView;
-    private TabLayout mTabLayout;
+//    private TabLayout mTabLayout;
     private TextView mTvProfile;
+    private Button mBtn1, mBtn2, mBtn3, mBtn4, mBtn5;
 
     //AR 게임 관련 멤버 변수
     FloatingActionButton mARFloatingActionButton;
@@ -124,40 +127,40 @@ public class MainActivity extends AppCompatActivity
 
 
         //메뉴탭 Listener
-        mTabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                Log.d(TAG, "onTabSelected()..." + tab.getText());
-
-                switch (tab.getText().toString()) {
-                    case "내주변":
-                        requestLocationUpdate();
-                        break;
-                    case "방문한 매장":
-                        mWebView.loadUrl(DOMAIN_NAME + VISITED_STORE_LIST_PATH);
-                        break;
-                    case "선물가게":
-                        mWebView.loadUrl(DOMAIN_NAME + GIFT_STORE_LIST_PATH);
-                        break;
-                    case "도장/포인트":
-                        mWebView.loadUrl(DOMAIN_NAME + STAMP_AND_POINT_LIST_PATH);
-                        break;
-                    case "쿠폰":
-                        mWebView.loadUrl(DOMAIN_NAME + COUPON_LIST_PATH);
-                        break;
-                }
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-                Log.d(TAG, "onTabUnselected()..." + tab.getText());
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-                Log.d(TAG, "onTabReselected()...");
-            }
-        });
+//        mTabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+//            @Override
+//            public void onTabSelected(TabLayout.Tab tab) {
+//                Log.d(TAG, "onTabSelected()..." + tab.getText());
+//
+//                switch (tab.getText().toString()) {
+//                    case "내주변":
+//                        requestLocationUpdate();
+//                        break;
+//                    case "방문한 매장":
+//                        mWebView.loadUrl(DOMAIN_NAME + VISITED_STORE_LIST_PATH);
+//                        break;
+//                    case "선물가게":
+//                        mWebView.loadUrl(DOMAIN_NAME + GIFT_STORE_LIST_PATH);
+//                        break;
+//                    case "도장/포인트":
+//                        mWebView.loadUrl(DOMAIN_NAME + STAMP_AND_POINT_LIST_PATH);
+//                        break;
+//                    case "쿠폰":
+//                        mWebView.loadUrl(DOMAIN_NAME + COUPON_LIST_PATH);
+//                        break;
+//                }
+//            }
+//
+//            @Override
+//            public void onTabUnselected(TabLayout.Tab tab) {
+//                Log.d(TAG, "onTabUnselected()..." + tab.getText());
+//            }
+//
+//            @Override
+//            public void onTabReselected(TabLayout.Tab tab) {
+//                Log.d(TAG, "onTabReselected()...");
+//            }
+//        });
 
 
         //AR 게임 실행 버튼 Listener
@@ -249,13 +252,13 @@ public class MainActivity extends AppCompatActivity
                 mSwipeRefresh.setRefreshing(false);
 
                 mARFloatingActionButton.setVisibility(View.GONE);
-                mTabLayout.setVisibility(View.VISIBLE);
+//                mTabLayout.setVisibility(View.VISIBLE);
                 mActionBarDrawerToggle.setDrawerIndicatorEnabled(true);
 
                 switch (url) {
                     case DOMAIN_NAME:   //로그인
                         mActionBarDrawerToggle.setDrawerIndicatorEnabled(false);    //menu(navigation) gone setting
-                        mTabLayout.setVisibility(View.GONE);    //tab menu gone setting
+//                        mTabLayout.setVisibility(View.GONE);    //tab menu gone setting
                         break;
 
                     case DOMAIN_NAME + VISITED_STORE_LIST_PATH: //방문한 매장
@@ -326,7 +329,21 @@ public class MainActivity extends AppCompatActivity
         mActionBarDrawerToggle.syncState();
         mActionBarDrawerToggle.setDrawerIndicatorEnabled(true);    //menu(navigation) visible/gone setting
 
-        mTabLayout = (TabLayout) findViewById(R.id.tabs);
+//        mTabLayout = (TabLayout) findViewById(R.id.tabs);
+
+        mBtn1 = (Button) findViewById(R.id.btn_1);
+        mBtn2 = (Button) findViewById(R.id.btn_2);
+        mBtn3 = (Button) findViewById(R.id.btn_3);
+        mBtn4 = (Button) findViewById(R.id.btn_4);
+        mBtn5 = (Button) findViewById(R.id.btn_5);
+
+        mBtn1.setOnClickListener(this);
+        mBtn2.setOnClickListener(this);
+        mBtn3.setOnClickListener(this);
+        mBtn4.setOnClickListener(this);
+        mBtn5.setOnClickListener(this);
+
+        mBtn1.setTextColor(Color.BLUE);
 
         mNavigationView = (NavigationView) findViewById(R.id.nav_view);
         mNavigationView.setNavigationItemSelectedListener(this);
@@ -343,6 +360,38 @@ public class MainActivity extends AppCompatActivity
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebAndAppBridge = new WebAndAppBridge(mWebView);
         mWebView.addJavascriptInterface(mWebAndAppBridge, "WebAndAppBridge");
+    }
+
+    @Override
+    public void onClick(View v) {
+        mBtn1.setTextColor(Color.BLACK);
+        mBtn2.setTextColor(Color.BLACK);
+        mBtn3.setTextColor(Color.BLACK);
+        mBtn4.setTextColor(Color.BLACK);
+        mBtn5.setTextColor(Color.BLACK);
+
+        switch (v.getId()) {
+            case R.id.btn_1:
+                mBtn1.setTextColor(Color.BLUE);
+                requestLocationUpdate();
+                break;
+            case R.id.btn_2:
+                mBtn2.setTextColor(Color.BLUE);
+                mWebView.loadUrl(DOMAIN_NAME + VISITED_STORE_LIST_PATH);
+                break;
+            case R.id.btn_3:
+                mBtn3.setTextColor(Color.BLUE);
+                mWebView.loadUrl(DOMAIN_NAME + GIFT_STORE_LIST_PATH);
+                break;
+            case R.id.btn_4:
+                mBtn4.setTextColor(Color.BLUE);
+                mWebView.loadUrl(DOMAIN_NAME + STAMP_AND_POINT_LIST_PATH);
+                break;
+            case R.id.btn_5:
+                mBtn5.setTextColor(Color.BLUE);
+                mWebView.loadUrl(DOMAIN_NAME + COUPON_LIST_PATH);
+                break;
+        }
     }
 
 
@@ -561,40 +610,49 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-        TabLayout.Tab tab;
+//        TabLayout.Tab tab;
 
         switch (id) {
             case R.id.nav_visited_store:    //방문한매장
-//                mWebView.loadUrl(DOMAIN_NAME + VISITED_STORE_LIST_PATH);
-                tab = mTabLayout.getTabAt(1);
-                tab.select();
+                mBtn2.performClick();
+//                tab = mTabLayout.getTabAt(1);
+//                tab.select();
                 break;
             case R.id.nav_nearby_stores:    //홈
-                requestLocationUpdate();
-                tab = mTabLayout.getTabAt(0);
-                tab.select();
+                mBtn1.performClick();
+//                tab = mTabLayout.getTabAt(0);
+//                tab.select();
                 break;
             case R.id.nav_gift_store:   //선물가게
-//                mWebView.loadUrl(DOMAIN_NAME + GIFT_STORE_LIST_PATH);
-                tab = mTabLayout.getTabAt(2);
-                tab.select();
+                mBtn3.performClick();
+//                tab = mTabLayout.getTabAt(2);
+//                tab.select();
                 break;
             case R.id.nav_received_gift:    //받은선물내역(선물함)
-                mTabLayout.removeAllTabs();
+                mBtn1.setTextColor(Color.BLACK);
+                mBtn2.setTextColor(Color.BLACK);
+                mBtn3.setTextColor(Color.BLACK);
+                mBtn4.setTextColor(Color.BLACK);
+                mBtn5.setTextColor(Color.BLACK);
                 mWebView.loadUrl(DOMAIN_NAME + RECEIVED_GIFT_LIST_PATH);
                 break;
             case R.id.nav_send_gift:    //보낸선물내역
+                mBtn1.setTextColor(Color.BLACK);
+                mBtn2.setTextColor(Color.BLACK);
+                mBtn3.setTextColor(Color.BLACK);
+                mBtn4.setTextColor(Color.BLACK);
+                mBtn5.setTextColor(Color.BLACK);
                 mWebView.loadUrl(DOMAIN_NAME + SEND_GIFT_LIST_PATH);
                 break;
             case R.id.nav_coupon:   //쿠폰함내역(쿠폰함)
-//                mWebView.loadUrl(DOMAIN_NAME + COUPON_LIST_PATH);
-                tab = mTabLayout.getTabAt(3);
-                tab.select();
+                mBtn5.performClick();
+//                tab = mTabLayout.getTabAt(3);
+//                tab.select();
                 break;
             case R.id.nav_point_and_stamp:  //도장/포인트내역
-//                mWebView.loadUrl(DOMAIN_NAME + STAMP_AND_POINT_LIST_PATH);
-                tab = mTabLayout.getTabAt(4);
-                tab.select();
+                mBtn4.performClick();
+//                tab = mTabLayout.getTabAt(4);
+//                tab.select();
                 break;
             case R.id.nav_setting:  //환경설정
                 //setting activity 이동
