@@ -142,6 +142,8 @@ public class Game2 extends Activity implements
                 if (mCompletedFileCnt == mMarkerVO.getMarkerGameCharacterCnt()) {
                     initializeAR();
 
+                    mCompletedFileCnt = 0;
+
                     return;
                 }
 

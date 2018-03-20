@@ -140,6 +140,7 @@ public class Game1 extends Activity implements
             public void onFileDownloaded() {
                 if (mCompletedFileCnt == mMarkerVO.getMarkerGameCharacterCnt()) {
                     initializeAR();
+                    mCompletedFileCnt = 0;
 
                     return;
                 }
@@ -586,6 +587,8 @@ public class Game1 extends Activity implements
             mTextures.clear();
             mTextures = null;
         }
+
+        mFileFetcher.removeFileAll();
 
         System.gc();
     }
