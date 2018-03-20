@@ -13,6 +13,7 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -434,6 +435,11 @@ public class MainActivity extends AppCompatActivity
                 getAndroidContactList(PERMISSION_DENIED_EVENT, mGiftProductNo);
             }
         };
+
+        @JavascriptInterface
+        public void callStore(String tel) {
+            startActivity(new Intent("android.intent.action.CALL", Uri.parse("tel:" + tel)));
+        }
 
         @JavascriptInterface
         public void getAndroidContactList(String event, int giftProductNo) {
