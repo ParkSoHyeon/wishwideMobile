@@ -51,10 +51,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.Vector;
+import java.util.*;
 
 
 // The AR activity for the VideoPlayback sample.
@@ -139,7 +136,7 @@ public class Game2 extends Activity implements
         mFileDownloader.setFileDownloaderListener(new FileDownloader.FileDownloaderListener<GameCharacterFileVO>() {
             @Override
             public void onFileDownloaded() {
-                if (mCompletedFileCnt == mMarkerVO.getMarkerGameCharacterCnt()) {
+                if (mCompletedFileCnt == mMarkerVO.getGameCharacterFileList().size()) {
                     initializeAR();
 
                     mCompletedFileCnt = 0;
@@ -163,6 +160,7 @@ public class Game2 extends Activity implements
         mFileFetcher = new FileFetcher();
         downloadTextures();
     }
+
 
     private void initializeAR() {
         // Load any sample specific textures:
@@ -217,12 +215,14 @@ public class Game2 extends Activity implements
                                 if (Game2Renderer.mReadyCharacterSeq == result) {
                                     ImageView image = new ImageView(mContext);
                                     image.setLayoutParams(new android.view.ViewGroup.LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.MATCH_PARENT));
-                                    image.setMaxHeight(40);
-                                    image.setMaxWidth(30);
+                                    image.setMaxHeight(60);
+                                    image.setMaxWidth(45);
                                     image.setImageBitmap(BitmapFactory.decodeFile(mCharacterSeq.get(Game2Renderer.mReadyCharacterSeq)));
+
 
                                     // Adds the view to the layout
                                     mLlCorrectView.addView(image);
+
 
                                     Game2Renderer.mReadyCharacterSeq++;
                                     Game2Renderer.mCorrectedCharacterCnt++;
@@ -269,6 +269,7 @@ public class Game2 extends Activity implements
                 .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 
+
     public void showGame2Guide(final String msg) {
         final Context context = this;
         runOnUiThread(new Runnable() {
@@ -278,19 +279,20 @@ public class Game2 extends Activity implements
                 if ((mGame2ContentView.getVisibility() == View.VISIBLE) && (mTvGame2Guide.getText().equals(msg))) {
                     return;
                 }
-                Animation bottomDown = AnimationUtils.loadAnimation(context,
-                        R.anim.bottom_down);
+//                Animation bottomDown = AnimationUtils.loadAnimation(context,
+//                        R.anim.bottom_down);
 
 
                 mTvGame2Guide.setText(msg);
 
                 mGame2ContentView.bringToFront();
                 mGame2ContentView.setVisibility(View.VISIBLE);
-                mGame2ContentView.startAnimation(bottomDown);
+//                mGame2ContentView.startAnimation(bottomDown);
                 // mUILayout.invalidate();
             }
         });
     }
+
 
     public void hideGame2Guide() {
         final Context context = this;
@@ -303,15 +305,16 @@ public class Game2 extends Activity implements
                 }
                 mTvGame2Guide.setText("");
 
-                Animation bottomUp = AnimationUtils.loadAnimation(context,
-                        R.anim.bottom_up);
+//                Animation bottomUp = AnimationUtils.loadAnimation(context,
+//                        R.anim.bottom_up);
 
-                mGame2ContentView.startAnimation(bottomUp);
+//                mGame2ContentView.startAnimation(bottomUp);
                 mGame2ContentView.setVisibility(View.INVISIBLE);
                 // mUILayout.invalidate();
             }
         });
     }
+
 
     private void showBenefitGainMessage(final String type, final int value, final String msg) {
         //축하합니다!\nㅌ를 획득하셨습니다.\n내일 다시 도전해주세요.
@@ -353,6 +356,7 @@ public class Game2 extends Activity implements
             }
         });
     }
+
 
     private MarkerVO parseJsonGameSetting(String jsonData) {
         MarkerVO markerVO = new MarkerVO();
@@ -420,6 +424,7 @@ public class Game2 extends Activity implements
         return markerVO;
     }
 
+
     private MembershipCustomerVO parseJsonMembershipCustomer(String jsonData) {
         MembershipCustomerVO membershipCustomerVO = new MembershipCustomerVO();
 
@@ -440,6 +445,7 @@ public class Game2 extends Activity implements
         return membershipCustomerVO;
     }
 
+
     private void downloadTextures() {
         List<GameCharacterFileVO> gameCharacterFileList = mMarkerVO.getGameCharacterFileList();
 
@@ -450,39 +456,66 @@ public class Game2 extends Activity implements
         mFileDownloader.queueFile();
     }
 
+
     // We want to load specific textures from the APK, which we will later
     // use for rendering.
     private void loadTextures() {
         //cpyoon
         //Load texture file (png, jpg, etc)
+        int totalCharacterCnt = mMarkerVO.getGameCharacterFileList().size();
+        int orderingCharacterCnt = mMarkerVO.getMarkerGameCharacterCnt();
+        int unorderingCharacterCnt = totalCharacterCnt - orderingCharacterCnt;
+//        Log.d(LOGTAG, "전체 캐릭터 수: " + totalCharacterCnt);
+//        Log.d(LOGTAG, "순서 캐릭터 수: " + orderingCharacterCnt);
+//        Log.d(LOGTAG, "순서x 캐릭터 수: " + unorderingCharacterCnt);
 
         List<String> filePaths = mFileFetcher.getFilePaths();
         mCharacterSeq = new ArrayList<>();
 
-        List<GameCharacterFileVO> gameCharacterFileList = mMarkerVO.getGameCharacterFileList();
+        List<GameCharacterFileVO> totalGameCharacterFileList = mMarkerVO.getGameCharacterFileList();
 
-        for (int i = 1; i <= mMarkerVO.getMarkerGameCharacterCnt(); i++) {
-            for (int j = 0; j < mMarkerVO.getMarkerGameCharacterCnt(); j++) {
-
-                Log.d(LOGTAG, i + " == " + gameCharacterFileList.get(j).getCharacterFileSeq() + ", " + (gameCharacterFileList.get(j).getCharacterFileSeq() == i));
-                if (gameCharacterFileList.get(j).getCharacterFileSeq() == i) {
-                    for (int k = 0; k < filePaths.size(); k++) {
-                        Log.d(LOGTAG, gameCharacterFileList.get(j).getCharacterFileName() + " == " + filePaths.get(k) + ", " + (filePaths.get(k).contains(gameCharacterFileList.get(j).getCharacterFileName())));
-                        if (filePaths.get(k).contains(gameCharacterFileList.get(j).getCharacterFileName())) {
-                            mTextures.add(Texture.loadTextureFromInputStream(filePaths.get(k)));
-
-                            mCharacterSeq.add(filePaths.get(k));
-
-                            break;
-                        }
-                    }
-
-                    continue;
+        Collections.sort(totalGameCharacterFileList, new Comparator<GameCharacterFileVO>() {
+            @Override
+            public int compare(GameCharacterFileVO o1, GameCharacterFileVO o2) {
+                if (o1.getCharacterFileSeq() > o2.getCharacterFileSeq()) {
+                    return 1;
                 }
-
+                else if (o1.getCharacterFileSeq() < o2.getCharacterFileSeq()) {
+                    return -1;
+                }
+                else {
+                    return 0;
+                }
             }
+        });
 
 
+
+        for (int i = unorderingCharacterCnt; i < totalCharacterCnt; i++) {
+//            Log.d(LOGTAG, "게임 캐릭터 " + i + ": " + totalGameCharacterFileList.get(i).getCharacterFileName());
+            for (int j = 0; j < filePaths.size(); j++) {
+//                Log.d(LOGTAG, "파일 경로 " + j + ": " + filePaths.get(j));
+                if (filePaths.get(j).contains(totalGameCharacterFileList.get(i).getCharacterFileName())) {
+                    mTextures.add(Texture.loadTextureFromInputStream(filePaths.get(j)));
+
+                    mCharacterSeq.add(filePaths.get(j));
+
+                    break;
+                }
+            }
+        }
+
+        for (int i = 0; i < unorderingCharacterCnt; i++) {
+//            Log.d(LOGTAG, "게임 캐릭터 " + i + ": " + totalGameCharacterFileList.get(i).getCharacterFileName());
+            for (int j = 0; j < filePaths.size(); j++) {
+//                Log.d(LOGTAG, "파일 경로 " + j + ": " + filePaths.get(j));
+                if (filePaths.get(j).contains(totalGameCharacterFileList.get(i).getCharacterFileName())) {
+                    mTextures.add(Texture.loadTextureFromInputStream(filePaths.get(j)));
+
+
+                    break;
+                }
+            }
         }
 
     }
@@ -531,6 +564,7 @@ public class Game2 extends Activity implements
 
         stopAR();
     }
+
 
     private void stopAR() {
         if (mGlView != null) {

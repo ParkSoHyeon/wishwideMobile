@@ -345,15 +345,15 @@ public class Game1 extends Activity implements
                 if ((mGame1ContentView.getVisibility() == View.VISIBLE) && (mTvGame1Guide.getText().equals(msg))) {
                     return;
                 }
-                Animation bottomDown = AnimationUtils.loadAnimation(context,
-                        R.anim.bottom_down);
+//                Animation bottomDown = AnimationUtils.loadAnimation(context,
+//                        R.anim.bottom_down);
 
 
                 mTvGame1Guide.setText(msg);
 
                 mGame1ContentView.bringToFront();
                 mGame1ContentView.setVisibility(View.VISIBLE);
-                mGame1ContentView.startAnimation(bottomDown);
+//                mGame1ContentView.startAnimation(bottomDown);
                 // mUILayout.invalidate();
             }
         });
@@ -370,10 +370,10 @@ public class Game1 extends Activity implements
                 }
                 mTvGame1Guide.setText("");
 
-                Animation bottomUp = AnimationUtils.loadAnimation(context,
-                        R.anim.bottom_up);
+//                Animation bottomUp = AnimationUtils.loadAnimation(context,
+//                        R.anim.bottom_up);
 
-                mGame1ContentView.startAnimation(bottomUp);
+//                mGame1ContentView.startAnimation(bottomUp);
                 mGame1ContentView.setVisibility(View.INVISIBLE);
                 // mUILayout.invalidate();
             }

@@ -172,7 +172,8 @@ public class MainActivity extends AppCompatActivity
         mARFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                new GameSettingTask().execute();
+                mWebView.loadUrl("javascript:callGameSetting()");
+
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
             }
@@ -371,6 +372,7 @@ public class MainActivity extends AppCompatActivity
         mWebView.addJavascriptInterface(mWebAndAppBridge, "WebAndAppBridge");
     }
 
+
     @Override
     public void onClick(View v) {
         mBtn1.setTextColor(Color.BLACK);
@@ -406,6 +408,8 @@ public class MainActivity extends AppCompatActivity
 
     //Web의 javascript와 앱을 연결해주는 클래스
     private class WebAndAppBridge {
+        private static final String TAG = "WebAndAppBridge";
+
         private static final String REQUEST_EVENT = "request";
         private static final String PERMISSION_DENIED_EVENT = "denied";
         private static final String PERMISSION_GRANTED_EVENT = "granted";
@@ -439,6 +443,11 @@ public class MainActivity extends AppCompatActivity
         @JavascriptInterface
         public void callStore(String tel) {
             startActivity(new Intent("android.intent.action.CALL", Uri.parse("tel:" + tel)));
+        }
+
+        @JavascriptInterface
+        public void callGameSetting(String managerId) {
+            new GameSettingTask(managerId).execute();
         }
 
         @JavascriptInterface
@@ -748,6 +757,7 @@ public class MainActivity extends AppCompatActivity
 
 
     public class BeaconFileRead extends AsyncTask<Void, Void, String> {
+        private static final String TAG = "BeaconFileRead";
 
         @Override
         protected String doInBackground(Void... params) {
@@ -790,6 +800,9 @@ public class MainActivity extends AppCompatActivity
 
 
     public class NearbyBeaonListTask extends AsyncTask<Double, Void, String> {
+        private static final String TAG = "NearbyBeaonListTask";
+
+
         @Override
         protected String doInBackground(Double... params) {
             double minla = params[0] - 1, maxla = params[0] + 1, minlo = params[1] - 1, maxlo = params[1] + 1;
@@ -876,6 +889,7 @@ public class MainActivity extends AppCompatActivity
 
 
     public class BeaconScanResult extends Thread {
+        private static final String TAG = "BeaconScanResult";
         public boolean isCon = true;
 
         @Override
@@ -970,13 +984,27 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+
     public class GameSettingTask extends AsyncTask<String, Void, String> {
+        private static final String TAG = "GameSettingTask";
+        private final String mWideMangerId;
+
+
+        public GameSettingTask(String managerId) {
+            this.mWideMangerId = managerId;
+        }
+
+
         @Override
         protected String doInBackground(String... params) {
             HttpURLConnection urlConn = null;
             StringBuffer sbParams = new StringBuffer();
 
-            sbParams.append("wideManagerId").append("=").append("starbucksJuk");
+            Log.d(TAG, "wideManagerId 확인: " + mWideMangerId);
+            Log.d(TAG, "wideCustomerNo 확인: " + wideCustomerVO.getWideCustomerNo());
+            Log.d(TAG, "wideCustomerPhone 확인: " + wideCustomerVO.getWideCustomerPhone());
+
+            sbParams.append("wideManagerId").append("=").append(mWideMangerId);
             sbParams.append("&");
             sbParams.append("wideCustomerNo").append("=").append(wideCustomerVO.getWideCustomerNo());
             sbParams.append("&");

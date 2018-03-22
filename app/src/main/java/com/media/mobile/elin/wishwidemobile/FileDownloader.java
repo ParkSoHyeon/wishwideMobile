@@ -39,7 +39,7 @@ public class FileDownloader<T> extends HandlerThread {
     }
 
     public void queueFile() {
-        Log.d(TAG, "들어옴");
+//        Log.d(TAG, "들어옴");
         mRequestHandler
                 .obtainMessage(MSG_FILE_DOWNLOAD)
                 .sendToTarget();

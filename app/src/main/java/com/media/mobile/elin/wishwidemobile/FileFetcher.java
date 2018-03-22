@@ -37,14 +37,14 @@ public class FileFetcher {
         @Override
         protected String doInBackground(String... params) {
 
-            Log.i(TAG, "콘텐츠 아이템 확인 : " + mGameCharacterFileVO);
+//            Log.i(TAG, "콘텐츠 아이템 확인 : " + mGameCharacterFileVO);
             File contentsDir = new File(strAppPath);
             int readByte = 0;
 
             //콘텐츠 관리 폴더 존재 확인, 없으면 생성
             boolean isContentExist = checkDirectory(contentsDir);
 
-            Log.d(TAG, "폴더 존재 확인: " + isContentExist);
+//            Log.d(TAG, "폴더 존재 확인: " + isContentExist);
             if (!isContentExist) {
                 makeDirectory(contentsDir);
             } else {

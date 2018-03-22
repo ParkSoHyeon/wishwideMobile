@@ -32,6 +32,7 @@ import javax.microedition.khronos.opengles.GL10;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Random;
 import java.util.Vector;
 
 
@@ -100,20 +101,22 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     private Matrix44F tappingProjectionMatrix = null;
 
     Game1 mActivity;
+
+    private boolean mIsRecognizedMarker = false;
     
     // Needed to calculate whether a screen tap is inside the target
     Matrix44F modelViewMatrix[] = new Matrix44F[Game1.NUM_TARGETS];
     //The Object ModelViewMatrix corresponding to the target marker
-    Matrix44F m_objectsmodelViewMatrix[][]= new Matrix44F[Game1.NUM_TARGETS][5];
+    Matrix44F m_objectsmodelViewMatrix[][];
 
     //cpyoon
     //objects position setting {x,y,z}
-    private float m_translates[][]={
-            {0.3f,0.3f,0f},
-            {-0.3f,-0.3f,0f},
-            {-0.3f,0.3f,0f},
-            {0.3f,-0.3f,0f},
-            {0.0f,0.0f,0f},};
+    //좌표, 크기, 회전 설정하는 변수
+    private float m_translates[][];
+    private float m_scales[][];
+    private float m_rotates[][];
+
+    MarkerVO mMarkerVO;
 
     private Vector<Texture> mTextures;
     private Handler mHandler;
@@ -133,11 +136,15 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         
         mActivity = activity;
         vuforiaAppSession = session;
+        mIsRecognizedMarker = false;
 
         // SampleAppRenderer_Video used to encapsulate the use of RenderingPrimitives setting
         // the device mode AR/VR and stereo mode
         mSampleAppRendererVideo = new SampleAppRenderer_Video(this, mActivity, Device.MODE.MODE_AR, false, 0.01f, 5f);
 
+        mMarkerVO = mActivity.mMarkerVO;
+
+        m_objectsmodelViewMatrix = new Matrix44F[Game1.NUM_TARGETS][mMarkerVO.getGameCharacterFileList().size()];
 
         for (int i = 0; i < Game1.NUM_TARGETS; i++)
             targetPositiveDimensions[i] = new Vec3F();
@@ -146,7 +153,7 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             modelViewMatrix[i] = new Matrix44F();
 
         for(int i=0;i<Game1.NUM_TARGETS;i++)
-            for( int j=0;j<5;j++)
+            for( int j=0;j<mMarkerVO.getGameCharacterFileList().size();j++)
                 m_objectsmodelViewMatrix[i][j] = new Matrix44F();
     }
     
@@ -275,7 +282,36 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         quadTexCoords = fillBuffer(quadTexCoordsArray);
         quadIndices = fillBuffer(quadIndicesArray);
         quadNormals = fillBuffer(quadNormalsArray);
+
+
+        mMarkerVO = mActivity.mMarkerVO;
+
+        int totalCharacterCnt = mMarkerVO.getGameCharacterFileList().size();
+
+        m_translates = new float[totalCharacterCnt][3];
+        m_scales = new float[totalCharacterCnt][3];
+        m_rotates = new float[totalCharacterCnt][3];
+
+        for (int i = 0; i < totalCharacterCnt; i++) {
+            for (int j = 0; j < 3; j++) {
+                m_translates[i][j] = randFloat(-0.5f, 0.5f);
+                m_scales[i][j] = randFloat(0.04f, 0.1f);
+                m_rotates[i][j] = randFloat(-100f, 100f);
+                Log.d(LOGTAG, "[" + i + "][" + j + "]: " +  m_translates[i][j]);
+            }
+        }
         
+    }
+
+
+    private float randFloat(float min, float max) {
+
+        Random rand = new Random();
+
+        float result = rand.nextFloat() * (max - min) + min;
+
+        return result;
+
     }
 
 
@@ -330,9 +366,8 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     // State should not be cached outside this method.
     public void renderFrame(State state, float[] projectionMatrix)
     {
-        MarkerVO markerVO = mActivity.mMarkerVO;
 
-        if(markerVO == null) return;
+        if(mMarkerVO == null) return;
         // Renders video background replacing Renderer.DrawVideoBackground()
         mSampleAppRendererVideo.renderVideoBackground();
         
@@ -347,7 +382,10 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         GLES20.glEnable(GLES20.GL_CULL_FACE);
         GLES20.glCullFace(GLES20.GL_BACK);
 
-        mActivity.showGame1Guide("매장 테이블 위에 있는 마커를 인식해주세요.");
+        if (!mIsRecognizedMarker) {
+            mActivity.showGame1Guide("매장 테이블 위에 있는 마커를 인식해주세요.");
+        }
+
 
         if(tappingProjectionMatrix == null)
         {
@@ -378,10 +416,10 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             //hong
             //check whether the marker is included in the target beacon
             //매장과 지금 매장이 같으면
-            if(markerVO.getMarkerVuforiaCode().equals(imageTargetName))
+            if(mMarkerVO.getMarkerVuforiaCode().equals(imageTargetName))
             {
-                characterNum = markerVO.getMarkerGameCharacterCnt();
-                touchEventCode = markerVO.getMarkerTouchEventCode().equals("R") ? 2 : 1;
+                characterNum = mMarkerVO.getMarkerGameCharacterCnt();
+                touchEventCode = mMarkerVO.getMarkerTouchEventCode().equals("R") ? 2 : 1;
             }
 
             //is not same
@@ -425,6 +463,7 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
                 // If the movie is ready to start playing or it has reached the end
                 // of playback we render the keyframe
                 mActivity.showGame1Guide("캐릭터를 하나 잡으세요.");
+                mIsRecognizedMarker = true;
 
                 float[] modelViewMatrixKeyframe = Tool.convertPose2GLMatrix(trackableResult.getPose()).getData();
                 float[] modelViewProjectionKeyframe = new float[16];
@@ -442,9 +481,27 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
                 //cpyoon
                 //Method to translate using m_translates
-                Matrix.translateM(modelViewMatrixKeyframe, 0, m_translates[trans][0], m_translates[trans][1], m_translates[trans][2]);
+                Matrix.translateM(
+                        modelViewMatrixKeyframe,
+                        0,
+                        m_translates[trans][0],
+                        m_translates[trans][1],
+                        m_translates[trans][2]);
 
-                Matrix.scaleM(modelViewMatrixKeyframe, 0, targetPositiveDimensions[currentTarget].getData()[0], targetPositiveDimensions[currentTarget].getData()[0] * ratio, targetPositiveDimensions[currentTarget].getData()[0]);
+                Matrix.rotateM(modelViewMatrixKeyframe,
+                        0,
+                        m_rotates[trans][0],
+                        m_rotates[trans][1],
+                        m_rotates[trans][2],
+                        m_rotates[trans][0]);
+
+                Matrix.scaleM(
+                        modelViewMatrixKeyframe,
+                        0,
+                        m_scales[trans][0],
+                        m_scales[trans][1],
+                        m_scales[trans][2]);
+
                 Matrix.multiplyMM(modelViewProjectionKeyframe, 0, projectionMatrix, 0, modelViewMatrixKeyframe, 0);
 
                 //cpyoon

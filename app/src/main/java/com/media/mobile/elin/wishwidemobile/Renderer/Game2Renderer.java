@@ -22,6 +22,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import com.media.mobile.elin.wishwidemobile.Activity.Game1;
 import com.media.mobile.elin.wishwidemobile.Activity.Game2;
 import com.media.mobile.elin.wishwidemobile.Activity.Game2;
 import com.media.mobile.elin.wishwidemobile.Control.SampleAppRendererControl;
@@ -37,6 +38,7 @@ import javax.microedition.khronos.opengles.GL10;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Random;
 import java.util.Vector;
 
 
@@ -80,6 +82,8 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     static int NUM_QUAD_VERTEX = 4;
     static int NUM_QUAD_INDEX = 6;
 
+    MarkerVO mMarkerVO;
+
     //Object Size
     private  final float TARGETAREA = 1f;
 
@@ -108,20 +112,19 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
     public static int mCorrectedCharacterCnt = 0;
     public static int mReadyCharacterSeq = 0;
+    private boolean mIsRecognizedMarker = false;
 
     // Needed to calculate whether a screen tap is inside the target
     Matrix44F modelViewMatrix[] = new Matrix44F[Game2.NUM_TARGETS];
     //The Object ModelViewMatrix corresponding to the target marker
-    Matrix44F m_objectsmodelViewMatrix[][]= new Matrix44F[Game2.NUM_TARGETS][5];
+    Matrix44F m_objectsmodelViewMatrix[][];
 
     //cpyoon
     //objects position setting {x,y,z}
-    private float m_translates[][]={
-            {0.3f,0.3f,0f},
-            {-0.3f,-0.3f,0f},
-            {-0.3f,0.3f,0f},
-            {0.3f,-0.3f,0f},
-            {0.0f,0.0f,0f},};
+    //좌표, 크기, 회전 설정하는 변수
+    private float m_translates[][];
+    private float m_scales[][];
+    private float m_rotates[][];
 
     private Vector<Texture> mTextures;
     private Handler mHandler;
@@ -141,11 +144,17 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         
         mActivity = activity;
         vuforiaAppSession = session;
+        mCorrectedCharacterCnt = 0;
+        mReadyCharacterSeq = 0;
+        mIsRecognizedMarker = false;
 
         // SampleAppRenderer_Video used to encapsulate the use of RenderingPrimitives setting
         // the device mode AR/VR and stereo mode
         mSampleAppRendererVideo = new SampleAppRenderer_Video(this, mActivity, Device.MODE.MODE_AR, false, 0.01f, 5f);
 
+        mMarkerVO = mActivity.mMarkerVO;
+
+        m_objectsmodelViewMatrix = new Matrix44F[Game2.NUM_TARGETS][mMarkerVO.getGameCharacterFileList().size()];
 
         for (int i = 0; i < Game2.NUM_TARGETS; i++)
             targetPositiveDimensions[i] = new Vec3F();
@@ -154,7 +163,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             modelViewMatrix[i] = new Matrix44F();
 
         for(int i=0;i<Game2.NUM_TARGETS;i++)
-            for( int j=0;j<5;j++)
+            for( int j=0;j<mMarkerVO.getGameCharacterFileList().size();j++)
                 m_objectsmodelViewMatrix[i][j] = new Matrix44F();
     }
     
@@ -284,6 +293,35 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         quadIndices = fillBuffer(quadIndicesArray);
         quadNormals = fillBuffer(quadNormalsArray);
 
+
+
+        int totalCharacterCnt = mMarkerVO.getGameCharacterFileList().size();
+
+        m_translates = new float[totalCharacterCnt][3];
+        m_scales = new float[totalCharacterCnt][3];
+        m_rotates = new float[totalCharacterCnt][3];
+
+        for (int i = 0; i < totalCharacterCnt; i++) {
+            for (int j = 0; j < 3; j++) {
+                m_translates[i][j] = randFloat(-0.5f, 0.5f);
+                m_scales[i][j] = randFloat(0.04f, 0.1f);
+                m_rotates[i][j] = randFloat(-100f, 100f);
+                Log.d(LOGTAG, "[" + i + "][" + j + "]: " +  m_translates[i][j]);
+            }
+        }
+
+
+    }
+
+
+    private float randFloat(float min, float max) {
+
+        Random rand = new Random();
+
+        float result = rand.nextFloat() * (max - min) + min;
+
+        return result;
+
     }
 
 
@@ -338,9 +376,8 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     // State should not be cached outside this method.
     public void renderFrame(State state, float[] projectionMatrix)
     {
-        MarkerVO markerVO = mActivity.mMarkerVO;
 
-        if(markerVO == null) return;
+        if(mMarkerVO == null) return;
         // Renders video background replacing Renderer.DrawVideoBackground()
         mSampleAppRendererVideo.renderVideoBackground();
         
@@ -355,7 +392,10 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         GLES20.glEnable(GLES20.GL_CULL_FACE);
         GLES20.glCullFace(GLES20.GL_BACK);
 
-        mActivity.showGame2Guide("매장 테이블 위에 있는 마커를 인식해주세요.");
+        if (!mIsRecognizedMarker) {
+            mActivity.showGame2Guide("매장 테이블 위에 있는 마커를 인식해주세요.");
+        }
+
 
         if(tappingProjectionMatrix == null)
         {
@@ -386,10 +426,10 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             //hong
             //check whether the marker is included in the target beacon
             //매장과 지금 매장이 같으면
-            if(markerVO.getMarkerVuforiaCode().equals(imageTargetName))
+            if(mMarkerVO.getMarkerVuforiaCode().equals(imageTargetName))
             {
-                characterNum = markerVO.getMarkerGameCharacterCnt();
-                touchEventCode = markerVO.getMarkerTouchEventCode().equals("R") ? 2 : 1;
+                characterNum = mMarkerVO.getGameCharacterFileList().size();
+                touchEventCode = mMarkerVO.getMarkerTouchEventCode().equals("R") ? 2 : 1;
             }
 
             //is not same
@@ -429,11 +469,12 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             //cpyoon
             //make objects
             //if you want to create an object selectively, must change for syntax
-            for(int trans=mCorrectedCharacterCnt; trans < characterNum; trans++) {
+            for(int trans=mCorrectedCharacterCnt; trans < mMarkerVO.getGameCharacterFileList().size(); trans++) {
                 // If the movie is ready to start playing or it has reached the end
                 // of playback we render the keyframe
 
-                mActivity.showGame2Guide("글자를 터치해 순서를 맞추세요.");
+                mActivity.showGame2Guide("순서대로 터치해 단어를 완성해주세요. " + (mMarkerVO.getMarkerGameCharacterCnt() - mReadyCharacterSeq) + "개 남았습니다.");
+                mIsRecognizedMarker = true;
 
                 float[] modelViewMatrixKeyframe = Tool.convertPose2GLMatrix(trackableResult.getPose()).getData();
                 float[] modelViewProjectionKeyframe = new float[16];
@@ -451,17 +492,50 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
                 //cpyoon
                 //Method to translate using m_translates
-                Matrix.translateM(modelViewMatrixKeyframe, 0, m_translates[trans][0], m_translates[trans][1], m_translates[trans][2]);
+                Matrix.translateM(
+                        modelViewMatrixKeyframe,
+                        0,
+                        m_translates[trans][0],
+                        m_translates[trans][1],
+                        m_translates[trans][2]);
 
-                Matrix.scaleM(modelViewMatrixKeyframe, 0, targetPositiveDimensions[currentTarget].getData()[0], targetPositiveDimensions[currentTarget].getData()[0] * ratio, targetPositiveDimensions[currentTarget].getData()[0]);
-                Matrix.multiplyMM(modelViewProjectionKeyframe, 0, projectionMatrix, 0, modelViewMatrixKeyframe, 0);
+                Matrix.rotateM(modelViewMatrixKeyframe,
+                        0,
+                        m_rotates[trans][0],
+                        m_rotates[trans][1],
+                        m_rotates[trans][2],
+                        m_rotates[trans][0]);
+
+                Matrix.scaleM(
+                        modelViewMatrixKeyframe,
+                        0,
+                        m_scales[trans][0],
+                        m_scales[trans][1],
+                        m_scales[trans][2]);
+
+                Matrix.multiplyMM(
+                        modelViewProjectionKeyframe,
+                        0,
+                        projectionMatrix,
+                        0,
+                        modelViewMatrixKeyframe,
+                        0);
+
+                Random random = new Random();
+//                Matrix.rotateM(
+//                        modelViewProjectionKeyframe,
+//                        0,
+//                        random.nextFloat(),
+//                        random.nextFloat(),
+//                        random.nextFloat(),
+//                        random.nextFloat());
 
                 //cpyoon
                 //get object modelviewmatrix
                 //used for touch event handling
                 Matrix44F matrix = new Matrix44F();
                 matrix.setData(modelViewMatrixKeyframe);
-                m_objectsmodelViewMatrix[currentTarget][trans] =  matrix ;
+                m_objectsmodelViewMatrix[currentTarget][trans] =  matrix;
 
                 GLES20.glUseProgram(keyframeShaderID);
 
