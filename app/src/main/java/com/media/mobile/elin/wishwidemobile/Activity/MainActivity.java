@@ -306,6 +306,13 @@ public class MainActivity extends AppCompatActivity
                 }
                 else if (url.contains(DOMAIN_NAME + HOME_PATH)) {
                     mWebView.clearHistory();
+
+                    //권한 안내 띄우기
+                    if (!mSharedPreferences.getBoolean(WHETHER_PERMISSION_GUIDE_SHOW_KEY, false)) {
+                        Log.d(TAG, "권한 안내 띄우기 시도");
+                        startActivityForResult(new Intent(MainActivity.this, PermissionGuideActivity.class), 00);
+                    }
+
                 }
 
                 progressOFF();
@@ -1044,6 +1051,13 @@ public class MainActivity extends AppCompatActivity
         JSONObject objRoot = new JSONObject();
 
         switch (requestCode) {
+            case 00:
+                if (resultCode == 1) {
+                    SharedPreferences.Editor editor = mSharedPreferences.edit();
+                    editor.putBoolean(WHETHER_PERMISSION_GUIDE_SHOW_KEY, true);
+                    editor.commit();
+                }
+                break;
             case 11:
                 if (resultCode == 1) {
                     //로그아웃
@@ -1254,7 +1268,8 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void progressSET(String message) {
+
+    private void progressSET(String message) {
         if (progressDialog == null || !progressDialog.isShowing()) {
             return;
         }
@@ -1267,7 +1282,8 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    public void progressOFF() {
+
+    private void progressOFF() {
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }

@@ -107,9 +107,12 @@
                 android:name=".Activity.Game2"
                 android:theme="@style/Theme.AppCompat.NoActionBar">
         </activity>
-        <activity android:name=".Activity.SettingActivity"
+        <activity
+                android:name=".Activity.SettingActivity"
+                android:theme="@style/Theme.AppCompat.NoActionBar">
+        </activity>
+        <activity android:name=".Activity.PermissionGuideActivity"
                   android:theme="@style/Theme.AppCompat.NoActionBar">
-
         </activity>
     </application>
 

@@ -3,8 +3,8 @@ package com.media.mobile.elin.wishwidemobile;
 public interface WebUrlConstance {
     //Webserver Domin Name
 //    public static final String DOMAIN_NAME = "http://210.89.180.127:8080/";    //실서버
-    public static final String DOMAIN_NAME = "http://192.168.0.23:8080/";  //테스트 서버1
-//    public static final String DOMAIN_NAME = "http://192.168.1.101:8080/";  //테스트 서버2
+//    public static final String DOMAIN_NAME = "http://192.168.0.23:8080/";  //테스트 서버1
+    public static final String DOMAIN_NAME = "http://192.168.1.101:8080/";  //테스트 서버2
 
     public static final String AUTO_LOGIN_PATH = "mobile/user/loginAuto";
     public static final String VISITED_STORE_LIST_PATH = "mobile/store/listVisitedStore";
