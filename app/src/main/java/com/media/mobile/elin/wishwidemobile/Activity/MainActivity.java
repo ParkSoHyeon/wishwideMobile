@@ -2,6 +2,7 @@ package com.media.mobile.elin.wishwidemobile.Activity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -10,6 +11,8 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -18,9 +21,10 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -28,23 +32,18 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AppCompatDialog;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.webkit.*;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-import com.gun0912.tedpermission.PermissionListener;
-import com.gun0912.tedpermission.TedPermission;
+import android.widget.*;
+import com.media.mobile.elin.wishwidemobile.*;
 import com.media.mobile.elin.wishwidemobile.Model.Beacon_Marker;
 import com.media.mobile.elin.wishwidemobile.Model.WideCustomerVO;
-import com.media.mobile.elin.wishwidemobile.R;
-import com.media.mobile.elin.wishwidemobile.SharedPreferencesConstant;
-import com.media.mobile.elin.wishwidemobile.WebUrlConstance;
 import com.wizturn.sdk.central.Central;
 import com.wizturn.sdk.central.CentralManager;
 import com.wizturn.sdk.peripheral.Peripheral;
@@ -59,10 +58,15 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
+
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-        WebUrlConstance, SharedPreferencesConstant, Button.OnClickListener {
+        WebUrlConstance,
+        SharedPreferencesConstant,
+        PermissionConstant,
+        Button.OnClickListener {
     private static final String TAG = "MainActivity";
 
     private final Context mContext = this;
@@ -103,21 +107,9 @@ public class MainActivity extends AppCompatActivity
     private BeaconScanResult beaconScanResult = null;
     private CentralManager centralManager;
 
-    private final PermissionListener mLocationPermissionListener = new PermissionListener() {
-        @Override
-        public void onPermissionGranted() {
-            Log.d(TAG, "권한 허용");
 
-            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 100, mLocationListener);
-            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 100, mLocationListener);
-        }
+    private AppCompatDialog progressDialog;
 
-        @Override
-        public void onPermissionDenied(ArrayList<String> deniedPermissions) {
-            Log.d(TAG, "권한 거부");
-            mWebView.loadUrl(DOMAIN_NAME + HOME_PATH + "?lat=0&lng=0");
-        }
-    };
 
     @SuppressLint("JavascriptInterface")
     @Override
@@ -172,7 +164,15 @@ public class MainActivity extends AppCompatActivity
         mARFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mWebView.loadUrl("javascript:callGameSetting()");
+                List<String> deniedPermissions = getDeniedPermissions(Manifest.permission.CAMERA);
+
+                if (deniedPermissions.size() > 0) {
+                    requestPermission(deniedPermissions.toArray(new String[deniedPermissions.size()]), GAME_START_PERMISSION);
+                }
+                else {
+                    mWebView.loadUrl("javascript:callGameSetting()");
+                }
+
 
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
@@ -186,6 +186,7 @@ public class MainActivity extends AppCompatActivity
                 Log.d(TAG, "위치 확인:" + location.getLatitude() + ", " + location.getLongitude());
 
                 mWebView.loadUrl(DOMAIN_NAME + HOME_PATH + "?lat=" + location.getLatitude() + "&lng=" + location.getLongitude());
+                progressOFF();
                 requestRemoveUpdate();
 
 //                new WebGET().execute(location.getLatitude(),location.getLongitude());
@@ -262,20 +263,39 @@ public class MainActivity extends AppCompatActivity
                 mLlTabs.setVisibility(View.VISIBLE);
                 mActionBarDrawerToggle.setDrawerIndicatorEnabled(true);
 
+
                 switch (url) {
                     case DOMAIN_NAME:   //로그인
                         mActionBarDrawerToggle.setDrawerIndicatorEnabled(false);    //menu(navigation) gone setting
                         mLlTabs.setVisibility(View.GONE);
-//                        mTabLayout.setVisibility(View.GONE);    //tab menu gone setting
                         break;
-
                     case DOMAIN_NAME + VISITED_STORE_LIST_PATH: //방문한 매장
+                        mBtn2.setTextColor(Color.BLUE);
                         break;
-
                     case DOMAIN_NAME + STORE_DETAIL_PATH:   //매장상세
                         mARFloatingActionButton.setVisibility(View.VISIBLE);
                         break;
-
+                    case DOMAIN_NAME + RECEIVED_GIFT_LIST_PATH:
+                    case DOMAIN_NAME + SEND_GIFT_LIST_PATH:
+                        mBtn1.setTextColor(Color.BLACK);
+                        mBtn2.setTextColor(Color.BLACK);
+                        mBtn3.setTextColor(Color.BLACK);
+                        mBtn4.setTextColor(Color.BLACK);
+                        mBtn5.setTextColor(Color.BLACK);
+                        break;
+                    case COUPON_LIST_PATH:
+                        mBtn1.setTextColor(Color.BLACK);
+                        mBtn2.setTextColor(Color.BLACK);
+                        mBtn3.setTextColor(Color.BLACK);
+                        mBtn4.setTextColor(Color.BLACK);
+                        mBtn5.setTextColor(Color.BLUE);
+                        break;
+                    case STAMP_AND_POINT_LIST_PATH:
+                        mBtn1.setTextColor(Color.BLACK);
+                        mBtn2.setTextColor(Color.BLACK);
+                        mBtn3.setTextColor(Color.BLACK);
+                        mBtn4.setTextColor(Color.BLUE);
+                        mBtn5.setTextColor(Color.BLACK);
                     default:
                         break;
                 }
@@ -287,6 +307,8 @@ public class MainActivity extends AppCompatActivity
                 else if (url.contains(DOMAIN_NAME + HOME_PATH)) {
                     mWebView.clearHistory();
                 }
+
+                progressOFF();
             }
 
         });
@@ -299,8 +321,10 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+
         String responseCode = getIntent().getStringExtra("responseCode");
         mSharedPreferences = this.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE);
+
 
         if (responseCode.equals("AUTO")) {
             JSONObject objRoot = new JSONObject();
@@ -403,6 +427,7 @@ public class MainActivity extends AppCompatActivity
                 mWebView.loadUrl(DOMAIN_NAME + COUPON_LIST_PATH);
                 break;
         }
+        progressON(this, "로딩 중...");
     }
 
 
@@ -410,9 +435,9 @@ public class MainActivity extends AppCompatActivity
     private class WebAndAppBridge {
         private static final String TAG = "WebAndAppBridge";
 
-        private static final String REQUEST_EVENT = "request";
-        private static final String PERMISSION_DENIED_EVENT = "denied";
-        private static final String PERMISSION_GRANTED_EVENT = "granted";
+        public static final String REQUEST_EVENT = "request";
+        public static final String PERMISSION_DENIED_EVENT = "denied";
+        public static final String PERMISSION_GRANTED_EVENT = "granted";
 
         private final WebView mWebView;
         private int mGiftProductNo;
@@ -424,43 +449,45 @@ public class MainActivity extends AppCompatActivity
             mWebView = webView;
         }
 
-        final PermissionListener contactPermissionListener = new PermissionListener() {
-            @Override
-            public void onPermissionGranted() {
-                Log.d(TAG, "권한 허용");
-
-                getAndroidContactList(PERMISSION_GRANTED_EVENT, mGiftProductNo);
-            }
-
-            @Override
-            public void onPermissionDenied(ArrayList<String> deniedPermissions) {
-                Log.d(TAG, "권한 거부");
-
-                getAndroidContactList(PERMISSION_DENIED_EVENT, mGiftProductNo);
-            }
-        };
 
         @JavascriptInterface
         public void callStore(String tel) {
             startActivity(new Intent("android.intent.action.CALL", Uri.parse("tel:" + tel)));
         }
 
+
         @JavascriptInterface
         public void callGameSetting(String managerId) {
             new GameSettingTask(managerId).execute();
         }
 
+
         @JavascriptInterface
         public void getAndroidContactList(String event, int giftProductNo) {
-            Log.d(TAG, "연락처 가져오기");
+//            Log.d(TAG, "연락처 가져오기");
 
             JSONObject objRoot = new JSONObject();
 
             try {
                 switch (event) {
                     case REQUEST_EVENT:
-                        requestPermission(contactPermissionListener, Manifest.permission.READ_CONTACTS);
+                        List<String> deniedPermissions = getDeniedPermissions(Manifest.permission.READ_CONTACTS);
+
                         mGiftProductNo = giftProductNo;
+
+                        if (deniedPermissions.size() > 0) {
+                            requestPermission(deniedPermissions.toArray(new String[deniedPermissions.size()]), CONTACT_PERMISSION);
+                        }
+                        else {
+                            mWebView.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    getAndroidContactList(PERMISSION_GRANTED_EVENT, mGiftProductNo);
+                                }
+                            });
+
+                        }
+
                         objRoot.put("responseCode", "HOLD");
                         break;
                     case PERMISSION_GRANTED_EVENT:
@@ -470,6 +497,7 @@ public class MainActivity extends AppCompatActivity
 
                         Log.d(TAG, "byte: " + EncodingUtils.getBytes(objRoot.toString(), "UTF-8"));
                         Log.d(TAG, "string: " + objRoot.toString());
+
                         mWebView.postUrl(DOMAIN_NAME + CONTACT_LIST_PATH, EncodingUtils.getBytes(objRoot.toString(), "UTF-8"));
                         break;
                     case PERMISSION_DENIED_EVENT:
@@ -516,9 +544,9 @@ public class MainActivity extends AppCompatActivity
                     String name = cursor.getString(nameIdx);
                     String phoneNumber = cursor.getString(phoneNumberIdx);
 
-                    Log.d(TAG, idContact);
-                    Log.d(TAG, name);
-                    Log.d(TAG, phoneNumber);
+//                    Log.d(TAG, idContact);
+//                    Log.d(TAG, name);
+//                    Log.d(TAG, phoneNumber);
 
                     objContact.put("contactId", idContact);
                     objContact.put("contactName", name);
@@ -558,6 +586,11 @@ public class MainActivity extends AppCompatActivity
 
                 SharedPreferences.Editor editor = mSharedPreferences.edit();
                 editor.putString(WIDE_CUSTOMER_PHONE_KEY, String.valueOf("0" + objRoot.optInt("wideCustomerPhone")));
+                editor.putInt(WIDE_CUSTOMER_NO_KEY, objRoot.optInt("wideCustomerNo"));
+                editor.putString(WIDE_CUSTOMER_BIRTH_KEY, objRoot.optString("wideCustomerBirth"));
+                editor.putString(WIDE_CUSTOMER_SEX_KEY, objRoot.optString("wideCustomerSex"));
+                editor.putString(WIDE_CUSTOMER_EMAIL_KEY, objRoot.optString("wideCustomerEmail"));
+                editor.putString(WIDE_CUSTOMER_NAME_KEY, objRoot.optString("wideCustomerName"));
                 editor.commit();
 
                 mTvProfile.setText(wideCustomerVO.getWideCustomerName());
@@ -634,7 +667,7 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 //        TabLayout.Tab tab;
-
+        progressON(this, "로딩 중...");
         switch (id) {
             case R.id.nav_visited_store:    //방문한매장
                 mBtn2.performClick();
@@ -679,6 +712,7 @@ public class MainActivity extends AppCompatActivity
                 break;
             case R.id.nav_setting:  //환경설정
                 //setting activity 이동
+                startActivityForResult(new Intent(MainActivity.this, SettingActivity.class), 11);
                 break;
             default:
                 break;
@@ -700,11 +734,18 @@ public class MainActivity extends AppCompatActivity
 
     //위치 서비스 요청
     private void requestLocationUpdate() {
-        int locationPermissionCheck1 = ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION);
-        int locationPermissionCheck2 = ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_COARSE_LOCATION);
+        progressON(this, "로딩 중...");
 
-        if (locationPermissionCheck1 == PackageManager.PERMISSION_GRANTED && locationPermissionCheck2 == PackageManager.PERMISSION_GRANTED) {
+        List<String> deniedPermissions = getDeniedPermissions(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION);
+
+
+        if (deniedPermissions.size() > 0) {
             //위치 권한 있음
+            requestPermission(deniedPermissions.toArray(new String[deniedPermissions.size()]), ROCATION_FIND_PERMISSION);
+        }
+        else {
             if (mLocationManager == null) {
                 mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             }
@@ -733,8 +774,6 @@ public class MainActivity extends AppCompatActivity
 
             mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 100, mLocationListener);
             mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 100, mLocationListener);
-        } else {
-            requestPermission(mLocationPermissionListener, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_CHECKIN_PROPERTIES);
         }
     }
 
@@ -745,14 +784,80 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    //권한 허용 안 된 리스트 가져오기
+    private List<String> getDeniedPermissions(String... permissions) {
+        List<String> deniedPermissions = new ArrayList<>();
+
+        for (String permission : permissions) {
+            boolean isDeniedPermission = ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
+            Log.d(TAG, permission + "의 권한 허용 여부: " + isDeniedPermission);
+
+            if (!isDeniedPermission) {
+                //권한 없음
+                deniedPermissions.add(permission);
+            }
+        }
+
+        return deniedPermissions;
+    }
+
+
     //권한 요청
-    private void requestPermission(PermissionListener permissionListener, String... permissions) {
-        TedPermission.with(this)
-                .setPermissionListener(permissionListener)
-//                .setRationaleMessage("구글 로그인을 하기 위해서는 주소록 접근 권한이 필요해요")
-                .setDeniedMessage("거부하신 권한은 [설정] > [권한] 에서 권한을 허용할 수 있어요.")
-                .setPermissions(permissions)
-                .check();
+    private void requestPermission(String[] deniedPermissions, int requestCode) {
+        Log.d(TAG, "권한 요청: " + deniedPermissions.length);
+        ActivityCompat.requestPermissions(
+                this,
+                deniedPermissions,
+                requestCode);
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case STORAGE_PERMISSION:
+                //저장소
+                break;
+            case ROCATION_FIND_PERMISSION:
+                //위치 찾기
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 100, mLocationListener);
+                    mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 100, mLocationListener);
+                }
+                else {
+                    mWebView.loadUrl(DOMAIN_NAME + HOME_PATH + "?lat=0&lng=0");
+                }
+                break;
+            case NEARBY_BEACON_FIND_PERMISSION:
+                //위치 찾기 + 주변 비콘 찾기
+                break;
+            case CONTACT_PERMISSION:
+                //전화부
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    mWebAndAppBridge.getAndroidContactList(mWebAndAppBridge.PERMISSION_GRANTED_EVENT, mWebAndAppBridge.mGiftProductNo);
+                }
+                else {
+                    mWebAndAppBridge.getAndroidContactList(mWebAndAppBridge.PERMISSION_DENIED_EVENT, mWebAndAppBridge.mGiftProductNo);
+                }
+                break;
+            case CALL_PERMISSION:
+                //전화
+
+                break;
+            case GAME_START_PERMISSION:
+                //카메라, 저장소
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    mWebView.loadUrl("javascript:callGameSetting()");
+                }
+                break;
+            default:
+                break;
+        }
     }
 
 
@@ -939,6 +1044,19 @@ public class MainActivity extends AppCompatActivity
         JSONObject objRoot = new JSONObject();
 
         switch (requestCode) {
+            case 11:
+                if (resultCode == 1) {
+                    //로그아웃
+                    Log.d(TAG, "로그아웃 시도");
+                    mWebView.loadUrl(DOMAIN_NAME);
+                    mWebView.clearHistory();
+                }
+                else if (resultCode == 2) {
+                    //설정 변경
+                    Log.d(TAG, "설정 변경");
+
+                }
+                break;
             case 7:
                 Log.d(TAG, "게임1 종료");
 
@@ -1093,6 +1211,65 @@ public class MainActivity extends AppCompatActivity
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+
+    public void progressON(Activity activity, String message) {
+
+        Log.d(TAG, "액티비티 nul??" + activity);
+
+        if (activity == null || activity.isFinishing()) {
+            Log.d(TAG, "액티비티 return");
+            return;
+        }
+
+
+        if (progressDialog != null && progressDialog.isShowing()) {
+            Log.d(TAG, "progressDialog is not null");
+            progressSET(message);
+        } else {
+            Log.d(TAG, "progressDialog is null");
+            progressDialog = new AppCompatDialog(activity);
+            progressDialog.setCancelable(false);
+            progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+            progressDialog.setContentView(R.layout.progress_loading);
+            progressDialog.show();
+
+        }
+
+
+        final ImageView img_loading_frame = (ImageView) progressDialog.findViewById(R.id.iv_frame_loading);
+        final AnimationDrawable frameAnimation = (AnimationDrawable) img_loading_frame.getBackground();
+        img_loading_frame.post(new Runnable() {
+            @Override
+            public void run() {
+                frameAnimation.start();
+            }
+        });
+
+        TextView tv_progress_message = (TextView) progressDialog.findViewById(R.id.tv_progress_message);
+        if (!TextUtils.isEmpty(message)) {
+            tv_progress_message.setText(message);
+        }
+    }
+
+    public void progressSET(String message) {
+        if (progressDialog == null || !progressDialog.isShowing()) {
+            return;
+        }
+
+
+        TextView tv_progress_message = (TextView) progressDialog.findViewById(R.id.tv_progress_message);
+        if (!TextUtils.isEmpty(message)) {
+            tv_progress_message.setText(message);
+        }
+
+    }
+
+    public void progressOFF() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
         }
     }
 }
