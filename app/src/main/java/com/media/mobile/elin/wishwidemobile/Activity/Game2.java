@@ -22,6 +22,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.*;
@@ -34,10 +35,7 @@ import android.widget.*;
 import com.media.mobile.elin.wishwidemobile.Control.SampleApplicationControl_Video;
 import com.media.mobile.elin.wishwidemobile.FileDownloader;
 import com.media.mobile.elin.wishwidemobile.FileFetcher;
-import com.media.mobile.elin.wishwidemobile.Model.GameBenefitVO;
-import com.media.mobile.elin.wishwidemobile.Model.GameCharacterFileVO;
-import com.media.mobile.elin.wishwidemobile.Model.MarkerVO;
-import com.media.mobile.elin.wishwidemobile.Model.MembershipCustomerVO;
+import com.media.mobile.elin.wishwidemobile.Model.*;
 import com.media.mobile.elin.wishwidemobile.R;
 import com.media.mobile.elin.wishwidemobile.Renderer.Game2Renderer;
 import com.media.mobile.elin.wishwidemobile.SampleAppMenu.SampleAppMenuInterface;
@@ -56,7 +54,8 @@ import java.util.*;
 
 // The AR activity for the VideoPlayback sample.
 public class Game2 extends Activity implements
-        SampleApplicationControl_Video, SampleAppMenuInterface {
+        SampleApplicationControl_Video,
+        SampleAppMenuInterface, Animation.AnimationListener {
 
     private static final String LOGTAG = "Game2";
 
@@ -64,8 +63,12 @@ public class Game2 extends Activity implements
 
     Activity mActivity;
 
+    private Animation mAnimBlink;
+
     private View mGame2ContentView;
     private LinearLayout mLlCorrectView;
+    private FrameLayout mFlEffectView;
+    private ImageView mImgEffectView;
     private TextView mTvGame2Guide;
 
     // Helpers to detect events such as double tapping:
@@ -77,7 +80,7 @@ public class Game2 extends Activity implements
     //cpyoon
     //the Target markers:
     public static final int NUM_TARGETS = 2;
-    public static final int STONES = 0;
+//    public static final int STONES = 0;
     public static final int CHIPS = 1;
     public static final String TARGETNAME[] = {"Stone", "Chips"};
 
@@ -111,7 +114,7 @@ public class Game2 extends Activity implements
 
     boolean mIsInitialized = false;
 
-    public MarkerVO mMarkerVO;
+    public GameSettingVO mGameSettingVO;
     public MembershipCustomerVO membershipCustomerVO;
     public List<String> mCharacterSeq;
 
@@ -128,7 +131,7 @@ public class Game2 extends Activity implements
         super.onCreate(savedInstanceState);
 
         //GameSetting 위한 정보 parsing
-        mMarkerVO = parseJsonGameSetting(getIntent().getStringExtra("gameSetting"));
+        mGameSettingVO = parseJsonGameSetting(getIntent().getStringExtra("gameSetting"));
         membershipCustomerVO = parseJsonMembershipCustomer(getIntent().getStringExtra("membershipCustomerVO"));
 
         Handler responseHandler = new Handler();
@@ -136,7 +139,7 @@ public class Game2 extends Activity implements
         mFileDownloader.setFileDownloaderListener(new FileDownloader.FileDownloaderListener<GameCharacterFileVO>() {
             @Override
             public void onFileDownloaded() {
-                if (mCompletedFileCnt == mMarkerVO.getGameCharacterFileList().size()) {
+                if (mCompletedFileCnt == mGameSettingVO.getGameCharacterFileList().size()) {
                     initializeAR();
 
                     mCompletedFileCnt = 0;
@@ -153,6 +156,8 @@ public class Game2 extends Activity implements
         vuforiaAppSession = new SampleApplicationSession_Video(this);
         mToast = Toast.makeText(mContext, "null", Toast.LENGTH_SHORT);
         mActivity = this;
+
+
 
         startLoadingAnimation();
 
@@ -193,16 +198,12 @@ public class Game2 extends Activity implements
             // Handle the single tap
             public boolean onSingleTapConfirmed(MotionEvent e) {
                 //touch event must have beacon target
-                if (mMarkerVO != null) {
-                    if (mMarkerVO.getMarkerTouchEventCode().equals("R")) {
+                if (mGameSettingVO != null) {
+                    if (true) {
                         //cpyoon
                         // Verify that the tap happened inside the object
                         if (mRenderer != null) {
-                            int target = -1;
-                            if (mMarkerVO.getMarkerVuforiaCode().equals("stones"))
-                                target = Game2.STONES;
-                            else
-                                target = Game2.CHIPS;
+                            int target = 0;
 
                             int result = mRenderer.isTapOnScreenInsideTarget(target, e.getX(), e.getY());
 
@@ -210,40 +211,78 @@ public class Game2 extends Activity implements
 //                                mToast.setText("select target : " + TARGETNAME[target] + " objects : " + result);
 //                                mToast.show();
 
-                                int gameCharacterNum = mMarkerVO.getMarkerGameCharacterCnt();
+                                int gameCharacterNum = mGameSettingVO.getBenefitCnt();
 
                                 if (Game2Renderer.mReadyCharacterSeq == result) {
+                                    mImgEffectView.setBackgroundResource(R.drawable.sample_correct);
+                                    mFlEffectView.setVisibility(View.VISIBLE);
+
+                                    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Log.d(LOGTAG, "원상태로");
+                                            mFlEffectView.setVisibility(View.GONE);
+                                        }
+                                    }, 300);
+
                                     ImageView image = new ImageView(mContext);
                                     image.setLayoutParams(new android.view.ViewGroup.LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.MATCH_PARENT));
                                     image.setMaxHeight(60);
-                                    image.setMaxWidth(45);
+                                    image.setMaxWidth(55);
                                     image.setImageBitmap(BitmapFactory.decodeFile(mCharacterSeq.get(Game2Renderer.mReadyCharacterSeq)));
 
 
                                     // Adds the view to the layout
                                     mLlCorrectView.addView(image);
 
-
                                     Game2Renderer.mReadyCharacterSeq++;
                                     Game2Renderer.mCorrectedCharacterCnt++;
 
+
                                     if (Game2Renderer.mCorrectedCharacterCnt == gameCharacterNum) {
                                         //혜택 보여주기
-
-                                        GameBenefitVO gameBenefitVO = mMarkerVO.getGameBenefitList().get(0);
-                                        if (gameBenefitVO.getGameBenefitTypeCode().equals("P")) {
+                                        GameBenefitVO gameBenefitVO = mGameSettingVO.getGameBenefitList().get(0);
+                                        if (gameBenefitVO.getCouponDiscountTypeCode().equals("P")) {
                                             showBenefitGainMessage(
-                                                    gameBenefitVO.getGameBenefitTypeCode(),
-                                                    gameBenefitVO.getGameBenefitTypeValue(),
-                                                    "축하합니다!\n" + gameBenefitVO.getGameBenefitTypeValue() + "p를 획득하셨습니다.\n내일 다시 도전해주세요.");
+                                                    gameBenefitVO.getCouponDiscountTypeCode(),
+                                                    "축하합니다!\n" + gameBenefitVO.getCouponDiscountValue() + "p를 획득하셨습니다.\n내일 다시 도전해주세요.",
+                                                    String.valueOf(gameBenefitVO.getCouponNo()),
+                                                    String.valueOf(gameBenefitVO.getCouponDiscountValue()));
+                                        }
+                                        else if (gameBenefitVO.getCouponDiscountTypeCode().equals("S")) {
+                                            showBenefitGainMessage(
+                                                    gameBenefitVO.getCouponDiscountTypeCode(),
+                                                    "축하합니다!\n도장 " + gameBenefitVO.getCouponDiscountValue() + "개를 획득하셨습니다.\n내일 다시 도전해주세요.",
+                                                    String.valueOf(gameBenefitVO.getCouponNo()),
+                                                    String.valueOf(gameBenefitVO.getCouponDiscountValue()));
                                         }
                                         else {
+                                            String msg = "";
+                                            if (gameBenefitVO.getCouponDiscountTypeCode().equals("DCP")) {
+                                                msg = "축하합니다!\n" + gameBenefitVO.getProductTitle() + " " + gameBenefitVO.getCouponDiscountValue() + "원 할인쿠폰을 획득하셨습니다.\n내일 다시 도전해주세요.";
+                                            }
+                                            else if (gameBenefitVO.getCouponDiscountTypeCode().equals("DCR")) {
+                                                msg = "축하합니다!\n" + gameBenefitVO.getProductTitle() + " " + gameBenefitVO.getCouponDiscountValue() + "% 할인쿠폰을 획득하셨습니다.\n내일 다시 도전해주세요.";
+                                            }
                                             showBenefitGainMessage(
-                                                    gameBenefitVO.getGameBenefitTypeCode(),
-                                                    gameBenefitVO.getGameBenefitTypeValue(),
-                                                    "축하합니다!\n" + gameBenefitVO.getGameBenefitTitle() + "를 획득하셨습니다.\n내일 다시 도전해주세요.");
+                                                    gameBenefitVO.getCouponDiscountTypeCode(),
+                                                    msg,
+                                                    String.valueOf(gameBenefitVO.getCouponNo()));
                                         }
                                     }
+                                }
+                                else {
+                                    mImgEffectView.setBackgroundResource(R.drawable.sample_incorrect);
+                                    mFlEffectView.setVisibility(View.VISIBLE);
+
+                                    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Log.d(LOGTAG, "원상태로");
+                                            mFlEffectView.setVisibility(View.GONE);
+                                        }
+                                    }, 300);
+//                                    mRlContentView.setAnimation(mAnimBlink);
                                 }
                                 return true;
                             }
@@ -255,6 +294,9 @@ public class Game2 extends Activity implements
 
         });
 
+        mAnimBlink = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.blink);
+        mAnimBlink.setAnimationListener(this);
+
         ViewGroup.LayoutParams layoutParamsControl = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         LayoutInflater inflater = getLayoutInflater();
         mGame2ContentView = inflater.inflate(R.layout.content_game2, null);
@@ -264,6 +306,8 @@ public class Game2 extends Activity implements
 
         mTvGame2Guide = (TextView) mGame2ContentView.findViewById(R.id.tv_game2_guide);
         mLlCorrectView = (LinearLayout) mGame2ContentView.findViewById(R.id.ll_correct_view);
+        mFlEffectView = (FrameLayout) mGame2ContentView.findViewById(R.id.fl_effect_view);
+        mImgEffectView = (ImageView) mGame2ContentView.findViewById(R.id.img_effect);
 
         vuforiaAppSession
                 .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -316,7 +360,7 @@ public class Game2 extends Activity implements
     }
 
 
-    private void showBenefitGainMessage(final String type, final int value, final String msg) {
+    private void showBenefitGainMessage(final String type, final String msg, final String... couponInfo) {
         //축하합니다!\nㅌ를 획득하셨습니다.\n내일 다시 도전해주세요.
         //꽝!\n다시 도전해주세요.
         runOnUiThread(new Runnable() {
@@ -337,11 +381,10 @@ public class Game2 extends Activity implements
                                 new DialogInterface.OnClickListener() {
                                     public void onClick(DialogInterface dialog, int id) {
                                         Intent intent = new Intent();
-                                        intent.putExtra("wideManagerId", mMarkerVO.getWideManagerId());
-                                        intent.putExtra("wwNo", mMarkerVO.getWwNo());
-                                        intent.putExtra("markerNo", mMarkerVO.getMarkerNo());
-                                        intent.putExtra("gameBenefitTypeCode", type);
-                                        intent.putExtra("gameBenefitTypeValue", value);
+                                        intent.putExtra("wideManagerId", mGameSettingVO.getWideManagerId());
+                                        intent.putExtra("couponDiscountTypeCode", type);
+                                        intent.putExtra("couponNo", couponInfo[0]);
+                                        intent.putExtra("couponDiscountTypeValue", couponInfo[1]);
                                         intent.putExtra("membershipCustomerNo", membershipCustomerVO.getMembershipCustomerNo());
 
                                         setResult(1, intent);
@@ -358,38 +401,61 @@ public class Game2 extends Activity implements
     }
 
 
-    private MarkerVO parseJsonGameSetting(String jsonData) {
-        MarkerVO markerVO = new MarkerVO();
+    private GameSettingVO parseJsonGameSetting(String jsonData) {
+        GameSettingVO gameSettingVO = new GameSettingVO();
 
         try {
             JSONObject gameSetting = new JSONObject(jsonData);
 
-            markerVO.setMarkerNo(gameSetting.optInt("markerNo"));
-            markerVO.setWwNo(gameSetting.optInt("wwNo"));
-            markerVO.setWideManagerId(gameSetting.optString("wideManagerId"));
-            markerVO.setMarkerGameCharacterCnt(gameSetting.optInt("markerGameCharacterCnt"));
-            markerVO.setMarkerGameTypeCode(gameSetting.optString("markerGameTypeCode"));
-            markerVO.setMarkerTouchEventCode(gameSetting.optString("markerTouchEventCode"));
-            markerVO.setMarkerVuforiaCode(gameSetting.optString("markerVuforiaCode"));
+            gameSettingVO.setArGameNo(gameSetting.optInt("arGameNo"));
+            gameSettingVO.setMarkerCnt(gameSetting.optInt("markerCnt"));
+            gameSettingVO.setBenefitCnt(gameSetting.optInt("benefitCnt"));
+            gameSettingVO.setTotalCharacterCnt(gameSetting.optInt("totalCharacterCnt"));
+            gameSettingVO.setWideManagerId(gameSetting.optString("wideManagerId"));
+            gameSettingVO.setMarkerName(gameSetting.optString("markerName"));
+            gameSettingVO.setMarkerGameTypeCode(gameSetting.optString("markerGameTypeCode"));
+            gameSettingVO.setMarkerGameValue(gameSetting.optString("markerGameValue"));
+            gameSettingVO.setWideManagerId(gameSetting.optString("wideManagerId"));
+            gameSettingVO.setMarkerDatDbFile(gameSetting.optString("markerDatDbFile"));
+            gameSettingVO.setMarkerDatFileDataType(gameSetting.optString("markerDatFileDataType"));
+            gameSettingVO.setMarkerDatFileName(gameSetting.optString("markerDatFileName"));
+            gameSettingVO.setMarkerDatFileSize(gameSetting.optInt("markerDatFileSize"));
+            gameSettingVO.setMarkerDatFileUrl(gameSetting.optString("markerDatFileUrl"));
+            gameSettingVO.setMarkerXmlDbFile(gameSetting.optString("markerXmlDbFile"));
+            gameSettingVO.setMarkerXmlFileDataType(gameSetting.optString("markerXmlFileDataType"));
+            gameSettingVO.setMarkerXmlFileName(gameSetting.optString("markerXmlFileName"));
+            gameSettingVO.setMarkerXmlFileSize(gameSetting.optInt("markerXmlFileSize"));
+            gameSettingVO.setMarkerXmlFileUrl(gameSetting.optString("markerXmlFileUrl"));
 
             List<GameBenefitVO> gameBenefitList = new ArrayList<>();
             List<GameCharacterFileVO> gameCharacterFileList = new ArrayList<>();
+            List<MarkerVO> markerList = new ArrayList<>();
             JSONArray arrGameBenefit = gameSetting.getJSONArray("gameBenefitList");
             JSONArray arrGameCharacterFile = gameSetting.getJSONArray("gameCharacterFileList");
+            JSONArray arrMarker = gameSetting.getJSONArray("markerList");
+
+            for (int i = 0; i < arrMarker.length(); i++) {
+                JSONObject objGameBenefit = arrMarker.getJSONObject(i);
+                MarkerVO markerVO = new MarkerVO();
+
+                markerVO.setMarkerId(objGameBenefit.getString("markerId"));
+
+                markerList.add(markerVO);
+            }
 
             for (int i = 0; i < arrGameBenefit.length(); i++) {
                 JSONObject objGameBenefit = arrGameBenefit.getJSONObject(i);
                 GameBenefitVO gameBenefitVO = new GameBenefitVO();
 
-                gameBenefitVO.setGameBenefitNo(objGameBenefit.getInt("gameBenefitNo"));
-                gameBenefitVO.setMarkerNo(objGameBenefit.getInt("markerNo"));
-                gameBenefitVO.setWwNo(objGameBenefit.getInt("wwNo"));
+                gameBenefitVO.setCouponNo(objGameBenefit.getInt("couponNo"));
+                gameBenefitVO.setCouponDeadLine(objGameBenefit.getInt("couponDeadLine"));
+                gameBenefitVO.setCouponMemberSendTypeCode(objGameBenefit.optString("couponMemberSendTypeCode"));
                 gameBenefitVO.setWideManagerId(objGameBenefit.getString("wideManagerId"));
-                gameBenefitVO.setMarkerGameTypeCode(objGameBenefit.getString("markerGameTypeCode"));
-                gameBenefitVO.setGameBenefitGradeTypeCode(objGameBenefit.getString("gameBenefitGradeTypeCode"));
-                gameBenefitVO.setGameBenefitTypeCode(objGameBenefit.getString("gameBenefitTypeCode"));
-                gameBenefitVO.setGameBenefitTypeValue(objGameBenefit.getInt("gameBenefitTypeValue"));
-                gameBenefitVO.setGameBenefitTitle(objGameBenefit.getString("gameBenefitTitle"));
+                gameBenefitVO.setCouponTitle(objGameBenefit.getString("couponTitle"));
+                gameBenefitVO.setCouponDiscountTypeCode(objGameBenefit.getString("couponDiscountTypeCode"));
+                gameBenefitVO.setCouponDiscountValue(objGameBenefit.optInt("couponDiscountValue"));
+                gameBenefitVO.setCouponPublishedCode(objGameBenefit.getInt("couponPublishedCode"));
+                gameBenefitVO.setProductTitle(objGameBenefit.getString("productTitle"));
 
                 gameBenefitList.add(gameBenefitVO);
             }
@@ -399,8 +465,6 @@ public class Game2 extends Activity implements
                 GameCharacterFileVO gameCharacterFileVO = new GameCharacterFileVO();
 
                 gameCharacterFileVO.setCharacterFileNo(objGameBenefit.getInt("characterFileNo"));
-                gameCharacterFileVO.setMarkerNo(objGameBenefit.getInt("markerNo"));
-                gameCharacterFileVO.setWideManagerId(objGameBenefit.getString("wideManagerId"));
                 gameCharacterFileVO.setMarkerGameTypeCode(objGameBenefit.getString("markerGameTypeCode"));
                 gameCharacterFileVO.setCharacterFileDataType(objGameBenefit.getString("characterFileDataType"));
                 gameCharacterFileVO.setCharacterFileSeq(objGameBenefit.getInt("characterFileSeq"));
@@ -408,20 +472,19 @@ public class Game2 extends Activity implements
                 gameCharacterFileVO.setCharacterFileName(objGameBenefit.getString("characterFileName"));
                 gameCharacterFileVO.setCharacterDbFile(objGameBenefit.getString("characterDbFile"));
                 gameCharacterFileVO.setCharacterFileUrl(objGameBenefit.getString("characterFileUrl"));
-                gameCharacterFileVO.setCharacterFileThumbnailName(objGameBenefit.getString("characterFileThumbnailName"));
-                gameCharacterFileVO.setCharacterFileThumbnailUrl(objGameBenefit.getString("characterFileThumbnailUrl"));
-                gameCharacterFileVO.setCharacterFileSession(objGameBenefit.getString("characterFileSession"));
+                gameCharacterFileVO.setCharacterFileValue(objGameBenefit.getString("characterFileValue"));
 
                 gameCharacterFileList.add(gameCharacterFileVO);
             }
 
-            markerVO.setGameBenefitList(gameBenefitList);
-            markerVO.setGameCharacterFileList(gameCharacterFileList);
+            gameSettingVO.setGameBenefitList(gameBenefitList);
+            gameSettingVO.setGameCharacterFileList(gameCharacterFileList);
+            gameSettingVO.setMarkerList(markerList);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
-        return markerVO;
+        return gameSettingVO;
     }
 
 
@@ -437,6 +500,7 @@ public class Game2 extends Activity implements
             membershipCustomerVO.setMembershipCustomerBenefitType(gameSetting.optString("membershipCustomerBenefitType"));
             membershipCustomerVO.setMembershipCustomerBenefitValue(gameSetting.optInt("membershipCustomerBenefitValue"));
             membershipCustomerVO.setMembershipCustomerGrade(gameSetting.optString("membershipCustomerGrade"));
+            membershipCustomerVO.setNewMembershipCustomerCode(gameSetting.optInt("newMembershipCustomerCode"));
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -447,13 +511,15 @@ public class Game2 extends Activity implements
 
 
     private void downloadTextures() {
-        List<GameCharacterFileVO> gameCharacterFileList = mMarkerVO.getGameCharacterFileList();
+        List<GameCharacterFileVO> gameCharacterFileList = mGameSettingVO.getGameCharacterFileList();
 
         for (GameCharacterFileVO vo : gameCharacterFileList) {
-            mFileFetcher.downloadFile(vo, mMarkerVO.getMarkerGameTypeCode());
+            mFileFetcher.downloadFile(vo, mGameSettingVO.getMarkerGameTypeCode());
         }
 
         mFileDownloader.queueFile();
+
+
     }
 
 
@@ -462,17 +528,17 @@ public class Game2 extends Activity implements
     private void loadTextures() {
         //cpyoon
         //Load texture file (png, jpg, etc)
-        int totalCharacterCnt = mMarkerVO.getGameCharacterFileList().size();
-        int orderingCharacterCnt = mMarkerVO.getMarkerGameCharacterCnt();
+        int totalCharacterCnt = mGameSettingVO.getTotalCharacterCnt();
+        int orderingCharacterCnt = mGameSettingVO.getBenefitCnt();
         int unorderingCharacterCnt = totalCharacterCnt - orderingCharacterCnt;
-//        Log.d(LOGTAG, "전체 캐릭터 수: " + totalCharacterCnt);
-//        Log.d(LOGTAG, "순서 캐릭터 수: " + orderingCharacterCnt);
-//        Log.d(LOGTAG, "순서x 캐릭터 수: " + unorderingCharacterCnt);
+        Log.d(LOGTAG, "전체 캐릭터 수: " + totalCharacterCnt);
+        Log.d(LOGTAG, "순서 캐릭터 수: " + orderingCharacterCnt);
+        Log.d(LOGTAG, "순서x 캐릭터 수: " + unorderingCharacterCnt);
 
         List<String> filePaths = mFileFetcher.getFilePaths();
         mCharacterSeq = new ArrayList<>();
 
-        List<GameCharacterFileVO> totalGameCharacterFileList = mMarkerVO.getGameCharacterFileList();
+        List<GameCharacterFileVO> totalGameCharacterFileList = mGameSettingVO.getGameCharacterFileList();
 
         Collections.sort(totalGameCharacterFileList, new Comparator<GameCharacterFileVO>() {
             @Override
@@ -492,9 +558,9 @@ public class Game2 extends Activity implements
 
 
         for (int i = unorderingCharacterCnt; i < totalCharacterCnt; i++) {
-//            Log.d(LOGTAG, "게임 캐릭터 " + i + ": " + totalGameCharacterFileList.get(i).getCharacterFileName());
+            Log.d(LOGTAG, "게임 캐릭터 " + i + ": " + totalGameCharacterFileList.get(i).getCharacterFileName());
             for (int j = 0; j < filePaths.size(); j++) {
-//                Log.d(LOGTAG, "파일 경로 " + j + ": " + filePaths.get(j));
+                Log.d(LOGTAG, "파일 경로 " + j + ": " + filePaths.get(j));
                 if (filePaths.get(j).contains(totalGameCharacterFileList.get(i).getCharacterFileName())) {
                     mTextures.add(Texture.loadTextureFromInputStream(filePaths.get(j)));
 
@@ -506,9 +572,9 @@ public class Game2 extends Activity implements
         }
 
         for (int i = 0; i < unorderingCharacterCnt; i++) {
-//            Log.d(LOGTAG, "게임 캐릭터 " + i + ": " + totalGameCharacterFileList.get(i).getCharacterFileName());
+            Log.d(LOGTAG, "게임 캐릭터 " + i + ": " + totalGameCharacterFileList.get(i).getCharacterFileName());
             for (int j = 0; j < filePaths.size(); j++) {
-//                Log.d(LOGTAG, "파일 경로 " + j + ": " + filePaths.get(j));
+                Log.d(LOGTAG, "파일 경로 " + j + ": " + filePaths.get(j));
                 if (filePaths.get(j).contains(totalGameCharacterFileList.get(i).getCharacterFileName())) {
                     mTextures.add(Texture.loadTextureFromInputStream(filePaths.get(j)));
 
@@ -516,6 +582,11 @@ public class Game2 extends Activity implements
                     break;
                 }
             }
+        }
+
+        Log.d(LOGTAG, "이미지 통합: " + mTextures);
+        for (int i = 0; i < mTextures.size(); i++) {
+            Log.d(LOGTAG, "이미지 정보 확인: " + mTextures.get(i)) ;
         }
 
     }
@@ -574,7 +645,7 @@ public class Game2 extends Activity implements
 
         mReturningFromFullScreen = false;
 
-        mFileFetcher.removeFileAll();
+//        mFileFetcher.removeFileAll();
 
         try {
             vuforiaAppSession.pauseAR();
@@ -1002,4 +1073,19 @@ public class Game2 extends Activity implements
 
         }
     };
+
+    @Override
+    public void onAnimationStart(Animation animation) {
+
+    }
+
+    @Override
+    public void onAnimationEnd(Animation animation) {
+        Log.d(LOGTAG, "애니메이션 종료");
+    }
+
+    @Override
+    public void onAnimationRepeat(Animation animation) {
+
+    }
 }

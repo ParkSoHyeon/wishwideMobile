@@ -26,6 +26,7 @@ import com.media.mobile.elin.wishwidemobile.Activity.Game1;
 import com.media.mobile.elin.wishwidemobile.Activity.Game2;
 import com.media.mobile.elin.wishwidemobile.Activity.Game2;
 import com.media.mobile.elin.wishwidemobile.Control.SampleAppRendererControl;
+import com.media.mobile.elin.wishwidemobile.Model.GameSettingVO;
 import com.media.mobile.elin.wishwidemobile.Model.MarkerVO;
 import com.media.mobile.elin.wishwidemobile.Session.SampleApplicationSession_Video;
 import com.media.mobile.elin.wishwidemobile.utils.SampleMath;
@@ -82,7 +83,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     static int NUM_QUAD_VERTEX = 4;
     static int NUM_QUAD_INDEX = 6;
 
-    MarkerVO mMarkerVO;
+    GameSettingVO mGameSettingVO;
 
     //Object Size
     private  final float TARGETAREA = 1f;
@@ -152,9 +153,9 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         // the device mode AR/VR and stereo mode
         mSampleAppRendererVideo = new SampleAppRenderer_Video(this, mActivity, Device.MODE.MODE_AR, false, 0.01f, 5f);
 
-        mMarkerVO = mActivity.mMarkerVO;
+        mGameSettingVO = mActivity.mGameSettingVO;
 
-        m_objectsmodelViewMatrix = new Matrix44F[Game2.NUM_TARGETS][mMarkerVO.getGameCharacterFileList().size()];
+        m_objectsmodelViewMatrix = new Matrix44F[Game2.NUM_TARGETS][mGameSettingVO.getTotalCharacterCnt()];
 
         for (int i = 0; i < Game2.NUM_TARGETS; i++)
             targetPositiveDimensions[i] = new Vec3F();
@@ -163,7 +164,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             modelViewMatrix[i] = new Matrix44F();
 
         for(int i=0;i<Game2.NUM_TARGETS;i++)
-            for( int j=0;j<mMarkerVO.getGameCharacterFileList().size();j++)
+            for( int j=0;j<mGameSettingVO.getTotalCharacterCnt();j++)
                 m_objectsmodelViewMatrix[i][j] = new Matrix44F();
     }
     
@@ -285,7 +286,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         keyframeTexSampler2DHandle = GLES20.glGetUniformLocation(keyframeShaderID, "texSampler2D");
 
         //put marker size
-        keyframeQuadAspectRatio[Game2.STONES] = (float) mTextures.get(0).mHeight / (float) mTextures.get(0).mWidth;
+        keyframeQuadAspectRatio[0] = (float) mTextures.get(0).mHeight / (float) mTextures.get(0).mWidth;
         keyframeQuadAspectRatio[Game2.CHIPS] = (float) mTextures.get(1).mHeight / (float) mTextures.get(1).mWidth;
 
         quadVertices = fillBuffer(quadVerticesArray);
@@ -295,7 +296,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
 
 
-        int totalCharacterCnt = mMarkerVO.getGameCharacterFileList().size();
+        int totalCharacterCnt = mGameSettingVO.getTotalCharacterCnt();
 
         m_translates = new float[totalCharacterCnt][3];
         m_scales = new float[totalCharacterCnt][3];
@@ -305,7 +306,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             for (int j = 0; j < 3; j++) {
                 m_translates[i][j] = randFloat(-0.5f, 0.5f);
                 m_scales[i][j] = randFloat(0.04f, 0.1f);
-                m_rotates[i][j] = randFloat(-100f, 100f);
+                m_rotates[i][j] = randFloat(-60f, 60f);
                 Log.d(LOGTAG, "[" + i + "][" + j + "]: " +  m_translates[i][j]);
             }
         }
@@ -377,7 +378,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     public void renderFrame(State state, float[] projectionMatrix)
     {
 
-        if(mMarkerVO == null) return;
+        if(mGameSettingVO == null) return;
         // Renders video background replacing Renderer.DrawVideoBackground()
         mSampleAppRendererVideo.renderVideoBackground();
         
@@ -426,10 +427,17 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             //hong
             //check whether the marker is included in the target beacon
             //매장과 지금 매장이 같으면
-            if(mMarkerVO.getMarkerVuforiaCode().equals(imageTargetName))
+//            for (int i = 0; i < mGameSettingVO.getMarkerCnt(); i++) {
+//                if(mGameSettingVO.getMarkerList().get(i).getMarkerId().equals(imageTargetName))
+//                {
+//                    characterNum = mGameSettingVO.getTotalCharacterCnt();
+//                    touchEventCode = 2;
+//                }
+//            }
+            if(imageTargetName.equals("stones"))
             {
-                characterNum = mMarkerVO.getGameCharacterFileList().size();
-                touchEventCode = mMarkerVO.getMarkerTouchEventCode().equals("R") ? 2 : 1;
+                characterNum = mGameSettingVO.getTotalCharacterCnt();
+                touchEventCode = 2;
             }
 
             //is not same
@@ -450,10 +458,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             
             // We store the modelview matrix to be used later by the tap
             // calculation
-            if (imageTarget.getName().compareTo("stones") == 0)
-                currentTarget = Game2.STONES;
-            else
-                currentTarget = Game2.CHIPS;
+            currentTarget = 0;
 
             modelViewMatrix[currentTarget] = Tool.convertPose2GLMatrix(trackableResult.getPose());
             
@@ -469,11 +474,11 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             //cpyoon
             //make objects
             //if you want to create an object selectively, must change for syntax
-            for(int trans=mCorrectedCharacterCnt; trans < mMarkerVO.getGameCharacterFileList().size(); trans++) {
+            for(int trans=mCorrectedCharacterCnt; trans < characterNum; trans++) {
                 // If the movie is ready to start playing or it has reached the end
                 // of playback we render the keyframe
 
-                mActivity.showGame2Guide("순서대로 터치해 단어를 완성해주세요. " + (mMarkerVO.getMarkerGameCharacterCnt() - mReadyCharacterSeq) + "개 남았습니다.");
+                mActivity.showGame2Guide("순서대로 터치해 단어를 완성해주세요. " + (mGameSettingVO.getBenefitCnt() - mReadyCharacterSeq) + "개 남았습니다.");
                 mIsRecognizedMarker = true;
 
                 float[] modelViewMatrixKeyframe = Tool.convertPose2GLMatrix(trackableResult.getPose()).getData();
@@ -521,7 +526,6 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
                         modelViewMatrixKeyframe,
                         0);
 
-                Random random = new Random();
 //                Matrix.rotateM(
 //                        modelViewProjectionKeyframe,
 //                        0,
@@ -609,7 +613,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         float mtx[] = textureCoordMatrix;
         float tempUVMultRes[] = new float[2];
         
-        if (target == Game2.STONES)
+        if (target == 0)
         {
             tempUVMultRes = uvMultMat4f(
                 videoQuadTextureCoordsTransformedStones[0],

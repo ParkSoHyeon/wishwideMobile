@@ -20,6 +20,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import com.media.mobile.elin.wishwidemobile.Activity.Game1;
 import com.media.mobile.elin.wishwidemobile.Control.SampleAppRendererControl;
+import com.media.mobile.elin.wishwidemobile.Model.GameSettingVO;
 import com.media.mobile.elin.wishwidemobile.Model.MarkerVO;
 import com.media.mobile.elin.wishwidemobile.Session.SampleApplicationSession_Video;
 import com.media.mobile.elin.wishwidemobile.utils.SampleMath;
@@ -116,7 +117,7 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     private float m_scales[][];
     private float m_rotates[][];
 
-    MarkerVO mMarkerVO;
+    GameSettingVO mGameSettingVO;
 
     private Vector<Texture> mTextures;
     private Handler mHandler;
@@ -142,9 +143,10 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         // the device mode AR/VR and stereo mode
         mSampleAppRendererVideo = new SampleAppRenderer_Video(this, mActivity, Device.MODE.MODE_AR, false, 0.01f, 5f);
 
-        mMarkerVO = mActivity.mMarkerVO;
+        mGameSettingVO = mActivity.mGameSettingVO;
 
-        m_objectsmodelViewMatrix = new Matrix44F[Game1.NUM_TARGETS][mMarkerVO.getGameCharacterFileList().size()];
+        Log.d(LOGTAG, "mGameSettingVO.getTotalCharacterCnt() 확인: " +  mGameSettingVO.getTotalCharacterCnt());
+        m_objectsmodelViewMatrix = new Matrix44F[Game1.NUM_TARGETS][mGameSettingVO.getTotalCharacterCnt()];
 
         for (int i = 0; i < Game1.NUM_TARGETS; i++)
             targetPositiveDimensions[i] = new Vec3F();
@@ -153,7 +155,7 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             modelViewMatrix[i] = new Matrix44F();
 
         for(int i=0;i<Game1.NUM_TARGETS;i++)
-            for( int j=0;j<mMarkerVO.getGameCharacterFileList().size();j++)
+            for( int j=0;j<mGameSettingVO.getTotalCharacterCnt();j++)
                 m_objectsmodelViewMatrix[i][j] = new Matrix44F();
     }
     
@@ -275,7 +277,7 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         keyframeTexSampler2DHandle = GLES20.glGetUniformLocation(keyframeShaderID, "texSampler2D");
 
         //put marker size
-        keyframeQuadAspectRatio[Game1.STONES] = (float) mTextures.get(0).mHeight / (float) mTextures.get(0).mWidth;
+        keyframeQuadAspectRatio[0] = (float) mTextures.get(0).mHeight / (float) mTextures.get(0).mWidth;
         keyframeQuadAspectRatio[Game1.CHIPS] = (float) mTextures.get(1).mHeight / (float) mTextures.get(1).mWidth;
 
         quadVertices = fillBuffer(quadVerticesArray);
@@ -284,9 +286,9 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         quadNormals = fillBuffer(quadNormalsArray);
 
 
-        mMarkerVO = mActivity.mMarkerVO;
+        mGameSettingVO = mActivity.mGameSettingVO;
 
-        int totalCharacterCnt = mMarkerVO.getGameCharacterFileList().size();
+        int totalCharacterCnt = mGameSettingVO.getTotalCharacterCnt();
 
         m_translates = new float[totalCharacterCnt][3];
         m_scales = new float[totalCharacterCnt][3];
@@ -296,7 +298,7 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             for (int j = 0; j < 3; j++) {
                 m_translates[i][j] = randFloat(-0.5f, 0.5f);
                 m_scales[i][j] = randFloat(0.04f, 0.1f);
-                m_rotates[i][j] = randFloat(-100f, 100f);
+                m_rotates[i][j] = randFloat(-60f, 60f);
                 Log.d(LOGTAG, "[" + i + "][" + j + "]: " +  m_translates[i][j]);
             }
         }
@@ -367,7 +369,7 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     public void renderFrame(State state, float[] projectionMatrix)
     {
 
-        if(mMarkerVO == null) return;
+        if(mGameSettingVO == null) return;
         // Renders video background replacing Renderer.DrawVideoBackground()
         mSampleAppRendererVideo.renderVideoBackground();
         
@@ -416,11 +418,19 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             //hong
             //check whether the marker is included in the target beacon
             //매장과 지금 매장이 같으면
-            if(mMarkerVO.getMarkerVuforiaCode().equals(imageTargetName))
+//            for (int i = 0; i < mGameSettingVO.getMarkerCnt(); i++) {
+//                if(mGameSettingVO.getMarkerList().get(i).getMarkerId().equals(imageTargetName))
+//                {
+//                    characterNum = mGameSettingVO.getTotalCharacterCnt();
+//                    touchEventCode = 2;
+//                }
+//            }
+            if(imageTargetName.equals("stones"))
             {
-                characterNum = mMarkerVO.getMarkerGameCharacterCnt();
-                touchEventCode = mMarkerVO.getMarkerTouchEventCode().equals("R") ? 2 : 1;
+                characterNum = mGameSettingVO.getTotalCharacterCnt();
+                touchEventCode = 2;
             }
+
 
             //is not same
             if(touchEventCode == -1) return;
@@ -440,10 +450,7 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             
             // We store the modelview matrix to be used later by the tap
             // calculation
-            if (imageTarget.getName().compareTo("stones") == 0)
-                currentTarget = Game1.STONES;
-            else
-                currentTarget = Game1.CHIPS;
+            currentTarget = 0;
 
             modelViewMatrix[currentTarget] = Tool.convertPose2GLMatrix(trackableResult.getPose());
             
@@ -524,6 +531,7 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
                 // The first loaded texture from the assets folder is the
                 // keyframe
+                Log.d(LOGTAG, "Texture null 여부: " + mTextures.get(trans).mTextureID[0]);
                 GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextures.get(trans).mTextureID[0]);
                 GLES20.glUniformMatrix4fv(keyframeMVPMatrixHandle, 1, false, modelViewProjectionKeyframe, 0);
                 GLES20.glUniform1i(keyframeTexSampler2DHandle, 0);
@@ -583,7 +591,7 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         float mtx[] = textureCoordMatrix;
         float tempUVMultRes[] = new float[2];
         
-        if (target == Game1.STONES)
+        if (target == 0)
         {
             tempUVMultRes = uvMultMat4f(
                 videoQuadTextureCoordsTransformedStones[0],

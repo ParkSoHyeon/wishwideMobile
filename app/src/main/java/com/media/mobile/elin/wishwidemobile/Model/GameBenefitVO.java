@@ -3,40 +3,95 @@ package com.media.mobile.elin.wishwidemobile.Model;
 import java.sql.Timestamp;
 
 public class GameBenefitVO {
-    private int gameBenefitNo;    //게임혜택번호
-    private int markerNo;  //마커번호
-    private int wwNo;  //위시와이드번호
-    private String wideManagerId; //운영자아이디
-    private String markerGameTypeCode; //게임혜택게임타입코드
-    private String  gameBenefitGradeTypeCode;   //게임혜택등급타입코드
-    private String gameBenefitTypeCode;  //게임혜택타입코드
-    private int gameBenefitTypeValue;    //게임혜택타입값
-    private String gameBenefitTitle;    //게임혜택명
-    private Timestamp gameBenefitRegDate;    //게임혜택등록일시
-    private Timestamp gameBenefitUpdateDate; //게임혜택수정일시
+    private int couponNo;
+    private int couponDeadLine;
+    private String couponMemberSendTypeCode;
+    private int couponPublishedCode;
+    private String couponTitle;
+    private int couponTypeNo;
+    private int couponVisibleCode;
+    private String franchiseId;
+    private String partnerId;
+    private String wideManagerId;
+    private String couponDiscountTypeCode;
+    private int couponDiscountValue;
+    private String productTitle;
+    private String couponimageUrl;
+    private int couponArCode;
+    private Timestamp couponRegDate;
+    private Timestamp couponUpdateDate;
 
-    public int getGameBenefitNo() {
-        return gameBenefitNo;
+
+    public int getCouponNo() {
+        return couponNo;
     }
 
-    public void setGameBenefitNo(int gameBenefitNo) {
-        this.gameBenefitNo = gameBenefitNo;
+    public void setCouponNo(int couponNo) {
+        this.couponNo = couponNo;
     }
 
-    public int getMarkerNo() {
-        return markerNo;
+    public int getCouponDeadLine() {
+        return couponDeadLine;
     }
 
-    public void setMarkerNo(int markerNo) {
-        this.markerNo = markerNo;
+    public void setCouponDeadLine(int couponDeadLine) {
+        this.couponDeadLine = couponDeadLine;
     }
 
-    public int getWwNo() {
-        return wwNo;
+    public String getCouponMemberSendTypeCode() {
+        return couponMemberSendTypeCode;
     }
 
-    public void setWwNo(int wwNo) {
-        this.wwNo = wwNo;
+    public void setCouponMemberSendTypeCode(String couponMemberSendTypeCode) {
+        this.couponMemberSendTypeCode = couponMemberSendTypeCode;
+    }
+
+    public int getCouponPublishedCode() {
+        return couponPublishedCode;
+    }
+
+    public void setCouponPublishedCode(int couponPublishedCode) {
+        this.couponPublishedCode = couponPublishedCode;
+    }
+
+    public String getCouponTitle() {
+        return couponTitle;
+    }
+
+    public void setCouponTitle(String couponTitle) {
+        this.couponTitle = couponTitle;
+    }
+
+    public int getCouponTypeNo() {
+        return couponTypeNo;
+    }
+
+    public void setCouponTypeNo(int couponTypeNo) {
+        this.couponTypeNo = couponTypeNo;
+    }
+
+    public int getCouponVisibleCode() {
+        return couponVisibleCode;
+    }
+
+    public void setCouponVisibleCode(int couponVisibleCode) {
+        this.couponVisibleCode = couponVisibleCode;
+    }
+
+    public String getFranchiseId() {
+        return franchiseId;
+    }
+
+    public void setFranchiseId(String franchiseId) {
+        this.franchiseId = franchiseId;
+    }
+
+    public String getPartnerId() {
+        return partnerId;
+    }
+
+    public void setPartnerId(String partnerId) {
+        this.partnerId = partnerId;
     }
 
     public String getWideManagerId() {
@@ -47,76 +102,83 @@ public class GameBenefitVO {
         this.wideManagerId = wideManagerId;
     }
 
-    public String getMarkerGameTypeCode() {
-        return markerGameTypeCode;
+    public String getCouponDiscountTypeCode() {
+        return couponDiscountTypeCode;
     }
 
-    public void setMarkerGameTypeCode(String markerGameTypeCode) {
-        this.markerGameTypeCode = markerGameTypeCode;
+    public void setCouponDiscountTypeCode(String couponDiscountTypeCode) {
+        this.couponDiscountTypeCode = couponDiscountTypeCode;
     }
 
-    public String getGameBenefitGradeTypeCode() {
-        return gameBenefitGradeTypeCode;
+    public int getCouponDiscountValue() {
+        return couponDiscountValue;
     }
 
-    public void setGameBenefitGradeTypeCode(String gameBenefitGradeTypeCode) {
-        this.gameBenefitGradeTypeCode = gameBenefitGradeTypeCode;
+    public void setCouponDiscountValue(int couponDiscountValue) {
+        this.couponDiscountValue = couponDiscountValue;
     }
 
-    public String getGameBenefitTypeCode() {
-        return gameBenefitTypeCode;
+    public String getProductTitle() {
+        return productTitle;
     }
 
-    public void setGameBenefitTypeCode(String gameBenefitTypeCode) {
-        this.gameBenefitTypeCode = gameBenefitTypeCode;
+    public void setProductTitle(String productTitle) {
+        this.productTitle = productTitle;
     }
 
-    public int getGameBenefitTypeValue() {
-        return gameBenefitTypeValue;
+    public String getCouponimageUrl() {
+        return couponimageUrl;
     }
 
-    public void setGameBenefitTypeValue(int gameBenefitTypeValue) {
-        this.gameBenefitTypeValue = gameBenefitTypeValue;
+    public void setCouponimageUrl(String couponimageUrl) {
+        this.couponimageUrl = couponimageUrl;
     }
 
-    public Timestamp getGameBenefitRegDate() {
-        return gameBenefitRegDate;
+    public int getCouponArCode() {
+        return couponArCode;
     }
 
-    public void setGameBenefitRegDate(Timestamp gameBenefitRegDate) {
-        this.gameBenefitRegDate = gameBenefitRegDate;
+    public void setCouponArCode(int couponArCode) {
+        this.couponArCode = couponArCode;
     }
 
-    public Timestamp getGameBenefitUpdateDate() {
-        return gameBenefitUpdateDate;
+    public Timestamp getCouponRegDate() {
+        return couponRegDate;
     }
 
-    public void setGameBenefitUpdateDate(Timestamp gameBenefitUpdateDate) {
-        this.gameBenefitUpdateDate = gameBenefitUpdateDate;
+    public void setCouponRegDate(Timestamp couponRegDate) {
+        this.couponRegDate = couponRegDate;
     }
 
-    public String getGameBenefitTitle() {
-        return gameBenefitTitle;
+    public Timestamp getCouponUpdateDate() {
+        return couponUpdateDate;
     }
 
-    public void setGameBenefitTitle(String gameBenefitTitle) {
-        this.gameBenefitTitle = gameBenefitTitle;
+    public void setCouponUpdateDate(Timestamp couponUpdateDate) {
+        this.couponUpdateDate = couponUpdateDate;
     }
+
 
     @Override
     public String toString() {
         return "GameBenefitVO{" +
-                "gameBenefitNo='" + gameBenefitNo + '\'' +
-                ", wwNo='" + wwNo + '\'' +
+                "couponNo=" + couponNo +
+                ", couponDeadLine=" + couponDeadLine +
+                ", couponMemberSendTypeCode='" + couponMemberSendTypeCode + '\'' +
+                ", couponPublishedCode=" + couponPublishedCode +
+                ", couponTitle='" + couponTitle + '\'' +
+                ", couponTypeNo=" + couponTypeNo +
+                ", couponVisibleCode=" + couponVisibleCode +
+                ", franchiseId='" + franchiseId + '\'' +
+                ", partnerId='" + partnerId + '\'' +
                 ", wideManagerId='" + wideManagerId + '\'' +
-                ", markerGameTypeCode='" + markerGameTypeCode + '\'' +
-                ", gameBenefitGradeTypeCode='" + gameBenefitGradeTypeCode + '\'' +
-                ", gameBenefitTypeCode='" + gameBenefitTypeCode + '\'' +
-                ", gameBenefitTypeValue='" + gameBenefitTypeValue + '\'' +
-                ", gameBenefitTitle='" + gameBenefitTitle + '\'' +
-                ", gameBenefitRegDate='" + gameBenefitRegDate + '\'' +
-                ", gameBenefitUpdateDate='" + gameBenefitUpdateDate + '\'' +
-                ", markerNo='" + markerNo + '\'' +
+                ", couponDiscountTypeCode='" + couponDiscountTypeCode + '\'' +
+                ", couponDiscountValue=" + couponDiscountValue +
+                ", productTitle='" + productTitle + '\'' +
+                ", couponimageUrl='" + couponimageUrl + '\'' +
+                ", couponArCode=" + couponArCode +
+                ", couponRegDate=" + couponRegDate +
+                ", couponUpdateDate=" + couponUpdateDate +
                 '}';
     }
 }

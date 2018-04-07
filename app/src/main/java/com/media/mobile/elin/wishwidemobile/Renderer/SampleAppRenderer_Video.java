@@ -210,10 +210,10 @@ public class SampleAppRenderer_Video {
         // Bind the video bg texture and get the Texture ID from Vuforia
         videoBackgroundTex.setTextureUnit(vbVideoTextureUnit);
         if (!mRenderer.updateVideoBackgroundTexture(videoBackgroundTex))
-        {
-            Log.e(LOGTAG, "Unable to update video background texture");
-            return;
-        }
+    {
+        Log.e(LOGTAG, "Unable to update video background texture");
+        return;
+    }
 
         float[] vbProjectionMatrix = Tool.convert2GLMatrix(
                 mRenderingPrimitives.getVideoBackgroundProjectionMatrix(currentView, COORDINATE_SYSTEM_TYPE.COORDINATE_SYSTEM_CAMERA)).getData();

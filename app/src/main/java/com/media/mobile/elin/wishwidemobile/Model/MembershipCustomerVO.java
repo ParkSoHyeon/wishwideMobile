@@ -17,11 +17,22 @@ public class MembershipCustomerVO {
     private int membershipCustomerVisibleCode;   //멤버쉽고객활성여부
     private Timestamp membershipCustomerRegDate; //멤버쉽고객등록일시
     private Timestamp membershipCustomerUpdateDate;  //멤버쉽고객수정일시
+    private int newMembershipCustomerCode;
 
     private String wideManagerId;   //멤버쉽매장아이디
     private String partnerWideManagerName; //파트너멤버쉽매장명
     private String franchiseWideManagerName; //가맹점멤버쉽매장명
+    private int wwStampGoal;    //일반고객도장기준개수
+    private int wwStampVipGoal; //단골고객도장기준개수
 
+
+    public int getNewMembershipCustomerCode() {
+        return newMembershipCustomerCode;
+    }
+
+    public void setNewMembershipCustomerCode(int newMembershipCustomerCode) {
+        this.newMembershipCustomerCode = newMembershipCustomerCode;
+    }
 
     public String getWideManagerId() {
         return wideManagerId;
@@ -141,6 +152,23 @@ public class MembershipCustomerVO {
 
     public void setMembershipCustomerUpdateDate(Timestamp membershipCustomerUpdateDate) {
         this.membershipCustomerUpdateDate = membershipCustomerUpdateDate;
+    }
+
+
+    public int getWwStampGoal() {
+        return wwStampGoal;
+    }
+
+    public void setWwStampGoal(int wwStampGoal) {
+        this.wwStampGoal = wwStampGoal;
+    }
+
+    public int getWwStampVipGoal() {
+        return wwStampVipGoal;
+    }
+
+    public void setWwStampVipGoal(int wwStampVipGoal) {
+        this.wwStampVipGoal = wwStampVipGoal;
     }
 
     @Override

@@ -362,7 +362,7 @@ public class SampleApplicationSession_Video implements UpdateCallbackInterface
             // Prevent the onDestroy() method to overlap with initialization:
             synchronized (mLifecycleLock)
             {
-                Vuforia.setInitParameters(mActivity, mVuforiaFlags, "AaUgpG7/////AAAAGfcCxUWm6kXIo8UcqTyqWf+CstDB3hVQjWo1bqXdjDPiqiYR7RmQqxzANQTCPZPc/Epbj5sOgQTKcAsk7DCA5UBjg0lGiX+xkE9Wiu54kA8v1kMf1dWss9BTIJfI7rO6t1RllODJl7EpVSQgsEylb0y22PO9gjQU/SDGXqvPMT8trECflFZt4vZbAZswHRYdQffzpREiM5qhmQlOd5Q6CohA9+ApEljdWnEzQ71E9vyYEMsa0nZufOFaaqEzIsymXUpEWvSD1WCHfdAZaz/WQ7D8Gv9eibxI1ckH4sMP2cEodICvjTd1ifenObOQ3SfVWBv/xbmI6j2db3zx1g0slLrFhEXVglwu83YUcF3VtyC/");
+                Vuforia.setInitParameters(mActivity, mVuforiaFlags, "AVCCRqf/////AAAAGbuLFErdu0BLkYk7R6zfKjMf3y7piCItu5+tUnXWHWO4Ea5y1EPGS85hISwchu214x0ED2ZuZlRzPKuMmvAo+jPH9UaHsHkCHs+d3xC1nhVyPNgkvBbH6K7P1Z7mPahcDuxqfwMYMYRMz42naPg85fGrL2bV2ZFQSvno2O4wO/YJro4bRq+hjgEc024czZHggsA0rdhZZap9ytNJObMp12INw39/2IgcJPaGCVYK84cSwG4rK9kFcb9LZsqHlZUr8VM/eaE7IOwnl9cHkt+a9KVCZaPosfr//DBt5kFUgWo7GJ8RKwqPvRMho904gUygBHPp0lalFROhA/bG/o8DV7F3JHtvFQ9IQazwJbUg8sMH");
                 
                 do
                 {
