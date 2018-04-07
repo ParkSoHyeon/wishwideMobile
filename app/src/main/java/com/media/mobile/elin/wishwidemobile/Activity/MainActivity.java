@@ -3,10 +3,7 @@ package com.media.mobile.elin.wishwidemobile.Activity;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.*;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -19,6 +16,8 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -34,6 +33,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDialog;
 import android.support.v7.widget.Toolbar;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -57,8 +57,8 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.regex.Pattern;
 
 
 public class MainActivity extends AppCompatActivity
@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mActionBarDrawerToggle;
     private NavigationView mNavigationView;
-//    private TabLayout mTabLayout;
+    //    private TabLayout mTabLayout;
     private TextView mTvProfile;
     private Button mBtn1, mBtn2, mBtn3, mBtn4, mBtn5;
     private LinearLayout mLlTabs;
@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity
     private ArrayList<String> scanBeaconAll = new ArrayList<>();
     private BeaconScanResult beaconScanResult = null;
     private CentralManager centralManager;
-
+    public final Map scanBeaconInfo = new HashMap();
 
     private AppCompatDialog progressDialog;
 
@@ -161,6 +161,9 @@ public class MainActivity extends AppCompatActivity
         //AR 게임 실행 버튼 Listener
 
 
+        //AR 게임 실행
+
+
         mARFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -168,12 +171,9 @@ public class MainActivity extends AppCompatActivity
 
                 if (deniedPermissions.size() > 0) {
                     requestPermission(deniedPermissions.toArray(new String[deniedPermissions.size()]), GAME_START_PERMISSION);
-                }
-                else {
+                } else {
                     mWebView.loadUrl("javascript:callGameSetting()");
                 }
-
-
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
             }
@@ -189,8 +189,7 @@ public class MainActivity extends AppCompatActivity
                 progressOFF();
                 requestRemoveUpdate();
 
-//                new WebGET().execute(location.getLatitude(),location.getLongitude());
-//                startBeaconScan();
+//                new NearbyBeaconListTask().execute(location.getLatitude(),location.getLongitude());
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -210,13 +209,49 @@ public class MainActivity extends AppCompatActivity
         centralManager.setPeripheralScanListener(new PeripheralScanListener() {
             @Override
             public void onPeripheralScan(Central central, Peripheral peripheral) {
-                String str = peripheral.getBDAddress().replace(":", "");
+                final String str = peripheral.getBDAddress().replace(":", "");
                 Log.d(TAG, "비콘 스캔" + str);
-                if (!scanBeaconAll.contains(str))
-                    scanBeaconAll.add(str);
-                if (scanBeaconList.contains(str)) {
-                    scanBeaconDistance.set(scanBeaconList.indexOf(str), peripheral.getDistance());
+//                if (!scanBeaconAll.contains(str))
+//                    scanBeaconAll.add(str);
+//                if (scanBeaconList.contains(str)) {
+//                    scanBeaconDistance.set(scanBeaconList.indexOf(str), peripheral.getDistance());
+//                }
+
+                Set key = scanBeaconInfo.keySet();
+
+                for (Iterator iterator = key.iterator(); iterator.hasNext(); ) {
+                    String keyName = (String) iterator.next();
+                    String valueName = (String) scanBeaconInfo.get(keyName);
+
+                    if (keyName.trim().equals(str.trim())) {
+                        Log.d(TAG, "DB 비콘과 일치" + valueName);
+                        stopBeaconScan();
+
+                        mWebView.loadUrl(DOMAIN_NAME + STORE_DETAIL_PATH + "?wideManagerId=" + valueName);
+
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                AlertDialog.Builder builder = new AlertDialog.Builder(getApplicationContext(), R.style.CustomTheme);
+//                                builder.setTitle("안내");
+//                                builder.setMessage(scanBeaconInfo.get(str) + " 매장 상세로 이동하시겠습니까?");
+//                                builder.setPositiveButton("이동", new DialogInterface.OnClickListener() {
+//                                    @Override
+//                                    public void onClick(DialogInterface dialog, int which) {
+//
+//                                    }
+//                                });
+//                                builder.setNegativeButton("머물기", null);
+//                                builder.show();
+//                            }
+//                        });
+
+                    }
+
+                    System.out.println(keyName + " = " + valueName);
                 }
+
+
             }
         });
 
@@ -268,6 +303,21 @@ public class MainActivity extends AppCompatActivity
                     case DOMAIN_NAME:   //로그인
                         mActionBarDrawerToggle.setDrawerIndicatorEnabled(false);    //menu(navigation) gone setting
                         mLlTabs.setVisibility(View.GONE);
+
+                        TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+
+                        String localPhoneNum = telephonyManager.getLine1Number();
+                        if (localPhoneNum != null) {
+                            localPhoneNum = localPhoneNum.replace("+82", "0");
+                            Log.d(TAG, "현재 디바이스의 전화번호 확인: " + localPhoneNum);
+
+                            mWebView.loadUrl("javascript:getDevicePhoneNum(" + localPhoneNum + ")");
+                        }
+
+                        break;
+                    case JOIN_PATH:
+                        mActionBarDrawerToggle.setDrawerIndicatorEnabled(false);    //menu(navigation) gone setting
+                        mLlTabs.setVisibility(View.GONE);
                         break;
                     case DOMAIN_NAME + VISITED_STORE_LIST_PATH: //방문한 매장
                         mBtn2.setTextColor(Color.BLUE);
@@ -303,8 +353,7 @@ public class MainActivity extends AppCompatActivity
                 //AR 게임 실행 버튼 visible
                 if (url.contains(DOMAIN_NAME + STORE_DETAIL_PATH)) {
                     mARFloatingActionButton.setVisibility(View.VISIBLE);
-                }
-                else if (url.contains(DOMAIN_NAME + HOME_PATH)) {
+                } else if (url.contains(DOMAIN_NAME + HOME_PATH)) {
                     mWebView.clearHistory();
 
                     //권한 안내 띄우기
@@ -344,14 +393,10 @@ public class MainActivity extends AppCompatActivity
                 e.printStackTrace();
             }
 
-        }
-        else if (responseCode.equals("LOGIN")) {
+        } else if (responseCode.equals("LOGIN")) {
             //로그인 url 이동
             mWebView.loadUrl(DOMAIN_NAME);
         }
-
-
-
     }
 
 
@@ -399,6 +444,7 @@ public class MainActivity extends AppCompatActivity
         mWebView = (WebView) findViewById(R.id.web_view);
         mSwipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
         mWebView.getSettings().setJavaScriptEnabled(true);
+        mWebView.getSettings().setDomStorageEnabled(true);
         mWebAndAppBridge = new WebAndAppBridge(mWebView);
         mWebView.addJavascriptInterface(mWebAndAppBridge, "WebAndAppBridge");
     }
@@ -447,7 +493,7 @@ public class MainActivity extends AppCompatActivity
         public static final String PERMISSION_GRANTED_EVENT = "granted";
 
         private final WebView mWebView;
-        private int mGiftProductNo;
+//        private int mGiftProductNo;
 
         private double mLatitude;
         private double mLongitude;
@@ -470,7 +516,7 @@ public class MainActivity extends AppCompatActivity
 
 
         @JavascriptInterface
-        public void getAndroidContactList(String event, int giftProductNo) {
+        public void getAndroidContactList(String event) {
 //            Log.d(TAG, "연락처 가져오기");
 
             JSONObject objRoot = new JSONObject();
@@ -480,16 +526,15 @@ public class MainActivity extends AppCompatActivity
                     case REQUEST_EVENT:
                         List<String> deniedPermissions = getDeniedPermissions(Manifest.permission.READ_CONTACTS);
 
-                        mGiftProductNo = giftProductNo;
+//                        mGiftProductNo = giftProductNo;
 
                         if (deniedPermissions.size() > 0) {
                             requestPermission(deniedPermissions.toArray(new String[deniedPermissions.size()]), CONTACT_PERMISSION);
-                        }
-                        else {
+                        } else {
                             mWebView.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    getAndroidContactList(PERMISSION_GRANTED_EVENT, mGiftProductNo);
+                                    getAndroidContactList(PERMISSION_GRANTED_EVENT);
                                 }
                             });
 
@@ -499,7 +544,7 @@ public class MainActivity extends AppCompatActivity
                         break;
                     case PERMISSION_GRANTED_EVENT:
                         objRoot.put("contacts", getContactAll());
-                        objRoot.put("giftProductNo", mGiftProductNo);
+//                        objRoot.put("giftProductNo", mGiftProductNo);
                         objRoot.put("responseCode", "SUCCESS");
 
                         Log.d(TAG, "byte: " + EncodingUtils.getBytes(objRoot.toString(), "UTF-8"));
@@ -509,7 +554,7 @@ public class MainActivity extends AppCompatActivity
                         break;
                     case PERMISSION_DENIED_EVENT:
                         objRoot.put("responseCode", "DENIED");
-                        objRoot.put("giftProductNo", mGiftProductNo);
+//                        objRoot.put("giftProductNo", mGiftProductNo);
 
                         mWebView.postUrl(DOMAIN_NAME + CONTACT_LIST_PATH, EncodingUtils.getBytes(objRoot.toString(), "UTF-8"));
                         break;
@@ -555,12 +600,15 @@ public class MainActivity extends AppCompatActivity
 //                    Log.d(TAG, name);
 //                    Log.d(TAG, phoneNumber);
 
-                    objContact.put("contactId", idContact);
-                    objContact.put("contactName", name);
-                    objContact.put("contactPhone", phoneNumber);
+                    if (Pattern.matches("^(010)(\\d{3,4})(\\d{4})", phoneNumber)) {
+                        objContact.put("contactId", idContact);
+                        objContact.put("contactName", name);
+                        objContact.put("contactPhone", phoneNumber);
+
+                        arrContacts.put(objContact);
+                    }
 
 
-                    arrContacts.put(objContact);
                 }
                 while (cursor.moveToNext());
 
@@ -631,13 +679,12 @@ public class MainActivity extends AppCompatActivity
 
 //            WebBackForwardList list = mWebView.copyBackForwardList();
 
-            switch (mWebView.getUrl()) {
-                case DOMAIN_NAME + GIFT_DETAIL_PATH:
-                    mWebView.goBackOrForward(-1);
-                    // history 삭제
-                    mWebView.clearHistory();
-                    break;
+            if (mWebView.getUrl().contains(DOMAIN_NAME + GIFT_ORDER_PATH)) {
+                mWebView.goBackOrForward(-1);
+                // history 삭제
+                mWebView.clearHistory();
             }
+
             return true;
         } else {
             //다이아로그박스 출력
@@ -722,6 +769,7 @@ public class MainActivity extends AppCompatActivity
                 startActivityForResult(new Intent(MainActivity.this, SettingActivity.class), 11);
                 break;
             default:
+                progressOFF();
                 break;
         }
 
@@ -741,8 +789,6 @@ public class MainActivity extends AppCompatActivity
 
     //위치 서비스 요청
     private void requestLocationUpdate() {
-        progressON(this, "로딩 중...");
-
         List<String> deniedPermissions = getDeniedPermissions(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION);
@@ -751,8 +797,7 @@ public class MainActivity extends AppCompatActivity
         if (deniedPermissions.size() > 0) {
             //위치 권한 있음
             requestPermission(deniedPermissions.toArray(new String[deniedPermissions.size()]), ROCATION_FIND_PERMISSION);
-        }
-        else {
+        } else {
             if (mLocationManager == null) {
                 mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             }
@@ -779,8 +824,26 @@ public class MainActivity extends AppCompatActivity
                         }).show();
             }
 
-            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 100, mLocationListener);
-            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 100, mLocationListener);
+            progressON(this, "로딩 중...");
+            Location lastKnownLocation = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            if (lastKnownLocation == null) {
+                Log.d(TAG, "최초 위치 정보 가져옴, 위치 정보 update 필요");
+                mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
+            } else {
+                boolean isOlderLocation = (System.currentTimeMillis() - lastKnownLocation.getTime()) > (1000 * 15);   //15초 지남
+
+                Log.d(TAG, isOlderLocation + ", 이전 location: " + lastKnownLocation.getLatitude() + ", " + lastKnownLocation.getLongitude());
+
+                if (isOlderLocation) {
+                    Log.d(TAG, "15초 지남, 위치 정보 update 필요");
+                    mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
+                } else {
+                    Log.d(TAG, "최신 위치 정보임을 확인");
+                    mWebView.loadUrl(DOMAIN_NAME + HOME_PATH +
+                            "?lat=" + lastKnownLocation.getLatitude() + "&lng=" + lastKnownLocation.getLongitude());
+                }
+            }
+
         }
     }
 
@@ -831,10 +894,9 @@ public class MainActivity extends AppCompatActivity
                 //위치 찾기
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 100, mLocationListener);
-                    mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 100, mLocationListener);
-                }
-                else {
+                    mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
+//                    mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 100, mLocationListener);
+                } else {
                     mWebView.loadUrl(DOMAIN_NAME + HOME_PATH + "?lat=0&lng=0");
                 }
                 break;
@@ -845,10 +907,9 @@ public class MainActivity extends AppCompatActivity
                 //전화부
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    mWebAndAppBridge.getAndroidContactList(mWebAndAppBridge.PERMISSION_GRANTED_EVENT, mWebAndAppBridge.mGiftProductNo);
-                }
-                else {
-                    mWebAndAppBridge.getAndroidContactList(mWebAndAppBridge.PERMISSION_DENIED_EVENT, mWebAndAppBridge.mGiftProductNo);
+                    mWebAndAppBridge.getAndroidContactList(WebAndAppBridge.PERMISSION_GRANTED_EVENT);
+                } else {
+                    mWebAndAppBridge.getAndroidContactList(WebAndAppBridge.PERMISSION_DENIED_EVENT);
                 }
                 break;
             case CALL_PERMISSION:
@@ -887,11 +948,17 @@ public class MainActivity extends AppCompatActivity
                 }
                 fr.close();
 
-                JSONArray ja = new JSONArray(str);
+                JSONObject objRoot = new JSONObject(str);
+
+
+                JSONArray ja = objRoot.optJSONArray("nearbyBeaconVO");
                 for (int i = 0; i < ja.length(); i++) {
                     JSONObject jo = ja.getJSONObject(i);
-                    Log.d(TAG, "Beacon.txt 파일 읽음: " + jo.getString("ww_beacon_macAddress"));
-                    scanBeaconList.add(jo.getString("ww_beacon_macAddress"));
+
+                    scanBeaconList.add(jo.getString("beaconMacAddress"));
+                    scanBeaconInfo.put(jo.getString("beaconMacAddress"), jo.getString("wideManagerId"));
+                    Log.d(TAG, "Beacon.txt 파일 읽음: " + jo.getString("beaconMacAddress"));
+                    Log.d(TAG, "Beacon.txt 파일 읽음: " + scanBeaconInfo.containsKey(jo.getString("beaconMacAddress")));
                     scanBeaconDistance.add(999.0);
                 }
             } catch (FileNotFoundException e) {
@@ -901,6 +968,8 @@ public class MainActivity extends AppCompatActivity
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
+            startBeaconScan();
             return null;
         }
 
@@ -911,23 +980,22 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    public class NearbyBeaonListTask extends AsyncTask<Double, Void, String> {
-        private static final String TAG = "NearbyBeaonListTask";
+    public class NearbyBeaconListTask extends AsyncTask<Double, Void, String> {
+        private static final String TAG = "NearbyBeaconListTask";
 
 
         @Override
         protected String doInBackground(Double... params) {
-            double minla = params[0] - 1, maxla = params[0] + 1, minlo = params[1] - 1, maxlo = params[1] + 1;
             HttpURLConnection urlConn = null;
             StringBuffer sbParams = new StringBuffer();
 
-            sbParams.append("minla").append("=").append(minla).append("&");
-            sbParams.append("maxla").append("=").append(maxla).append("&");
-            sbParams.append("minlo").append("=").append(minlo).append("&");
-            sbParams.append("maxlo").append("=").append(maxlo);
+            Log.d(TAG, "lat: " + params[0]);
+            Log.d(TAG, "lng: " + params[1]);
+            sbParams.append("lat").append("=").append(params[0]).append("&");
+            sbParams.append("lng").append("=").append(params[1]);
 
             try {
-                URL url = new URL("http://192.168.0.23:8080/databeacon");
+                URL url = new URL(DOMAIN_NAME + NEARBY_BEACON_LIST_PATH);
                 urlConn = (HttpURLConnection) url.openConnection();
 
                 urlConn.setRequestMethod("POST");
@@ -986,16 +1054,17 @@ public class MainActivity extends AppCompatActivity
 
     //비콘 스캔 시작
     private void startBeaconScan() {
-        beaconScanResult = new BeaconScanResult();
-        beaconScanResult.start();
+//        beaconScanResult = new BeaconScanResult();
+//        beaconScanResult.start();
         centralManager.startScanning();
     }
 
 
     //비콘 스캔 종료 및 자원 반납
     private void stopBeaconScan() {
-        beaconScanResult.isCon = false;
-        beaconScanResult = null;
+//        beaconScanResult.isCon = false;
+//        beaconScanResult = null;
+        Log.d(TAG, "비콘 스캔 종료");
         centralManager.stopScanning();
     }
 
@@ -1006,6 +1075,10 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         public void run() {
+            if (scanBeaconDistance.size() < 1) {
+                Log.d(TAG, "주변에 비콘 없음");
+                return;
+            }
             while (isCon) {
                 try {
                     Thread.sleep(3000);
@@ -1064,10 +1137,10 @@ public class MainActivity extends AppCompatActivity
                     Log.d(TAG, "로그아웃 시도");
                     mWebView.loadUrl(DOMAIN_NAME);
                     mWebView.clearHistory();
-                }
-                else if (resultCode == 2) {
+                } else if (resultCode == 2) {
                     //설정 변경
                     Log.d(TAG, "설정 변경");
+                    progressOFF();
 
                 }
                 break;
@@ -1079,11 +1152,9 @@ public class MainActivity extends AppCompatActivity
                     if (resultCode == 1) {
                         objRoot.put("responseCode", "SUCCESS");
                         objRoot.put("wideManagerId", data.getStringExtra("wideManagerId"));
-                        objRoot.put("wwNo", data.getIntExtra("wwNo", 0));
-                        objRoot.put("markerNo", data.getIntExtra("markerNo", 0));
-                        objRoot.put("gameBenefitTypeCode", data.getStringExtra("gameBenefitTypeCode"));
-                        objRoot.put("membershipCustomerNo", data.getIntExtra("membershipCustomerNo", 0));
-                        objRoot.put("gameBenefitTypeValue", data.getIntExtra("gameBenefitTypeValue", 0));
+                        objRoot.put("couponNo", data.getStringExtra("couponNo"));
+                        objRoot.put("membershipCustomerNo", data.getStringExtra("membershipCustomerNo"));
+                        objRoot.put("couponDiscountTypeCode", data.getStringExtra("couponDiscountTypeCode"));
 
                         Log.d(TAG, "혜택 insert: " + objRoot.toString());
                         mWebView.postUrl(DOMAIN_NAME + GAME_BENEFIT_REGISTER_PATH, EncodingUtils.getBytes(objRoot.toString(), "UTF-8"));
@@ -1100,11 +1171,9 @@ public class MainActivity extends AppCompatActivity
                     if (resultCode == 1) {
                         objRoot.put("responseCode", "SUCCESS");
                         objRoot.put("wideManagerId", data.getStringExtra("wideManagerId"));
-                        objRoot.put("wwNo", data.getIntExtra("wwNo", 0));
-                        objRoot.put("markerNo", data.getIntExtra("markerNo", 0));
-                        objRoot.put("gameBenefitTypeCode", data.getStringExtra("gameBenefitTypeCode"));
-                        objRoot.put("membershipCustomerNo", data.getIntExtra("membershipCustomerNo", 0));
-                        objRoot.put("gameBenefitTypeValue", data.getIntExtra("gameBenefitTypeValue", 0));
+                        objRoot.put("couponNo", data.getStringExtra("couponNo"));
+                        objRoot.put("membershipCustomerNo", data.getStringExtra("membershipCustomerNo"));
+                        objRoot.put("couponDiscountTypeCode", data.getStringExtra("couponDiscountTypeCode"));
 
                         Log.d(TAG, "혜택 insert: " + objRoot.toString());
                         mWebView.postUrl(DOMAIN_NAME + GAME_BENEFIT_REGISTER_PATH, EncodingUtils.getBytes(objRoot.toString(), "UTF-8"));
@@ -1116,7 +1185,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-
+    //게임 설정 가져오기
     public class GameSettingTask extends AsyncTask<String, Void, String> {
         private static final String TAG = "GameSettingTask";
         private final String mWideMangerId;
@@ -1132,7 +1201,10 @@ public class MainActivity extends AppCompatActivity
             HttpURLConnection urlConn = null;
             StringBuffer sbParams = new StringBuffer();
 
-            Log.d(TAG, "wideManagerId 확인: " + mWideMangerId);
+            Log.d(TAG, "" +
+                    "" +
+                    "" +
+                    " 확인: " + mWideMangerId);
             Log.d(TAG, "wideCustomerNo 확인: " + wideCustomerVO.getWideCustomerNo());
             Log.d(TAG, "wideCustomerPhone 확인: " + wideCustomerVO.getWideCustomerPhone());
 
@@ -1230,9 +1302,6 @@ public class MainActivity extends AppCompatActivity
 
 
     public void progressON(Activity activity, String message) {
-
-        Log.d(TAG, "액티비티 nul??" + activity);
-
         if (activity == null || activity.isFinishing()) {
             Log.d(TAG, "액티비티 return");
             return;

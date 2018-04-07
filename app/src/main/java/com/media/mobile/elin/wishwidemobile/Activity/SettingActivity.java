@@ -28,7 +28,7 @@ public class SettingActivity
         tvName = (TextView) findViewById(R.id.tv_name);
         tvBirth = (TextView) findViewById(R.id.tv_birth);
         tvGender = (TextView) findViewById(R.id.tv_gender);
-        tvAppVersion = (TextView) findViewById(R.id.tv_app_version);
+//        tvAppVersion = (TextView) findViewById(R.id.tv_app_version);
         btnLogout = (Button) findViewById(R.id.btn_logout);
 
         mSharedPreferences = this.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE);
@@ -43,12 +43,13 @@ public class SettingActivity
                 +birth.substring(4, 6)+"월 "
                 +birth.substring(6, 8)+"일");
         tvGender.setText(mSharedPreferences.getString(WIDE_CUSTOMER_SEX_KEY, "").equals("0") ? "남자" : "여자");
-        tvAppVersion.setText("0.0");
+//        tvAppVersion.setText("0.0");
 
         btnLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 SharedPreferences.Editor editor = mSharedPreferences.edit();
+                editor.putBoolean(WHETHER_PERMISSION_GUIDE_SHOW_KEY, true);
                 editor.clear();
                 editor.commit();
 

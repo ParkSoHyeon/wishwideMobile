@@ -191,9 +191,7 @@ public class FileFetcher {
 
             Log.i(TAG, fileSize + " 파일 사이즈 확인 " + file.length());
 
-            if(isSameFile) {
-                return true;
-            }
+            return isSameFile;
         }
 
         return false;
