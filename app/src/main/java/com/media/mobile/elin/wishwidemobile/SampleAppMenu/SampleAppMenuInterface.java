@@ -13,5 +13,5 @@ package com.media.mobile.elin.wishwidemobile.SampleAppMenu;
 // previously set for a SampleAppMenu instance
 public interface SampleAppMenuInterface
 {
-    public boolean menuProcess(int command);
+    boolean menuProcess(int command);
 }

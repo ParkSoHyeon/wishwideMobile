@@ -296,7 +296,12 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
         for (int i = 0; i < totalCharacterCnt; i++) {
             for (int j = 0; j < 3; j++) {
-                m_translates[i][j] = randFloat(-0.5f, 0.5f);
+                if (j == 1) {
+                    m_translates[i][j] = randFloat(3.0f, 4.5f);
+                }
+                else {
+                    m_translates[i][j] = randFloat(-0.5f, 0.5f);
+                }
                 m_scales[i][j] = randFloat(0.04f, 0.1f);
                 m_rotates[i][j] = randFloat(-60f, 60f);
                 Log.d(LOGTAG, "[" + i + "][" + j + "]: " +  m_translates[i][j]);
@@ -531,7 +536,6 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
                 // The first loaded texture from the assets folder is the
                 // keyframe
-                Log.d(LOGTAG, "Texture null 여부: " + mTextures.get(trans).mTextureID[0]);
                 GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextures.get(trans).mTextureID[0]);
                 GLES20.glUniformMatrix4fv(keyframeMVPMatrixHandle, 1, false, modelViewProjectionKeyframe, 0);
                 GLES20.glUniform1i(keyframeTexSampler2DHandle, 0);

@@ -273,8 +273,7 @@ public class SampleApplicationSession_Video implements UpdateCallbackInterface
     
     
     // Pauses Vuforia and stops the camera
-    public void pauseAR() throws SampleApplicationException
-    {
+    public void pauseAR() {
         if (mStarted)
         {
             stopCamera();

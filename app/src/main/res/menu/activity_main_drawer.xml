@@ -17,11 +17,11 @@
     <item
             android:icon="@drawable/img_pikachu"
             android:id="@+id/nav_received_gift"
-            android:title="받은 선물"/>
+            android:title="받은 선물함"/>
     <item
             android:icon="@drawable/img_pikachu"
             android:id="@+id/nav_send_gift"
-            android:title="보낸 선물"/>
+            android:title="보낸 선물함"/>
     <item
             android:icon="@drawable/img_pikachu"
             android:id="@+id/nav_coupon"

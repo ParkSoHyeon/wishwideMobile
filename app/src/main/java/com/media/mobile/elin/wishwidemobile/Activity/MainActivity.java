@@ -268,6 +268,47 @@ public class MainActivity extends AppCompatActivity
             }
 
             @Override
+            public boolean onJsAlert(WebView view, String url, String message, final JsResult result) {
+                new AlertDialog.Builder(view.getContext())
+                        .setTitle("안내")
+                        .setMessage(message)
+                        .setPositiveButton(android.R.string.ok,
+                                new AlertDialog.OnClickListener(){
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        result.confirm();
+                                    }
+                                })
+                        .setCancelable(true)
+                        .create()
+                        .show();
+
+                return true;
+            }
+
+            @Override
+            public boolean onJsConfirm(WebView view, String url, String message, final JsResult result) {
+                new AlertDialog.Builder(view.getContext())
+                        .setTitle("안내")
+                        .setMessage(message)
+                        .setPositiveButton(android.R.string.ok,
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        result.confirm();
+                                    }
+                                })
+                        .setNegativeButton(android.R.string.cancel,
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        result.cancel();
+                                    }
+                                })
+                        .create()
+                        .show();
+
+                return true;
+            }
+
+            @Override
             public void onReceivedTitle(WebView view, String title) {
                 super.onReceivedTitle(view, title);
             }
@@ -323,7 +364,6 @@ public class MainActivity extends AppCompatActivity
                         mBtn2.setTextColor(Color.BLUE);
                         break;
                     case DOMAIN_NAME + STORE_DETAIL_PATH:   //매장상세
-                        mARFloatingActionButton.setVisibility(View.VISIBLE);
                         break;
                     case DOMAIN_NAME + RECEIVED_GIFT_LIST_PATH:
                     case DOMAIN_NAME + SEND_GIFT_LIST_PATH:
@@ -352,7 +392,15 @@ public class MainActivity extends AppCompatActivity
 
                 //AR 게임 실행 버튼 visible
                 if (url.contains(DOMAIN_NAME + STORE_DETAIL_PATH)) {
-                    mARFloatingActionButton.setVisibility(View.VISIBLE);
+                    mWebView.loadUrl("javascript:callIsExecuteGame()");
+                    if (!mWebAndAppBridge.ismIsExecuteGame()) {
+                        Log.d(TAG, "게임이용가능");
+                        mARFloatingActionButton.setVisibility(View.VISIBLE);
+                    }
+                    else {
+                        Log.d(TAG, "게임이용불가");
+                        mARFloatingActionButton.setVisibility(View.GONE);
+                    }
                 } else if (url.contains(DOMAIN_NAME + HOME_PATH)) {
                     mWebView.clearHistory();
 
@@ -498,6 +546,8 @@ public class MainActivity extends AppCompatActivity
         private double mLatitude;
         private double mLongitude;
 
+        private boolean mIsExecuteGame;
+
         public WebAndAppBridge(WebView webView) {
             mWebView = webView;
         }
@@ -512,6 +562,11 @@ public class MainActivity extends AppCompatActivity
         @JavascriptInterface
         public void callGameSetting(String managerId) {
             new GameSettingTask(managerId).execute();
+        }
+
+        @JavascriptInterface
+        public void callIsExecuteGame(String isExecuteGame) {
+            mIsExecuteGame = isExecuteGame.equals("0") ? false : true;
         }
 
 
@@ -623,6 +678,7 @@ public class MainActivity extends AppCompatActivity
             return arrContacts;
         }
 
+
         @JavascriptInterface
         public void setWideCustomer(String data) {
             try {
@@ -662,6 +718,10 @@ public class MainActivity extends AppCompatActivity
 
         public void setLongitude(double longitude) {
             mLongitude = longitude;
+        }
+
+        public boolean ismIsExecuteGame() {
+            return mIsExecuteGame;
         }
     }
 
@@ -715,6 +775,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    //왼쪽 네비게이션바 아이템 선택 리스너
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -882,6 +943,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    //권한 허용 메시지
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
@@ -1153,7 +1215,7 @@ public class MainActivity extends AppCompatActivity
                         objRoot.put("responseCode", "SUCCESS");
                         objRoot.put("wideManagerId", data.getStringExtra("wideManagerId"));
                         objRoot.put("couponNo", data.getStringExtra("couponNo"));
-                        objRoot.put("membershipCustomerNo", data.getStringExtra("membershipCustomerNo"));
+                        objRoot.put("membershipCustomerNo", String.valueOf(data.getIntExtra("membershipCustomerNo", 0)));
                         objRoot.put("couponDiscountTypeCode", data.getStringExtra("couponDiscountTypeCode"));
 
                         Log.d(TAG, "혜택 insert: " + objRoot.toString());
@@ -1171,8 +1233,8 @@ public class MainActivity extends AppCompatActivity
                     if (resultCode == 1) {
                         objRoot.put("responseCode", "SUCCESS");
                         objRoot.put("wideManagerId", data.getStringExtra("wideManagerId"));
-                        objRoot.put("couponNo", data.getStringExtra("couponNo"));
-                        objRoot.put("membershipCustomerNo", data.getStringExtra("membershipCustomerNo"));
+                        objRoot.put("couponNo", String.valueOf(data.getIntExtra("couponNo", 0)));
+                        objRoot.put("membershipCustomerNo", String.valueOf(data.getIntExtra("membershipCustomerNo", 0)));
                         objRoot.put("couponDiscountTypeCode", data.getStringExtra("couponDiscountTypeCode"));
 
                         Log.d(TAG, "혜택 insert: " + objRoot.toString());

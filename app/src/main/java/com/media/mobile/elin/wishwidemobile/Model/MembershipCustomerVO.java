@@ -174,15 +174,24 @@ public class MembershipCustomerVO {
     @Override
     public String toString() {
         return "MembershipCustomerVO{" +
-                "membershipCustomerNo='" + membershipCustomerNo + '\'' +
-                ", wideCustomerNo='" + wideCustomerNo + '\'' +
+                "membershipCustomerNo=" + membershipCustomerNo +
+                ", wideCustomerNo=" + wideCustomerNo +
                 ", membershipCustomerPhone='" + membershipCustomerPhone + '\'' +
                 ", partnerId='" + partnerId + '\'' +
                 ", franchiseId='" + franchiseId + '\'' +
+                ", membershipCustomerBenefitType='" + membershipCustomerBenefitType + '\'' +
+                ", membershipCustomerBenefitValue=" + membershipCustomerBenefitValue +
+                ", membershipCustomerReceiveGiftCnt=" + membershipCustomerReceiveGiftCnt +
                 ", membershipCustomerGrade='" + membershipCustomerGrade + '\'' +
-                ", membershipCustomerVisibleCode='" + membershipCustomerVisibleCode + '\'' +
-                ", membershipCustomerRegDate='" + membershipCustomerRegDate + '\'' +
+                ", membershipCustomerVisibleCode=" + membershipCustomerVisibleCode +
+                ", membershipCustomerRegDate=" + membershipCustomerRegDate +
                 ", membershipCustomerUpdateDate=" + membershipCustomerUpdateDate +
+                ", newMembershipCustomerCode=" + newMembershipCustomerCode +
+                ", wideManagerId='" + wideManagerId + '\'' +
+                ", partnerWideManagerName='" + partnerWideManagerName + '\'' +
+                ", franchiseWideManagerName='" + franchiseWideManagerName + '\'' +
+                ", wwStampGoal=" + wwStampGoal +
+                ", wwStampVipGoal=" + wwStampVipGoal +
                 '}';
     }
 }

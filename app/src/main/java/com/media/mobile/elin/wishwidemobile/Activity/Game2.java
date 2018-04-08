@@ -115,7 +115,7 @@ public class Game2 extends Activity implements
     boolean mIsInitialized = false;
 
     public GameSettingVO mGameSettingVO;
-    public MembershipCustomerVO membershipCustomerVO;
+    public MembershipCustomerVO mMembershipCustomerVO;
     public List<String> mCharacterSeq;
 
     FileFetcher mFileFetcher;
@@ -132,7 +132,8 @@ public class Game2 extends Activity implements
 
         //GameSetting 위한 정보 parsing
         mGameSettingVO = parseJsonGameSetting(getIntent().getStringExtra("gameSetting"));
-        membershipCustomerVO = parseJsonMembershipCustomer(getIntent().getStringExtra("membershipCustomerVO"));
+        mMembershipCustomerVO = parseJsonMembershipCustomer(getIntent().getStringExtra("membershipCustomerVO"));
+        Log.d(LOGTAG, "parse 멤버쉽: " + mMembershipCustomerVO.toString());
 
         Handler responseHandler = new Handler();
         mFileDownloader = new FileDownloader<>(responseHandler);
@@ -382,14 +383,20 @@ public class Game2 extends Activity implements
                                     public void onClick(DialogInterface dialog, int id) {
                                         Intent intent = new Intent();
                                         intent.putExtra("wideManagerId", mGameSettingVO.getWideManagerId());
+                                        Log.d(LOGTAG, "멤버쉽 정보 확인: " + mMembershipCustomerVO.toString());
+                                        intent.putExtra("membershipCustomerNo", mMembershipCustomerVO.getMembershipCustomerNo());
                                         intent.putExtra("couponDiscountTypeCode", type);
                                         intent.putExtra("couponNo", couponInfo[0]);
-                                        intent.putExtra("couponDiscountTypeValue", couponInfo[1]);
-                                        intent.putExtra("membershipCustomerNo", membershipCustomerVO.getMembershipCustomerNo());
+                                        if (couponInfo.length > 0) {
+                                            intent.putExtra("couponDiscountTypeValue", 0);
+                                        }
+                                        else {
+                                            intent.putExtra("couponDiscountTypeValue", couponInfo[1]);
+                                        }
+
 
                                         setResult(1, intent);
 
-                                        stopAR();
                                         finish();
                                     }
                                 });
@@ -645,13 +652,9 @@ public class Game2 extends Activity implements
 
         mReturningFromFullScreen = false;
 
-//        mFileFetcher.removeFileAll();
+        mFileFetcher.removeFileAll();
 
-        try {
-            vuforiaAppSession.pauseAR();
-        } catch (SampleApplicationException e) {
-            Log.e(LOGTAG, e.getString());
-        }
+        vuforiaAppSession.pauseAR();
     }
 
 
@@ -822,7 +825,7 @@ public class Game2 extends Activity implements
             String name = "Current Dataset : " + trackable.getName();
             trackable.setUserData(name);
             Log.d(LOGTAG, "UserData:Set the following user data "
-                    + (String) trackable.getUserData());
+                    + trackable.getUserData());
         }
 
         Log.d(LOGTAG, "Successfully loaded and activated data set.");
@@ -1087,5 +1090,30 @@ public class Game2 extends Activity implements
     @Override
     public void onAnimationRepeat(Animation animation) {
 
+    }
+
+
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+
+            //다이아로그박스 출력
+            new AlertDialog.Builder(this)
+                    .setTitle("게임 종료")
+                    .setMessage("게임을 종료하시겠습니까?")
+                    .setPositiveButton("예", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    })
+                    .setNegativeButton("아니오", null)
+                    .show();
+
+            return true;
+        }
+
+        return super.onKeyDown(keyCode, event);
     }
 }

@@ -28,6 +28,7 @@ import com.media.mobile.elin.wishwidemobile.Activity.Game2;
 import com.media.mobile.elin.wishwidemobile.Control.SampleAppRendererControl;
 import com.media.mobile.elin.wishwidemobile.Model.GameSettingVO;
 import com.media.mobile.elin.wishwidemobile.Model.MarkerVO;
+import com.media.mobile.elin.wishwidemobile.Model.MembershipCustomerVO;
 import com.media.mobile.elin.wishwidemobile.Session.SampleApplicationSession_Video;
 import com.media.mobile.elin.wishwidemobile.utils.SampleMath;
 import com.media.mobile.elin.wishwidemobile.utils.SampleUtils;
@@ -83,7 +84,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     static int NUM_QUAD_VERTEX = 4;
     static int NUM_QUAD_INDEX = 6;
 
-    GameSettingVO mGameSettingVO;
+    private GameSettingVO mGameSettingVO;
 
     //Object Size
     private  final float TARGETAREA = 1f;
@@ -304,7 +305,13 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
         for (int i = 0; i < totalCharacterCnt; i++) {
             for (int j = 0; j < 3; j++) {
-                m_translates[i][j] = randFloat(-0.5f, 0.5f);
+                if (j == 1) {
+                    m_translates[i][j] = randFloat(3.0f, 4.5f);
+                }
+                else {
+                    m_translates[i][j] = randFloat(-0.5f, 0.5f);
+                }
+
                 m_scales[i][j] = randFloat(0.04f, 0.1f);
                 m_rotates[i][j] = randFloat(-60f, 60f);
                 Log.d(LOGTAG, "[" + i + "][" + j + "]: " +  m_translates[i][j]);
@@ -478,7 +485,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
                 // If the movie is ready to start playing or it has reached the end
                 // of playback we render the keyframe
 
-                mActivity.showGame2Guide("순서대로 터치해 단어를 완성해주세요. " + (mGameSettingVO.getBenefitCnt() - mReadyCharacterSeq) + "개 남았습니다.");
+                mActivity.showGame2Guide("순서대로 터치해 \"" + mGameSettingVO.getMarkerGameValue() + "\"단어를 완성해주세요. " + (mGameSettingVO.getBenefitCnt() - mReadyCharacterSeq) + "개 남았습니다.");
                 mIsRecognizedMarker = true;
 
                 float[] modelViewMatrixKeyframe = Tool.convertPose2GLMatrix(trackableResult.getPose()).getData();

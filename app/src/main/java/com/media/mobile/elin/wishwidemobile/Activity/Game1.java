@@ -20,6 +20,7 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.*;
@@ -28,10 +29,7 @@ import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.ViewGroup.LayoutParams;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 import com.media.mobile.elin.wishwidemobile.Control.SampleApplicationControl_Video;
 import com.media.mobile.elin.wishwidemobile.FileDownloader;
 import com.media.mobile.elin.wishwidemobile.FileFetcher;
@@ -66,6 +64,8 @@ public class Game1 extends Activity implements
     Activity mActivity;
 
     private View mGame1ContentView;
+    private FrameLayout mFlEffectView;
+    private ImageView mImgEffectView;
     private TextView mTvGame1Guide;
 
     // Helpers to detect events such as double tapping:
@@ -109,7 +109,7 @@ public class Game1 extends Activity implements
     boolean mIsInitialized = false;
 
     public GameSettingVO mGameSettingVO;
-    public MembershipCustomerVO membershipCustomerVO;
+    public MembershipCustomerVO mMembershipCustomerVO;
 
     FileFetcher mFileFetcher;
     private FileDownloader<GameCharacterFileVO> mFileDownloader;
@@ -125,7 +125,7 @@ public class Game1 extends Activity implements
 
         //GameSetting 위한 정보 parsing
         mGameSettingVO = parseJsonGameSetting(getIntent().getStringExtra("gameSetting"));
-        membershipCustomerVO = parseJsonMembershipCustomer(getIntent().getStringExtra("membershipCustomerVO"));
+        mMembershipCustomerVO = parseJsonMembershipCustomer(getIntent().getStringExtra("membershipCustomerVO"));
 
         Handler responseHandler = new Handler();
         mFileDownloader = new FileDownloader<>(responseHandler);
@@ -198,9 +198,9 @@ public class Game1 extends Activity implements
 //                                mToast.show();
 
                                 int gameCharacterNum = mGameSettingVO.getTotalCharacterCnt();
-                                int gameBenefitNum = 0;
+                                int gameBenefitNum = mGameSettingVO.getBenefitCnt();
                                 int randomNum = new Random().nextInt(gameCharacterNum);
-                                List<GameBenefitVO> gameBenefitList = new ArrayList();
+                                List<GameBenefitVO> gameBenefitList = mGameSettingVO.getGameBenefitList();
 
                                 Log.d(LOGTAG, "유효혜택 수: " + gameBenefitNum);
                                 Log.d(LOGTAG, "선택된 값: " + randomNum);
@@ -261,10 +261,13 @@ public class Game1 extends Activity implements
         addContentView(mGame1ContentView, layoutParamsControl);
 
         mTvGame1Guide = (TextView) mGame1ContentView.findViewById(R.id.tv_game1_guide);
+        mFlEffectView = (FrameLayout) mGame1ContentView.findViewById(R.id.fl_effect_view);
+        mImgEffectView = (ImageView) mGame1ContentView.findViewById(R.id.img_effect);
 
         vuforiaAppSession
                 .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
+
 
     private void showBenefitGainMessage(final String type, final String msg, final String... couponInfo) {
         //축하합니다!\nㅌ를 획득하셨습니다.\n내일 다시 도전해주세요.
@@ -280,6 +283,19 @@ public class Game1 extends Activity implements
                         Game1.this);
 
                 if (type.equals("BOOM")) {
+                    //꽝 이미지 표시
+                    mImgEffectView.setBackgroundResource(R.drawable.sample_bomb);
+                    mFlEffectView.setVisibility(View.VISIBLE);
+
+                    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.d(LOGTAG, "원상태로");
+                            mFlEffectView.setVisibility(View.GONE);
+                        }
+                    }, 300);
+
+
                     builder
                             .setMessage(msg)
                             .setTitle("알림")
@@ -294,7 +310,6 @@ public class Game1 extends Activity implements
                                     new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
-                                            stopAR();
                                             finish();
                                         }
                                     });
@@ -309,14 +324,20 @@ public class Game1 extends Activity implements
                                         public void onClick(DialogInterface dialog, int id) {
                                             Intent intent = new Intent();
                                             intent.putExtra("wideManagerId", mGameSettingVO.getWideManagerId());
+                                            Log.d(LOGTAG, "멤버쉽 정보 확인: " + mMembershipCustomerVO.toString());
+                                            intent.putExtra("membershipCustomerNo", mMembershipCustomerVO.getMembershipCustomerNo());
                                             intent.putExtra("couponDiscountTypeCode", type);
-                                            intent.putExtra("couponDiscountTypeValue", couponInfo[1]);
                                             intent.putExtra("couponNo", couponInfo[0]);
-                                            intent.putExtra("membershipCustomerNo", membershipCustomerVO.getMembershipCustomerNo());
+                                            if (couponInfo.length > 0) {
+                                                intent.putExtra("couponDiscountTypeValue", 0);
+                                            }
+                                            else {
+                                                intent.putExtra("couponDiscountTypeValue", couponInfo[1]);
+                                            }
+
 
                                             setResult(1, intent);
 
-                                            stopAR();
                                             finish();
                                         }
                                     });
@@ -327,6 +348,7 @@ public class Game1 extends Activity implements
             }
         });
     }
+
 
     public void showGame1Guide(final String msg) {
         final Context context = this;
@@ -458,6 +480,7 @@ public class Game1 extends Activity implements
         return gameSettingVO;
     }
 
+
     private MembershipCustomerVO parseJsonMembershipCustomer(String jsonData) {
         MembershipCustomerVO membershipCustomerVO = new MembershipCustomerVO();
 
@@ -567,11 +590,7 @@ public class Game1 extends Activity implements
 
 //        mFileFetcher.removeFileAll();
 
-        try {
-            vuforiaAppSession.pauseAR();
-        } catch (SampleApplicationException e) {
-            Log.e(LOGTAG, e.getString());
-        }
+        vuforiaAppSession.pauseAR();
     }
 
 
@@ -744,7 +763,7 @@ public class Game1 extends Activity implements
             String name = "Current Dataset : " + trackable.getName();
             trackable.setUserData(name);
             Log.d(LOGTAG, "UserData:Set the following user data "
-                    + (String) trackable.getUserData());
+                    + trackable.getUserData());
         }
 
         Log.d(LOGTAG, "Successfully loaded and activated data set.");
@@ -983,6 +1002,30 @@ public class Game1 extends Activity implements
         }
 
         return result;
+    }
+
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+
+            //다이아로그박스 출력
+            new AlertDialog.Builder(this)
+                    .setTitle("게임 종료")
+                    .setMessage("게임을 종료하시겠습니까?")
+                    .setPositiveButton("예", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    })
+                    .setNegativeButton("아니오", null)
+                    .show();
+
+            return true;
+        }
+
+        return super.onKeyDown(keyCode, event);
     }
 
 
