@@ -117,6 +117,10 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+        mSharedPreferences = this.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE);
+
+
         //View 초기화
         initializeView();
 
@@ -345,15 +349,15 @@ public class MainActivity extends AppCompatActivity
                         mActionBarDrawerToggle.setDrawerIndicatorEnabled(false);    //menu(navigation) gone setting
                         mLlTabs.setVisibility(View.GONE);
 
-                        TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+//                        TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 
-                        String localPhoneNum = telephonyManager.getLine1Number();
-                        if (localPhoneNum != null) {
-                            localPhoneNum = localPhoneNum.replace("+82", "0");
-                            Log.d(TAG, "현재 디바이스의 전화번호 확인: " + localPhoneNum);
-
-                            mWebView.loadUrl("javascript:getDevicePhoneNum(" + localPhoneNum + ")");
-                        }
+//                        String localPhoneNum = telephonyManager.getLine1Number();
+//                        if (localPhoneNum != null) {
+//                            localPhoneNum = localPhoneNum.replace("+82", "0");
+//                            Log.d(TAG, "현재 디바이스의 전화번호 확인: " + localPhoneNum);
+//
+//                            mWebView.loadUrl("javascript:getDevicePhoneNum(" + localPhoneNum + ")");
+//                        }
 
                         break;
                     case JOIN_PATH:
@@ -393,14 +397,7 @@ public class MainActivity extends AppCompatActivity
                 //AR 게임 실행 버튼 visible
                 if (url.contains(DOMAIN_NAME + STORE_DETAIL_PATH)) {
                     mWebView.loadUrl("javascript:callIsExecuteGame()");
-                    if (!mWebAndAppBridge.ismIsExecuteGame()) {
-                        Log.d(TAG, "게임이용가능");
-                        mARFloatingActionButton.setVisibility(View.VISIBLE);
-                    }
-                    else {
-                        Log.d(TAG, "게임이용불가");
-                        mARFloatingActionButton.setVisibility(View.GONE);
-                    }
+
                 } else if (url.contains(DOMAIN_NAME + HOME_PATH)) {
                     mWebView.clearHistory();
 
@@ -409,6 +406,15 @@ public class MainActivity extends AppCompatActivity
                         Log.d(TAG, "권한 안내 띄우기 시도");
                         startActivityForResult(new Intent(MainActivity.this, PermissionGuideActivity.class), 00);
                     }
+
+
+                    //매장명 set
+                    String wideCustomerName = mSharedPreferences.getString(WIDE_CUSTOMER_NAME_KEY, "GUEST");
+                    if (wideCustomerName == null) {
+                        wideCustomerName = "";
+                    }
+                    Log.d(TAG, "고객명 확인: " + wideCustomerName);
+//                    mTvProfile.setText(wideCustomerName);
 
                 }
 
@@ -427,7 +433,7 @@ public class MainActivity extends AppCompatActivity
 
 
         String responseCode = getIntent().getStringExtra("responseCode");
-        mSharedPreferences = this.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE);
+
 
 
         if (responseCode.equals("AUTO")) {
@@ -482,8 +488,6 @@ public class MainActivity extends AppCompatActivity
         mNavigationView = (NavigationView) findViewById(R.id.nav_view);
         mNavigationView.setNavigationItemSelectedListener(this);
 
-        mTvProfile = (TextView) findViewById(R.id.tv_profile);
-
         mProgressBar = (ProgressBar) findViewById(R.id.pb_web_loading);
         mProgressBar.setMax(100);
 
@@ -495,6 +499,8 @@ public class MainActivity extends AppCompatActivity
         mWebView.getSettings().setDomStorageEnabled(true);
         mWebAndAppBridge = new WebAndAppBridge(mWebView);
         mWebView.addJavascriptInterface(mWebAndAppBridge, "WebAndAppBridge");
+
+        mTvProfile = (TextView) findViewById(R.id.tv_profile);
     }
 
 
@@ -541,12 +547,6 @@ public class MainActivity extends AppCompatActivity
         public static final String PERMISSION_GRANTED_EVENT = "granted";
 
         private final WebView mWebView;
-//        private int mGiftProductNo;
-
-        private double mLatitude;
-        private double mLongitude;
-
-        private boolean mIsExecuteGame;
 
         public WebAndAppBridge(WebView webView) {
             mWebView = webView;
@@ -565,8 +565,23 @@ public class MainActivity extends AppCompatActivity
         }
 
         @JavascriptInterface
-        public void callIsExecuteGame(String isExecuteGame) {
-            mIsExecuteGame = isExecuteGame.equals("0") ? false : true;
+        public void callIsExecuteGame(final String isExecuteGame) {
+            Log.d(TAG, "게임 실행 여부 확인: " + isExecuteGame);
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (isExecuteGame.equals("1") ? true : false) {
+                        Log.d(TAG, "게임이용가능");
+                        mARFloatingActionButton.setVisibility(View.VISIBLE);
+                    }
+                    else {
+                        Log.d(TAG, "게임이용불가");
+                        mARFloatingActionButton.setVisibility(View.GONE);
+                    }
+                }
+            });
+
         }
 
 
@@ -602,8 +617,7 @@ public class MainActivity extends AppCompatActivity
 //                        objRoot.put("giftProductNo", mGiftProductNo);
                         objRoot.put("responseCode", "SUCCESS");
 
-                        Log.d(TAG, "byte: " + EncodingUtils.getBytes(objRoot.toString(), "UTF-8"));
-                        Log.d(TAG, "string: " + objRoot.toString());
+                        Log.d(TAG, "연락처 확인: " + objRoot.toString());
 
                         mWebView.postUrl(DOMAIN_NAME + CONTACT_LIST_PATH, EncodingUtils.getBytes(objRoot.toString(), "UTF-8"));
                         break;
@@ -704,24 +718,12 @@ public class MainActivity extends AppCompatActivity
                 editor.putString(WIDE_CUSTOMER_NAME_KEY, objRoot.optString("wideCustomerName"));
                 editor.commit();
 
-                mTvProfile.setText(wideCustomerVO.getWideCustomerName());
+//                mTvProfile.setText(wideCustomerVO.getWideCustomerName());
 
                 Log.d(TAG, "고객 정보 확인: " + wideCustomerVO.toString());
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-        }
-
-        public void setLatitude(double latitude) {
-            mLatitude = latitude;
-        }
-
-        public void setLongitude(double longitude) {
-            mLongitude = longitude;
-        }
-
-        public boolean ismIsExecuteGame() {
-            return mIsExecuteGame;
         }
     }
 
@@ -850,6 +852,7 @@ public class MainActivity extends AppCompatActivity
 
     //위치 서비스 요청
     private void requestLocationUpdate() {
+        progressON(this, "로딩 중...");
         List<String> deniedPermissions = getDeniedPermissions(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION);
@@ -857,6 +860,7 @@ public class MainActivity extends AppCompatActivity
 
         if (deniedPermissions.size() > 0) {
             //위치 권한 있음
+            progressOFF();
             requestPermission(deniedPermissions.toArray(new String[deniedPermissions.size()]), ROCATION_FIND_PERMISSION);
         } else {
             if (mLocationManager == null) {
@@ -867,6 +871,8 @@ public class MainActivity extends AppCompatActivity
             //isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
             if (!mIsGPSEnabled) {
+                progressOFF();
+
                 new AlertDialog.Builder(mContext)
                         .setTitle("안내")
                         .setMessage("현재 매장 위치를 더욱 쉽게 찾기 위해 위치 서비스를 켜주세요.")
@@ -885,13 +891,13 @@ public class MainActivity extends AppCompatActivity
                         }).show();
             }
 
-            progressON(this, "로딩 중...");
+
             Location lastKnownLocation = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
             if (lastKnownLocation == null) {
                 Log.d(TAG, "최초 위치 정보 가져옴, 위치 정보 update 필요");
                 mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
             } else {
-                boolean isOlderLocation = (System.currentTimeMillis() - lastKnownLocation.getTime()) > (1000 * 15);   //15초 지남
+                boolean isOlderLocation = (System.currentTimeMillis() - lastKnownLocation.getTime()) > (1000 * 60 * 2);   //15초 지남
 
                 Log.d(TAG, isOlderLocation + ", 이전 location: " + lastKnownLocation.getLatitude() + ", " + lastKnownLocation.getLongitude());
 
@@ -1217,6 +1223,7 @@ public class MainActivity extends AppCompatActivity
                         objRoot.put("couponNo", data.getStringExtra("couponNo"));
                         objRoot.put("membershipCustomerNo", String.valueOf(data.getIntExtra("membershipCustomerNo", 0)));
                         objRoot.put("couponDiscountTypeCode", data.getStringExtra("couponDiscountTypeCode"));
+                        objRoot.put("couponDiscountTypeValue", data.getStringExtra("couponDiscountTypeValue"));
 
                         Log.d(TAG, "혜택 insert: " + objRoot.toString());
                         mWebView.postUrl(DOMAIN_NAME + GAME_BENEFIT_REGISTER_PATH, EncodingUtils.getBytes(objRoot.toString(), "UTF-8"));

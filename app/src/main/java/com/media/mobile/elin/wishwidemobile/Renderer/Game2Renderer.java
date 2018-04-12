@@ -127,6 +127,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     private float m_translates[][];
     private float m_scales[][];
     private float m_rotates[][];
+    private int randNum = new Random().nextInt(3);
 
     private Vector<Texture> mTextures;
     private Handler mHandler;
@@ -299,26 +300,104 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
         int totalCharacterCnt = mGameSettingVO.getTotalCharacterCnt();
 
-        m_translates = new float[totalCharacterCnt][3];
-        m_scales = new float[totalCharacterCnt][3];
+        m_translates = new float[10][6];
+//        m_scales = new float[totalCharacterCnt][3];
         m_rotates = new float[totalCharacterCnt][3];
 
         for (int i = 0; i < totalCharacterCnt; i++) {
             for (int j = 0; j < 3; j++) {
-                if (j == 1) {
-                    m_translates[i][j] = randFloat(3.0f, 4.5f);
-                }
-                else {
-                    m_translates[i][j] = randFloat(-0.5f, 0.5f);
-                }
-
-                m_scales[i][j] = randFloat(0.04f, 0.1f);
+//
+//                if (j == 0) {   //x축
+//                    m_translates[i][j] = randFloat(-4.5f, 4.5f);
+//                }
+//                else if (j == 1) {  //y축
+//                    m_translates[i][j] = randFloat(-0.6f, 3.5f);
+//                }
+//                else {  //z축
+//                    m_translates[i][j] = randFloat(0.0f, 0.0f);
+//                }
+//
+//                m_scales[i][j] = 0.23f;//randFloat(0.04f, 0.1f);
                 m_rotates[i][j] = randFloat(-60f, 60f);
-                Log.d(LOGTAG, "[" + i + "][" + j + "]: " +  m_translates[i][j]);
+//                Log.d(LOGTAG, "[" + i + "][" + j + "]: " +  m_translates[i][j]);
             }
         }
+//        if (j == 0) {   //x축
+//                    m_translates[i][j] = randFloat(-4.5f, 4.5f);
+//                }
+//                else if (j == 1) {  //y축
+//                    m_translates[i][j] = randFloat(-0.6f, 3.5f);
+//                }
 
+        m_translates[0][0] = 3.0f;  //1 - x
+        m_translates[0][1] = 0.0f;  //1 - y
+        m_translates[0][2] = 2.0f;  //2 - x
+        m_translates[0][3] = 2.0f;  //2 - y
+        m_translates[0][4] = 0.19f;  //3 - x
+        m_translates[0][5] = 0.0f;  //3 - y
 
+        m_translates[1][0] = 1.0f;
+        m_translates[1][1] = 3.0f;
+        m_translates[1][2] = -3.0f;
+        m_translates[1][3] = 0.0f;
+        m_translates[1][4] = -1.17f;
+        m_translates[1][5] = 2.0f;
+
+        m_translates[2][0] = -2.0f;
+        m_translates[2][1] = 1.0f;
+        m_translates[2][2] = 0.0f;
+        m_translates[2][3] = 0.0f;
+        m_translates[2][4] = 2.0f;
+        m_translates[2][5] = -0.55f;
+
+        m_translates[3][0] = 0.0f;
+        m_translates[3][1] = 3.812f;
+        m_translates[3][2] = 1.2f;
+        m_translates[3][3] = -1.8f;
+        m_translates[3][4] = 0.43f;
+        m_translates[3][5] = 1.71f;
+
+        m_translates[4][0] = -3.913f;
+        m_translates[4][1] = -0.2f;
+        m_translates[4][2] = -1.456f;
+        m_translates[4][3] = 1.35f;
+        m_translates[4][4] = 0.0f;
+        m_translates[4][5] = 2.89f;
+
+        m_translates[5][0] = 2.0f;
+        m_translates[5][1] = 2.0f;
+        m_translates[5][2] = 0.0f;
+        m_translates[5][3] = 0.0f;
+        m_translates[5][4] = -2.71f;
+        m_translates[5][5] = 4.07f;
+
+        m_translates[6][0] = -3.67f;
+        m_translates[6][1] = 1.3f;
+        m_translates[6][2] = 0.67f;
+        m_translates[6][3] = -0.46f;
+        m_translates[6][4] = 2.999f;
+        m_translates[6][5] = 0.0f;
+
+        m_translates[7][0] = 4.112f;
+        m_translates[7][1] = 0.0f;
+        m_translates[7][2] = 4.136f;
+        m_translates[7][3] = 4.342f;
+        m_translates[7][4] = -2.22f;
+        m_translates[7][5] = 0.0f;
+
+        m_translates[8][0] = 2.0f;
+        m_translates[8][1] = 0.0f;
+        m_translates[8][2] = -2.35f;
+        m_translates[8][3] = 0.0f;
+        m_translates[8][4] = -3.15f;
+        m_translates[8][5] = 0.61f;
+
+        m_translates[9][0] = -1.54f;
+        m_translates[9][1] = 3.0f;
+        m_translates[9][2] = 1.651f;
+        m_translates[9][3] = 0.0f;
+        m_translates[9][4] = 4.0f;
+        m_translates[9][5] = -0.39f;
     }
 
 
@@ -504,26 +583,45 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
                 //cpyoon
                 //Method to translate using m_translates
-                Matrix.translateM(
-                        modelViewMatrixKeyframe,
-                        0,
-                        m_translates[trans][0],
-                        m_translates[trans][1],
-                        m_translates[trans][2]);
+                if (randNum == 0) {
+                    Matrix.translateM(
+                            modelViewMatrixKeyframe,
+                            0,
+                            m_translates[trans][0],
+                            2.0f,
+                            m_translates[trans][1]);
+                }
+                else if (randNum == 1) {
+                    Matrix.translateM(
+                            modelViewMatrixKeyframe,
+                            0,
+                            m_translates[trans][2],
+                            2.0f,
+                            m_translates[trans][3]);
+                }
+                else {
+                    Matrix.translateM(
+                            modelViewMatrixKeyframe,
+                            0,
+                            m_translates[trans][4],
+                            2.0f,
+                            m_translates[trans][5]);
+                }
+
 
                 Matrix.rotateM(modelViewMatrixKeyframe,
                         0,
-                        m_rotates[trans][0],
-                        m_rotates[trans][1],
-                        m_rotates[trans][2],
-                        m_rotates[trans][0]);
+                        95.0f,
+                        90.0f,
+                        0.0f,    //m_rotates[trans][0]
+                        0.0f);
 
                 Matrix.scaleM(
                         modelViewMatrixKeyframe,
                         0,
-                        m_scales[trans][0],
-                        m_scales[trans][1],
-                        m_scales[trans][2]);
+                        0.23f,
+                        0.23f,
+                        0.23f);
 
                 Matrix.multiplyMM(
                         modelViewProjectionKeyframe,
