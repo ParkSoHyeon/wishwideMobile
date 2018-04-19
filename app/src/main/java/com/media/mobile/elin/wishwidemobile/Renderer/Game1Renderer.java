@@ -227,8 +227,7 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         Log.d(LOGTAG, "VideoPlayback VideoPlaybackRenderer initRendering");
         
         // Define clear color
-        GLES20.glClearColor(0.0f, 0.0f, 0.0f, Vuforia.requiresAlpha() ? 0.0f
-            : 1.0f);
+        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         
         // Now generate the OpenGL texture objects and add settings
         for (Texture t : mTextures) {
@@ -293,8 +292,8 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
         int totalCharacterCnt = mGameSettingVO.getTotalCharacterCnt();
 
-        m_translates = new float[totalCharacterCnt][3];
-        m_scales = new float[totalCharacterCnt][3];
+        m_translates = new float[10][6];
+//        m_scales = new float[totalCharacterCnt][3];
         m_rotates = new float[totalCharacterCnt][3];
 
         for (int i = 0; i < totalCharacterCnt; i++) {
@@ -316,19 +315,19 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         }
 
 
-        m_translates[0][0] = 3.0f;  //1 - x
-        m_translates[0][1] = 0.0f;  //1 - y
+        m_translates[0][0] = 1.357f;  //1 - x
+        m_translates[0][1] = 0.411f;  //1 - y
         m_translates[0][2] = 2.0f;  //2 - x
         m_translates[0][3] = 2.0f;  //2 - y
         m_translates[0][4] = 0.19f;  //3 - x
         m_translates[0][5] = 0.0f;  //3 - y
 
         m_translates[1][0] = 1.0f;
-        m_translates[1][1] = 3.0f;
-        m_translates[1][2] = -3.0f;
+        m_translates[1][1] = 1.912f;
+        m_translates[1][2] = -2.240f;
         m_translates[1][3] = 0.0f;
         m_translates[1][4] = -1.17f;
-        m_translates[1][5] = 2.0f;
+        m_translates[1][5] = 1.109f;
 
         m_translates[2][0] = -2.0f;
         m_translates[2][1] = 1.0f;
@@ -338,52 +337,52 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         m_translates[2][5] = -0.55f;
 
         m_translates[3][0] = 0.0f;
-        m_translates[3][1] = 3.812f;
+        m_translates[3][1] = 2.212f;
         m_translates[3][2] = 1.2f;
-        m_translates[3][3] = -1.8f;
+        m_translates[3][3] = -0.8f;
         m_translates[3][4] = 0.43f;
         m_translates[3][5] = 1.71f;
 
-        m_translates[4][0] = -3.913f;
-        m_translates[4][1] = -0.2f;
+        m_translates[4][0] = 0.0f;
+        m_translates[4][1] = 0.0f;
         m_translates[4][2] = -1.456f;
         m_translates[4][3] = 1.35f;
-        m_translates[4][4] = 0.0f;
-        m_translates[4][5] = 2.89f;
+        m_translates[4][4] = 0.101f;
+        m_translates[4][5] = 0.89f;
 
         m_translates[5][0] = 2.0f;
         m_translates[5][1] = 2.0f;
         m_translates[5][2] = 0.0f;
         m_translates[5][3] = 0.0f;
-        m_translates[5][4] = -2.71f;
-        m_translates[5][5] = 4.07f;
+        m_translates[5][4] = -1.71f;
+        m_translates[5][5] = -0.07f;
 
-        m_translates[6][0] = -3.67f;
+        m_translates[6][0] = -0.67f;
         m_translates[6][1] = 1.3f;
         m_translates[6][2] = 0.67f;
-        m_translates[6][3] = -0.46f;
-        m_translates[6][4] = 2.999f;
-        m_translates[6][5] = 0.0f;
+        m_translates[6][3] = 1.46f;
+        m_translates[6][4] = 1.999f;
+        m_translates[6][5] = 0.501f;
 
-        m_translates[7][0] = 4.112f;
+        m_translates[7][0] = 2.112f;
         m_translates[7][1] = 0.0f;
-        m_translates[7][2] = 4.136f;
-        m_translates[7][3] = 4.342f;
-        m_translates[7][4] = -2.22f;
-        m_translates[7][5] = 0.0f;
+        m_translates[7][2] = -0.136f;
+        m_translates[7][3] = 2.342f;
+        m_translates[7][4] = -1.82f;
+        m_translates[7][5] = 1.605f;
 
-        m_translates[8][0] = 2.0f;
-        m_translates[8][1] = 0.0f;
-        m_translates[8][2] = -2.35f;
-        m_translates[8][3] = 0.0f;
-        m_translates[8][4] = -3.15f;
-        m_translates[8][5] = 0.61f;
+        m_translates[8][0] = 1.0f;
+        m_translates[8][1] = -0.912f;
+        m_translates[8][2] = -0.559f;
+        m_translates[8][3] = 1.0f;
+        m_translates[8][4] = 2.15f;
+        m_translates[8][5] = 1.61f;
 
         m_translates[9][0] = -1.54f;
-        m_translates[9][1] = 3.0f;
+        m_translates[9][1] = -0.5f;
         m_translates[9][2] = 1.651f;
-        m_translates[9][3] = 0.0f;
-        m_translates[9][4] = 4.0f;
+        m_translates[9][3] = 1.0f;
+        m_translates[9][4] = 1.0f;
         m_translates[9][5] = -0.39f;
         
     }
@@ -636,6 +635,12 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
                 GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
 
+
+                GLES20.glEnable(GLES20.GL_BLEND);
+                GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+
+
+
                 // The first loaded texture from the assets folder is the
                 // keyframe
                 GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextures.get(trans).mTextureID[0]);
@@ -652,8 +657,11 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
                 SampleUtils.checkGLError("VideoPlayback renderFrame");
             }
+
         }
-        
+
+        GLES20.glDisable(GLES20.GL_BLEND);
+
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
         
         Renderer.getInstance().end();

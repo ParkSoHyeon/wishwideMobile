@@ -70,6 +70,7 @@ public class Game2 extends Activity implements
     private FrameLayout mFlEffectView;
     private ImageView mImgEffectView;
     private TextView mTvGame2Guide;
+    public TextView[] mTvCorrectEffect;
 
     // Helpers to detect events such as double tapping:
     private GestureDetector mGestureDetector = null;
@@ -158,6 +159,11 @@ public class Game2 extends Activity implements
         mToast = Toast.makeText(mContext, "null", Toast.LENGTH_SHORT);
         mActivity = this;
 
+        // Create the gesture detector that will handle the single and
+        // double taps:
+        mSimpleListener = new SimpleOnGestureListener();
+        mGestureDetector = new GestureDetector(getApplicationContext(),
+                mSimpleListener);
 
 
         startLoadingAnimation();
@@ -173,14 +179,10 @@ public class Game2 extends Activity implements
         mTextures = new Vector<Texture>();
         loadTextures();
 
-        // Create the gesture detector that will handle the single and
-        // double taps:
-        mSimpleListener = new SimpleOnGestureListener();
-        mGestureDetector = new GestureDetector(getApplicationContext(),
-                mSimpleListener);
 
         mSeekPosition = new int[NUM_TARGETS];
         mWasPlaying = new boolean[NUM_TARGETS];
+
 
         // Set the double tap listener:
         mGestureDetector.setOnDoubleTapListener(new OnDoubleTapListener() {
@@ -221,21 +223,21 @@ public class Game2 extends Activity implements
                                     new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                                         @Override
                                         public void run() {
-                                            Log.d(LOGTAG, "원상태로");
                                             mFlEffectView.setVisibility(View.GONE);
                                         }
                                     }, 300);
 
-                                    ImageView image = new ImageView(mContext);
-                                    image.setLayoutParams(new android.view.ViewGroup.LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.MATCH_PARENT));
-                                    image.setMaxHeight(60);
-                                    image.setMaxWidth(55);
-                                    image.setImageBitmap(BitmapFactory.decodeFile(mCharacterSeq.get(Game2Renderer.mReadyCharacterSeq)));
+//                                    ImageView image = new ImageView(mContext);
+//                                    image.setLayoutParams(new android.view.ViewGroup.LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.MATCH_PARENT));
+//                                    image.setMaxHeight(60);
+//                                    image.setMaxWidth(55);
+//                                    image.setImageBitmap(BitmapFactory.decodeFile(mCharacterSeq.get(Game2Renderer.mReadyCharacterSeq)));
 
 
                                     // Adds the view to the layout
-                                    mLlCorrectView.addView(image);
+//                                    mLlCorrectView.addView(image);
 
+                                    mTvCorrectEffect[Game2Renderer.mCorrectedCharacterCnt].setTextColor(Color.parseColor("#008000"));
                                     Game2Renderer.mReadyCharacterSeq++;
                                     Game2Renderer.mCorrectedCharacterCnt++;
 
@@ -279,7 +281,6 @@ public class Game2 extends Activity implements
                                     new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                                         @Override
                                         public void run() {
-                                            Log.d(LOGTAG, "원상태로");
                                             mFlEffectView.setVisibility(View.GONE);
                                         }
                                     }, 300);
@@ -309,6 +310,52 @@ public class Game2 extends Activity implements
         mLlCorrectView = (LinearLayout) mGame2ContentView.findViewById(R.id.ll_correct_view);
         mFlEffectView = (FrameLayout) mGame2ContentView.findViewById(R.id.fl_effect_view);
         mImgEffectView = (ImageView) mGame2ContentView.findViewById(R.id.img_effect);
+
+
+        //8~10개: 10;
+        char[] correctCharacterVal = mGameSettingVO.getMarkerGameValue().toCharArray();
+        int correctCharacterCnt = mGameSettingVO.getBenefitCnt();
+        int paddingLR = 0;
+
+        switch (correctCharacterCnt) {
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+                paddingLR = 40;
+                break;
+            case 6:
+                paddingLR = 30;
+                break;
+            case 7:
+                paddingLR = 25;
+                break;
+            case 8:
+                paddingLR = 20;
+                break;
+            case 9:
+                paddingLR = 15;
+                break;
+            case 10:
+                paddingLR = 10;
+                break;
+        }
+
+        mTvCorrectEffect = new TextView[correctCharacterCnt];
+
+        for (int i = 0; i < correctCharacterCnt; i++) {
+//        for (int i = 0; i < mGameSettingVO.getBenefitCnt(); i++) {
+            mTvCorrectEffect[i] = new TextView(mContext);
+            mTvCorrectEffect[i].setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+            mTvCorrectEffect[i].setPadding(paddingLR, 0, paddingLR, 0);
+            mTvCorrectEffect[i].setTextColor(Color.parseColor("#000000"));
+            mTvCorrectEffect[i].setTextSize(30);
+            mTvCorrectEffect[i].setText("" + correctCharacterVal[i]);
+            mTvCorrectEffect[i].setVisibility(View.GONE);
+            mLlCorrectView.addView(mTvCorrectEffect[i]);
+        }
+
 
         vuforiaAppSession
                 .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -367,16 +414,22 @@ public class Game2 extends Activity implements
         runOnUiThread(new Runnable() {
             public void run() {
                 if (mDialog != null) {
+                    mDialog.setCanceledOnTouchOutside(false);
                     mDialog.dismiss();
                 }
+
 
                 // Generates an Alert Dialog to show the error message
                 AlertDialog.Builder builder = new AlertDialog.Builder(
                         Game2.this);
 
+//                View dialogView = findViewById(R.layout.dialog_game2);
+//                TextView tvGuide = (TextView) dialogView.findViewById(R.id.tv_guide);
+//                tvGuide.setText(msg);
+
                 builder
+//                        .setView(dialogView)
                         .setMessage(msg)
-                        .setTitle("알림")
                         .setIcon(0)
                         .setPositiveButton("확인",
                                 new DialogInterface.OnClickListener() {
@@ -386,12 +439,12 @@ public class Game2 extends Activity implements
                                         Log.d(LOGTAG, "멤버쉽 정보 확인: " + mMembershipCustomerVO.toString());
                                         intent.putExtra("membershipCustomerNo", mMembershipCustomerVO.getMembershipCustomerNo());
                                         intent.putExtra("couponDiscountTypeCode", type);
-                                        intent.putExtra("couponNo", couponInfo[0]);
-                                        if (couponInfo.length > 0) {
-                                            intent.putExtra("couponDiscountTypeValue", 0);
+                                        intent.putExtra("couponNo", Integer.parseInt(couponInfo[0]));
+                                        if (couponInfo.length == 2) {
+                                            intent.putExtra("couponDiscountTypeValue", Integer.parseInt(couponInfo[1]));
                                         }
                                         else {
-                                            intent.putExtra("couponDiscountTypeValue", couponInfo[1]);
+                                            intent.putExtra("couponDiscountTypeValue", 0);
                                         }
 
 

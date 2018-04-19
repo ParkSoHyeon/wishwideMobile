@@ -149,6 +149,14 @@ public class Game1 extends Activity implements
         mToast = Toast.makeText(mContext, "null", Toast.LENGTH_SHORT);
         mActivity = this;
 
+
+        // Create the gesture detector that will handle the single and
+        // double taps:
+        mSimpleListener = new SimpleOnGestureListener();
+        mGestureDetector = new GestureDetector(getApplicationContext(),
+                mSimpleListener);
+
+
         startLoadingAnimation();
 
         //게임 캐릭터 파일 다운로드
@@ -161,11 +169,6 @@ public class Game1 extends Activity implements
         mTextures = new Vector<Texture>();
         loadTextures();
 
-        // Create the gesture detector that will handle the single and
-        // double taps:
-        mSimpleListener = new SimpleOnGestureListener();
-        mGestureDetector = new GestureDetector(getApplicationContext(),
-                mSimpleListener);
 
         // Set the double tap listener:
         mGestureDetector.setOnDoubleTapListener(new OnDoubleTapListener() {
@@ -327,13 +330,14 @@ public class Game1 extends Activity implements
                                             Log.d(LOGTAG, "멤버쉽 정보 확인: " + mMembershipCustomerVO.toString());
                                             intent.putExtra("membershipCustomerNo", mMembershipCustomerVO.getMembershipCustomerNo());
                                             intent.putExtra("couponDiscountTypeCode", type);
-                                            intent.putExtra("couponNo", couponInfo[0]);
-                                            if (couponInfo.length > 0) {
-                                                intent.putExtra("couponDiscountTypeValue", 0);
+                                            intent.putExtra("couponNo", Integer.parseInt(couponInfo[0]));
+                                            if (couponInfo.length == 2) {
+                                                intent.putExtra("couponDiscountTypeValue", Integer.parseInt(couponInfo[1]));
                                             }
                                             else {
-                                                intent.putExtra("couponDiscountTypeValue", couponInfo[1]);
+                                                intent.putExtra("couponDiscountTypeValue", 0);
                                             }
+
 
 
                                             setResult(1, intent);

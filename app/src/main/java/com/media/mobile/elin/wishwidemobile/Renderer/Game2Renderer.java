@@ -18,17 +18,10 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
-import com.media.mobile.elin.wishwidemobile.Activity.Game1;
-import com.media.mobile.elin.wishwidemobile.Activity.Game2;
 import com.media.mobile.elin.wishwidemobile.Activity.Game2;
 import com.media.mobile.elin.wishwidemobile.Control.SampleAppRendererControl;
 import com.media.mobile.elin.wishwidemobile.Model.GameSettingVO;
-import com.media.mobile.elin.wishwidemobile.Model.MarkerVO;
-import com.media.mobile.elin.wishwidemobile.Model.MembershipCustomerVO;
 import com.media.mobile.elin.wishwidemobile.Session.SampleApplicationSession_Video;
 import com.media.mobile.elin.wishwidemobile.utils.SampleMath;
 import com.media.mobile.elin.wishwidemobile.utils.SampleUtils;
@@ -45,8 +38,7 @@ import java.util.Vector;
 
 
 // The renderer class for the VideoPlayback sample.
-public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererControl
-{
+public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererControl {
     private static final String LOGTAG = "Game2Renderer";
 
     SampleApplicationSession_Video vuforiaAppSession;
@@ -71,12 +63,12 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
     // We cannot use the default texture coordinates of the quad since these
     // will change depending on the video itself
-    private float videoQuadTextureCoords[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, };
+    private float videoQuadTextureCoords[] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,};
 
     // This variable will hold the transformed coordinates (changes every frame)
-    private float videoQuadTextureCoordsTransformedStones[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, };
+    private float videoQuadTextureCoordsTransformedStones[] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,};
 
-    private float videoQuadTextureCoordsTransformedChips[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, };
+    private float videoQuadTextureCoordsTransformedChips[] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,};
 
     // Trackable dimensions
     Vec3F targetPositiveDimensions[] = new Vec3F[Game2.NUM_TARGETS];
@@ -87,23 +79,23 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     private GameSettingVO mGameSettingVO;
 
     //Object Size
-    private  final float TARGETAREA = 1f;
+    private final float TARGETAREA = 1f;
 
     double quadVerticesArray[] = {
             -1.0f, -1.0f, 0.0f,
             1.0f, -1.0f, 0.0f,
             1.0f, 1.0f, 0.0f,
-            -1.0f, 1.0f, 0.0f };
+            -1.0f, 1.0f, 0.0f};
 
     double quadTexCoordsArray[] = {
             0.0f, 0.0f,
             1.0f, 0.0f,
             1.0f, 1.0f,
-            0.0f, 1.0f };
+            0.0f, 1.0f};
 
-    double quadNormalsArray[] = { 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, };
+    double quadNormalsArray[] = {0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,};
 
-    short quadIndicesArray[] = { 0, 1, 2, 2, 3, 0 };
+    short quadIndicesArray[] = {0, 1, 2, 2, 3, 0};
 
     Buffer quadVertices, quadTexCoords, quadIndices, quadNormals;
 
@@ -142,9 +134,8 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     float keyframeQuadAspectRatio[] = new float[Game2.NUM_TARGETS];
 
 
-    public Game2Renderer(Game2 activity, SampleApplicationSession_Video session)
-    {
-        
+    public Game2Renderer(Game2 activity, SampleApplicationSession_Video session) {
+
         mActivity = activity;
         vuforiaAppSession = session;
         mCorrectedCharacterCnt = 0;
@@ -161,23 +152,22 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
         for (int i = 0; i < Game2.NUM_TARGETS; i++)
             targetPositiveDimensions[i] = new Vec3F();
-        
+
         for (int i = 0; i < Game2.NUM_TARGETS; i++)
             modelViewMatrix[i] = new Matrix44F();
 
-        for(int i=0;i<Game2.NUM_TARGETS;i++)
-            for( int j=0;j<mGameSettingVO.getTotalCharacterCnt();j++)
+        for (int i = 0; i < Game2.NUM_TARGETS; i++)
+            for (int j = 0; j < mGameSettingVO.getTotalCharacterCnt(); j++)
                 m_objectsmodelViewMatrix[i][j] = new Matrix44F();
     }
-    
+
 
     // Called when the surface is created or recreated.
-    public void onSurfaceCreated(GL10 gl, EGLConfig config)
-    {
+    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         // Call function to initialize rendering:
         // The video texture is also created on this step
         initRendering();
-        
+
         // Call Vuforia function to (re)initialize rendering after first use
         // or after OpenGL ES context was lost (e.g. after onPause/onResume):
         Vuforia.onSurfaceCreated();
@@ -186,14 +176,12 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
     }
 
-    public void updateConfiguration()
-    {
+    public void updateConfiguration() {
         mSampleAppRendererVideo.onConfigurationChanged(mIsActive);
     }
 
     // Called when the surface changed size.
-    public void onSurfaceChanged(GL10 gl, int width, int height)
-    {
+    public void onSurfaceChanged(GL10 gl, int width, int height) {
         // Call Vuforia function to handle render surface size changes:
         Vuforia.onSurfaceChanged(width, height);
 
@@ -207,11 +195,10 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         // http://developer.android.com/reference/android/media/MediaPlayer.html#release()
 
     }
-    
-    
+
+
     // Called to draw the current frame.
-    public void onDrawFrame(GL10 gl)
-    {
+    public void onDrawFrame(GL10 gl) {
         if (!mIsActive)
             return;
 
@@ -220,66 +207,63 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     }
 
 
-    public void setActive(boolean active)
-    {
+    public void setActive(boolean active) {
         mIsActive = active;
 
-        if(mIsActive)
+        if (mIsActive)
             mSampleAppRendererVideo.configureVideoBackground();
     }
 
 
     @SuppressLint("InlinedApi")
-    void initRendering()
-    {
+    void initRendering() {
         Log.d(LOGTAG, "VideoPlayback VideoPlaybackRenderer initRendering");
-        
+
         // Define clear color
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, Vuforia.requiresAlpha() ? 0.0f
-            : 1.0f);
-        
+                : 1.0f);
+
         // Now generate the OpenGL texture objects and add settings
         for (Texture t : mTextures) {
             // Here we create the textures for the keyframe
             // and for all the icons
             GLES20.glGenTextures(1, t.mTextureID, 0);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, t.mTextureID[0]);
-            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
-            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
             GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, t.mWidth, t.mHeight, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, t.mData);
         }
-        
+
         // Now we create the texture for the video data from the movie
         // IMPORTANT:
         // Notice that the textures are not typical GL_TEXTURE_2D textures
         // but instead are GL_TEXTURE_EXTERNAL_OES extension textures
         // This is required by the Android SurfaceTexture
-        for (int i = 0; i < Game2.NUM_TARGETS; i++)
-        {
-            GLES20.glGenTextures(Game2.NUM_TARGETS-1, videoPlaybackTextureID, i);
+        for (int i = 0; i < Game2.NUM_TARGETS; i++) {
+            GLES20.glGenTextures(Game2.NUM_TARGETS - 1, videoPlaybackTextureID, i);
             GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, videoPlaybackTextureID[i]);
-            GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
-            GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+            GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+            GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
             GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0);
         }
-        
+
         // The first shader is the one that will display the video data of the
         // movie
         // (it is aware of the GL_TEXTURE_EXTERNAL_OES extension)
         videoPlaybackShaderID = SampleUtils.createProgramFromShaderSrc(
-            VideoPlaybackShaders.VIDEO_PLAYBACK_VERTEX_SHADER,
-            VideoPlaybackShaders.VIDEO_PLAYBACK_FRAGMENT_SHADER);
+                VideoPlaybackShaders.VIDEO_PLAYBACK_VERTEX_SHADER,
+                VideoPlaybackShaders.VIDEO_PLAYBACK_FRAGMENT_SHADER);
         videoPlaybackVertexHandle = GLES20.glGetAttribLocation(
-            videoPlaybackShaderID, "vertexPosition");
+                videoPlaybackShaderID, "vertexPosition");
         videoPlaybackTexCoordHandle = GLES20.glGetAttribLocation(
-            videoPlaybackShaderID, "vertexTexCoord");
+                videoPlaybackShaderID, "vertexTexCoord");
         videoPlaybackMVPMatrixHandle = GLES20.glGetUniformLocation(
-            videoPlaybackShaderID, "modelViewProjectionMatrix");
+                videoPlaybackShaderID, "modelViewProjectionMatrix");
         videoPlaybackTexSamplerOESHandle = GLES20.glGetUniformLocation(
-            videoPlaybackShaderID, "texSamplerOES");
-        
+                videoPlaybackShaderID, "texSamplerOES");
+
         // This is a simpler shader with regular 2D textures
         keyframeShaderID = SampleUtils.createProgramFromShaderSrc(KeyFrameShaders.KEY_FRAME_VERTEX_SHADER, KeyFrameShaders.KEY_FRAME_FRAGMENT_SHADER);
         keyframeVertexHandle = GLES20.glGetAttribLocation(keyframeShaderID, "vertexPosition");
@@ -295,7 +279,6 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         quadTexCoords = fillBuffer(quadTexCoordsArray);
         quadIndices = fillBuffer(quadIndicesArray);
         quadNormals = fillBuffer(quadNormalsArray);
-
 
 
         int totalCharacterCnt = mGameSettingVO.getTotalCharacterCnt();
@@ -329,19 +312,19 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 //                    m_translates[i][j] = randFloat(-0.6f, 3.5f);
 //                }
 
-        m_translates[0][0] = 3.0f;  //1 - x
-        m_translates[0][1] = 0.0f;  //1 - y
+        m_translates[0][0] = 1.357f;  //1 - x
+        m_translates[0][1] = 0.411f;  //1 - y
         m_translates[0][2] = 2.0f;  //2 - x
         m_translates[0][3] = 2.0f;  //2 - y
         m_translates[0][4] = 0.19f;  //3 - x
         m_translates[0][5] = 0.0f;  //3 - y
 
         m_translates[1][0] = 1.0f;
-        m_translates[1][1] = 3.0f;
-        m_translates[1][2] = -3.0f;
+        m_translates[1][1] = 1.912f;
+        m_translates[1][2] = -2.240f;
         m_translates[1][3] = 0.0f;
         m_translates[1][4] = -1.17f;
-        m_translates[1][5] = 2.0f;
+        m_translates[1][5] = 1.109f;
 
         m_translates[2][0] = -2.0f;
         m_translates[2][1] = 1.0f;
@@ -351,52 +334,52 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         m_translates[2][5] = -0.55f;
 
         m_translates[3][0] = 0.0f;
-        m_translates[3][1] = 3.812f;
+        m_translates[3][1] = 2.212f;
         m_translates[3][2] = 1.2f;
-        m_translates[3][3] = -1.8f;
+        m_translates[3][3] = -0.8f;
         m_translates[3][4] = 0.43f;
         m_translates[3][5] = 1.71f;
 
-        m_translates[4][0] = -3.913f;
-        m_translates[4][1] = -0.2f;
+        m_translates[4][0] = 0.0f;
+        m_translates[4][1] = 0.0f;
         m_translates[4][2] = -1.456f;
         m_translates[4][3] = 1.35f;
-        m_translates[4][4] = 0.0f;
-        m_translates[4][5] = 2.89f;
+        m_translates[4][4] = 0.101f;
+        m_translates[4][5] = 0.89f;
 
         m_translates[5][0] = 2.0f;
         m_translates[5][1] = 2.0f;
         m_translates[5][2] = 0.0f;
         m_translates[5][3] = 0.0f;
-        m_translates[5][4] = -2.71f;
-        m_translates[5][5] = 4.07f;
+        m_translates[5][4] = -1.71f;
+        m_translates[5][5] = -0.07f;
 
-        m_translates[6][0] = -3.67f;
+        m_translates[6][0] = -0.67f;
         m_translates[6][1] = 1.3f;
         m_translates[6][2] = 0.67f;
-        m_translates[6][3] = -0.46f;
-        m_translates[6][4] = 2.999f;
-        m_translates[6][5] = 0.0f;
+        m_translates[6][3] = 1.46f;
+        m_translates[6][4] = 1.999f;
+        m_translates[6][5] = 0.501f;
 
-        m_translates[7][0] = 4.112f;
+        m_translates[7][0] = 2.112f;
         m_translates[7][1] = 0.0f;
-        m_translates[7][2] = 4.136f;
-        m_translates[7][3] = 4.342f;
-        m_translates[7][4] = -2.22f;
-        m_translates[7][5] = 0.0f;
+        m_translates[7][2] = -0.136f;
+        m_translates[7][3] = 2.342f;
+        m_translates[7][4] = -1.82f;
+        m_translates[7][5] = 1.605f;
 
-        m_translates[8][0] = 2.0f;
-        m_translates[8][1] = 0.0f;
-        m_translates[8][2] = -2.35f;
-        m_translates[8][3] = 0.0f;
-        m_translates[8][4] = -3.15f;
-        m_translates[8][5] = 0.61f;
+        m_translates[8][0] = 1.0f;
+        m_translates[8][1] = -0.912f;
+        m_translates[8][2] = -0.559f;
+        m_translates[8][3] = 1.0f;
+        m_translates[8][4] = 2.15f;
+        m_translates[8][5] = 1.61f;
 
         m_translates[9][0] = -1.54f;
-        m_translates[9][1] = 3.0f;
+        m_translates[9][1] = -0.5f;
         m_translates[9][2] = 1.651f;
-        m_translates[9][3] = 0.0f;
-        m_translates[9][4] = 4.0f;
+        m_translates[9][3] = 1.0f;
+        m_translates[9][4] = 1.0f;
         m_translates[9][5] = -0.39f;
     }
 
@@ -412,8 +395,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     }
 
 
-    private Buffer fillBuffer(double[] array)
-    {
+    private Buffer fillBuffer(double[] array) {
         // Convert to floats because OpenGL doesnt work on doubles, and manually
         // casting each input value would take too much time.
         ByteBuffer bb = ByteBuffer.allocateDirect(4 * array.length); // each float takes 4 bytes
@@ -427,8 +409,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     }
 
 
-    private Buffer fillBuffer(short[] array)
-    {
+    private Buffer fillBuffer(short[] array) {
         ByteBuffer bb = ByteBuffer.allocateDirect(2 * array.length); // each
         // short
         // takes 2
@@ -443,8 +424,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     }
 
 
-    private Buffer fillBuffer(float[] array)
-    {
+    private Buffer fillBuffer(float[] array) {
         // Convert to floats because OpenGL doesnt work on doubles, and manually
         // casting each input value would take too much time.
         ByteBuffer bb = ByteBuffer.allocateDirect(4 * array.length); // each float takes 4 bytes
@@ -461,15 +441,14 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     // The render function called from SampleAppRendering by using RenderingPrimitives views.
     // The state is owned by SampleAppRenderer_Video which is controlling it's lifecycle.
     // State should not be cached outside this method.
-    public void renderFrame(State state, float[] projectionMatrix)
-    {
+    public void renderFrame(State state, float[] projectionMatrix) {
 
-        if(mGameSettingVO == null) return;
+        if (mGameSettingVO == null) return;
         // Renders video background replacing Renderer.DrawVideoBackground()
         mSampleAppRendererVideo.renderVideoBackground();
-        
+
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
-       
+
         // We must detect if background reflection is active and adjust the
         // culling direction.
         // If the reflection is active, this means the post matrix has been
@@ -482,28 +461,30 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         if (!mIsRecognizedMarker) {
             mActivity.showGame2Guide("매장 테이블 위에 있는 마커를 인식해주세요.");
         }
+        else {
+            for (int i = 0; i < mActivity.mTvCorrectEffect.length; i++) {
+                mActivity.mTvCorrectEffect[i].setVisibility(View.VISIBLE);
+            }
+        }
 
 
-        if(tappingProjectionMatrix == null)
-        {
+        if (tappingProjectionMatrix == null) {
             tappingProjectionMatrix = new Matrix44F();
             tappingProjectionMatrix.setData(projectionMatrix);
         }
 
-        float temp[] = { 0.0f, 0.0f, 0.0f };
-        for (int i = 0; i < Game2.NUM_TARGETS; i++)
-        {
+        float temp[] = {0.0f, 0.0f, 0.0f};
+        for (int i = 0; i < Game2.NUM_TARGETS; i++) {
             targetPositiveDimensions[i].setData(temp);
         }
-        
+
         // Did we find any trackables this frame?
-        for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++)
-        {
+        for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++) {
             // Get the trackable:
             TrackableResult trackableResult = state.getTrackableResult(tIdx);
-            
+
             ImageTarget imageTarget = (ImageTarget) trackableResult.getTrackable();
-            ImageTargetResult imageTargetResult = (ImageTargetResult)trackableResult;
+            ImageTargetResult imageTargetResult = (ImageTargetResult) trackableResult;
 
             String imageTargetName = imageTarget.getName();
             Log.d(LOGTAG, "타켓명: " + imageTargetName);
@@ -520,16 +501,15 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 //                    touchEventCode = 2;
 //                }
 //            }
-            if(imageTargetName.equals("stones"))
-            {
+            if (imageTargetName.equals("stones")) {
                 characterNum = mGameSettingVO.getTotalCharacterCnt();
                 touchEventCode = 2;
             }
 
             //is not same
-            if(touchEventCode == -1) return;
+            if (touchEventCode == -1) return;
             //if event type is 1(Virtual button touch)
-            if(touchEventCode == 1) {
+            if (touchEventCode == 1) {
                 for (int virtual = 0; virtual < imageTargetResult.getNumVirtualButtons(); virtual++) {
                     VirtualButtonResult btnResult = imageTargetResult.getVirtualButtonResult(virtual);
                     if (btnResult.isPressed()) {
@@ -541,16 +521,59 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
                 }
             }
             int currentTarget;
-            
+
             // We store the modelview matrix to be used later by the tap
             // calculation
             currentTarget = 0;
 
             modelViewMatrix[currentTarget] = Tool.convertPose2GLMatrix(trackableResult.getPose());
-            
+
+
+            Matrix44F modelviewmatrix = Tool.convertPose2GLMatrix(trackableResult.getPose());
+            Matrix44F inverseMV = SampleMath.Matrix44FInverse(modelviewmatrix);
+            Matrix44F invTranspMV = SampleMath.Matrix44FTranspose(inverseMV);
+
+            float rotateA = 0.0f;
+            float rotateX = 0.0f;
+            float rotateZ = 0.0f;
+            float transX=  0.0f;
+            float transY = 0.0f;
+            float transZ= 0.0f;
+
+
+            //카메라 방향 체크
+            if(invTranspMV.getData()[12] < 0 && invTranspMV.getData()[13] < 0) {
+                Log.d(LOGTAG, "1");
+                rotateA = 90.0f;
+                rotateX = 90.0f;
+                rotateZ = 0.0f;
+                transX = 0.0f;
+                transY = 2.0f;
+                transZ = 0.0f;
+            }
+            else if(invTranspMV.getData()[12] > 0 && invTranspMV.getData()[13] < 0) {
+                Log.d(LOGTAG, "2");
+                rotateA = 90.0f;
+                rotateX = 90.0f;
+                rotateZ = 90.0f;
+                transX = -2.0f;
+                transY = 0.0f;
+                transZ = 0.0f;
+            }
+            else if(invTranspMV.getData()[12] > 0 && invTranspMV.getData()[13] > 0) {
+                Log.d(LOGTAG, "3");
+                //rotateX = -90.0f;
+                transY = -2.0f;
+//                rotateY=180f;
+            }
+            else if(invTranspMV.getData()[12] < 0 && invTranspMV.getData()[13] > 0) {
+                Log.d(LOGTAG, "4");
+                //rotateX = 270.0f;
+                transY = 0f;
+            }
 
             targetPositiveDimensions[currentTarget] = imageTarget.getSize();
-            
+
             // The pose delivers the center of the target, thus the dimensions
             // go from -width/2 to width/2, same for height
             temp[0] = targetPositiveDimensions[currentTarget].getData()[0] / 2.0f;
@@ -560,11 +583,11 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             //cpyoon
             //make objects
             //if you want to create an object selectively, must change for syntax
-            for(int trans=mCorrectedCharacterCnt; trans < characterNum; trans++) {
+            for (int trans = mCorrectedCharacterCnt; trans < characterNum; trans++) {
                 // If the movie is ready to start playing or it has reached the end
                 // of playback we render the keyframe
 
-                mActivity.showGame2Guide("순서대로 터치해 \"" + mGameSettingVO.getMarkerGameValue() + "\"단어를 완성해주세요. " + (mGameSettingVO.getBenefitCnt() - mReadyCharacterSeq) + "개 남았습니다.");
+                mActivity.showGame2Guide("\"" + mGameSettingVO.getMarkerGameValue() + "\"단어를 순서대로 캐치하세요. ");
                 mIsRecognizedMarker = true;
 
                 float[] modelViewMatrixKeyframe = Tool.convertPose2GLMatrix(trackableResult.getPose()).getData();
@@ -583,38 +606,45 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
                 //cpyoon
                 //Method to translate using m_translates
-                if (randNum == 0) {
-                    Matrix.translateM(
-                            modelViewMatrixKeyframe,
-                            0,
-                            m_translates[trans][0],
-                            2.0f,
-                            m_translates[trans][1]);
-                }
-                else if (randNum == 1) {
-                    Matrix.translateM(
-                            modelViewMatrixKeyframe,
-                            0,
-                            m_translates[trans][2],
-                            2.0f,
-                            m_translates[trans][3]);
-                }
-                else {
-                    Matrix.translateM(
-                            modelViewMatrixKeyframe,
-                            0,
-                            m_translates[trans][4],
-                            2.0f,
-                            m_translates[trans][5]);
-                }
+//                if (randNum == 0) {
+//                    Matrix.translateM(
+//                            modelViewMatrixKeyframe,
+//                            0,
+//                            m_translates[trans][0],
+//                            2.0f,
+//                            m_translates[trans][1]);
+//                }
+//                else if (randNum == 1) {
+//                    Matrix.translateM(
+//                            modelViewMatrixKeyframe,
+//                            0,
+//                            m_translates[trans][2],
+//                            2.0f,
+//                            m_translates[trans][3]);
+//                }
+//                else {
+//                    Matrix.translateM(
+//                            modelViewMatrixKeyframe,
+//                            0,
+//                            m_translates[trans][4],
+//                            2.0f,
+//                            m_translates[trans][5]);
+//                }
+
+                Matrix.translateM(
+                        modelViewMatrixKeyframe,
+                        0,
+                        m_translates[trans][4] + transX,
+                        transY,
+                        m_translates[trans][5] + transZ);
 
 
                 Matrix.rotateM(modelViewMatrixKeyframe,
                         0,
-                        95.0f,
-                        90.0f,
+                        rotateA,
+                        rotateX,
                         0.0f,    //m_rotates[trans][0]
-                        0.0f);
+                        rotateZ);
 
                 Matrix.scaleM(
                         modelViewMatrixKeyframe,
@@ -644,7 +674,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
                 //used for touch event handling
                 Matrix44F matrix = new Matrix44F();
                 matrix.setData(modelViewMatrixKeyframe);
-                m_objectsmodelViewMatrix[currentTarget][trans] =  matrix;
+                m_objectsmodelViewMatrix[currentTarget][trans] = matrix;
 
                 GLES20.glUseProgram(keyframeShaderID);
 
@@ -656,6 +686,12 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
                 GLES20.glEnableVertexAttribArray(keyframeTexCoordHandle);
 
                 GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+
+
+                //택스처에 투명부분을 투명으로 처리
+                GLES20.glEnable(GLES20.GL_BLEND);
+                GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+
 
                 // The first loaded texture from the assets folder is the
                 // keyframe
@@ -674,18 +710,20 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
                 SampleUtils.checkGLError("VideoPlayback renderFrame");
             }
         }
-        
+
+        GLES20.glDisable(GLES20.GL_BLEND);
+
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
-        
+
         Renderer.getInstance().end();
-        
+
     }
+
     //cpyoon
     //touch event handling
     //check touched object corresponding target marker
-    public int isTapOnScreenInsideTarget(int target, float x, float y)
-    {
-        for(int trans = 0;trans<m_translates.length;trans++) {
+    public int isTapOnScreenInsideTarget(int target, float x, float y) {
+        for (int trans = 0; trans < m_translates.length; trans++) {
             //cpyoon
             // Here we calculate that the touch event is inside the target
             Vec3F intersection;
@@ -695,16 +733,15 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             //cpyoon
             // The target returns as pose the center of the trackable. The following
             // if-statement simply checks that the tap is within this range
-                if ((intersection.getData()[0] >= -(TARGETAREA) && (intersection.getData()[0] <= (TARGETAREA))) && (intersection.getData()[1] >= -(TARGETAREA)) && (intersection.getData()[1]<= (TARGETAREA)))
-                    return trans;
+            if ((intersection.getData()[0] >= -(TARGETAREA) && (intersection.getData()[0] <= (TARGETAREA))) && (intersection.getData()[1] >= -(TARGETAREA)) && (intersection.getData()[1] <= (TARGETAREA)))
+                return trans;
         }
         return -1;
     }
-    
-    
+
+
     void setVideoDimensions(int target, float videoWidth, float videoHeight,
-        float[] textureCoordMatrix)
-    {
+                            float[] textureCoordMatrix) {
         // The quad originaly comes as a perfect square, however, the video
         // often has a different aspect ration such as 4:3 or 16:9,
         // To mitigate this we have two options:
@@ -714,54 +751,52 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         // the height down.
         // (see the render call in renderFrame)
         videoQuadAspectRatio[target] = videoHeight / videoWidth;
-        
+
         float mtx[] = textureCoordMatrix;
         float tempUVMultRes[] = new float[2];
-        
-        if (target == 0)
-        {
+
+        if (target == 0) {
             tempUVMultRes = uvMultMat4f(
-                videoQuadTextureCoordsTransformedStones[0],
-                videoQuadTextureCoordsTransformedStones[1],
-                videoQuadTextureCoords[0], videoQuadTextureCoords[1], mtx);
+                    videoQuadTextureCoordsTransformedStones[0],
+                    videoQuadTextureCoordsTransformedStones[1],
+                    videoQuadTextureCoords[0], videoQuadTextureCoords[1], mtx);
             videoQuadTextureCoordsTransformedStones[0] = tempUVMultRes[0];
             videoQuadTextureCoordsTransformedStones[1] = tempUVMultRes[1];
             tempUVMultRes = uvMultMat4f(
-                videoQuadTextureCoordsTransformedStones[2],
-                videoQuadTextureCoordsTransformedStones[3],
-                videoQuadTextureCoords[2], videoQuadTextureCoords[3], mtx);
+                    videoQuadTextureCoordsTransformedStones[2],
+                    videoQuadTextureCoordsTransformedStones[3],
+                    videoQuadTextureCoords[2], videoQuadTextureCoords[3], mtx);
             videoQuadTextureCoordsTransformedStones[2] = tempUVMultRes[0];
             videoQuadTextureCoordsTransformedStones[3] = tempUVMultRes[1];
             tempUVMultRes = uvMultMat4f(
-                videoQuadTextureCoordsTransformedStones[4],
-                videoQuadTextureCoordsTransformedStones[5],
-                videoQuadTextureCoords[4], videoQuadTextureCoords[5], mtx);
+                    videoQuadTextureCoordsTransformedStones[4],
+                    videoQuadTextureCoordsTransformedStones[5],
+                    videoQuadTextureCoords[4], videoQuadTextureCoords[5], mtx);
             videoQuadTextureCoordsTransformedStones[4] = tempUVMultRes[0];
             videoQuadTextureCoordsTransformedStones[5] = tempUVMultRes[1];
             tempUVMultRes = uvMultMat4f(
-                videoQuadTextureCoordsTransformedStones[6],
-                videoQuadTextureCoordsTransformedStones[7],
-                videoQuadTextureCoords[6], videoQuadTextureCoords[7], mtx);
+                    videoQuadTextureCoordsTransformedStones[6],
+                    videoQuadTextureCoordsTransformedStones[7],
+                    videoQuadTextureCoords[6], videoQuadTextureCoords[7], mtx);
             videoQuadTextureCoordsTransformedStones[6] = tempUVMultRes[0];
             videoQuadTextureCoordsTransformedStones[7] = tempUVMultRes[1];
         }
-        
+
         // textureCoordMatrix = mtx;
     }
-    
-    
+
+
     // Multiply the UV coordinates by the given transformation matrix
     float[] uvMultMat4f(float transformedU, float transformedV, float u,
-        float v, float[] pMat)
-    {
-        float x = pMat[0] * u + pMat[4] * v /* + pMat[ 8]*0.f */+ pMat[12]
-            * 1.f;
-        float y = pMat[1] * u + pMat[5] * v /* + pMat[ 9]*0.f */+ pMat[13]
-            * 1.f;
+                        float v, float[] pMat) {
+        float x = pMat[0] * u + pMat[4] * v /* + pMat[ 8]*0.f */ + pMat[12]
+                * 1.f;
+        float y = pMat[1] * u + pMat[5] * v /* + pMat[ 9]*0.f */ + pMat[13]
+                * 1.f;
         // float z = pMat[2]*u + pMat[6]*v + pMat[10]*0.f + pMat[14]*1.f; // We
         // dont need z and w so we comment them out
         // float w = pMat[3]*u + pMat[7]*v + pMat[11]*0.f + pMat[15]*1.f;
-        
+
         float result[] = new float[2];
         // transformedU = x;
         // transformedV = y;
@@ -770,9 +805,8 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         return result;
     }
 
-    public void setTextures(Vector<Texture> textures)
-    {
+    public void setTextures(Vector<Texture> textures) {
         mTextures = textures;
     }
-    
+
 }

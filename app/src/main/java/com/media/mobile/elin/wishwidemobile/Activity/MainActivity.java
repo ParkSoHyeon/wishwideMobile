@@ -101,10 +101,10 @@ public class MainActivity extends AppCompatActivity
     //beacon list
     public Beacon_Marker beacon_marker = null;
     private ArrayList<String> scanBeaconList = new ArrayList<>();
-    private ArrayList<Double> scanBeaconDistance = new ArrayList<>();
+//    private ArrayList<Double> scanBeaconDistance = new ArrayList<>();
     private ArrayList<String> notExistBeacon = new ArrayList<>();
     private ArrayList<String> scanBeaconAll = new ArrayList<>();
-    private BeaconScanResult beaconScanResult = null;
+//    private BeaconScanResult beaconScanResult = null;
     private CentralManager centralManager;
     public final Map scanBeaconInfo = new HashMap();
 
@@ -176,7 +176,9 @@ public class MainActivity extends AppCompatActivity
                 if (deniedPermissions.size() > 0) {
                     requestPermission(deniedPermissions.toArray(new String[deniedPermissions.size()]), GAME_START_PERMISSION);
                 } else {
-                    mWebView.loadUrl("javascript:callGameSetting()");
+                    mWebView.loadUrl("javascript:callNearbyBeacon()");
+//                    mWebView.loadUrl("javascript:callGameSetting()");
+
                 }
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
@@ -192,8 +194,6 @@ public class MainActivity extends AppCompatActivity
                 mWebView.loadUrl(DOMAIN_NAME + HOME_PATH + "?lat=" + location.getLatitude() + "&lng=" + location.getLongitude());
                 progressOFF();
                 requestRemoveUpdate();
-
-//                new NearbyBeaconListTask().execute(location.getLatitude(),location.getLongitude());
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -227,11 +227,14 @@ public class MainActivity extends AppCompatActivity
                     String keyName = (String) iterator.next();
                     String valueName = (String) scanBeaconInfo.get(keyName);
 
+                    Log.d(TAG, keyName.trim() + " 비콘 맥주소 확인 " + str.trim());
                     if (keyName.trim().equals(str.trim())) {
                         Log.d(TAG, "DB 비콘과 일치" + valueName);
                         stopBeaconScan();
 
-                        mWebView.loadUrl(DOMAIN_NAME + STORE_DETAIL_PATH + "?wideManagerId=" + valueName);
+                        mWebView.loadUrl("javascript:callGameSetting()");
+
+//                        mWebView.loadUrl(DOMAIN_NAME + STORE_DETAIL_PATH + "?wideManagerId=" + valueName);
 
 //                        runOnUiThread(new Runnable() {
 //                            @Override
@@ -277,7 +280,7 @@ public class MainActivity extends AppCompatActivity
                         .setTitle("안내")
                         .setMessage(message)
                         .setPositiveButton(android.R.string.ok,
-                                new AlertDialog.OnClickListener(){
+                                new AlertDialog.OnClickListener() {
                                     public void onClick(DialogInterface dialog, int which) {
                                         result.confirm();
                                     }
@@ -435,7 +438,6 @@ public class MainActivity extends AppCompatActivity
         String responseCode = getIntent().getStringExtra("responseCode");
 
 
-
         if (responseCode.equals("AUTO")) {
             JSONObject objRoot = new JSONObject();
             try {
@@ -565,6 +567,11 @@ public class MainActivity extends AppCompatActivity
         }
 
         @JavascriptInterface
+        public void callNearbyBeacon(String managerId) {
+            new NearbyBeaconListTask(managerId).execute();
+        }
+
+        @JavascriptInterface
         public void callIsExecuteGame(final String isExecuteGame) {
             Log.d(TAG, "게임 실행 여부 확인: " + isExecuteGame);
 
@@ -574,8 +581,7 @@ public class MainActivity extends AppCompatActivity
                     if (isExecuteGame.equals("1") ? true : false) {
                         Log.d(TAG, "게임이용가능");
                         mARFloatingActionButton.setVisibility(View.VISIBLE);
-                    }
-                    else {
+                    } else {
                         Log.d(TAG, "게임이용불가");
                         mARFloatingActionButton.setVisibility(View.GONE);
                     }
@@ -874,7 +880,7 @@ public class MainActivity extends AppCompatActivity
                 progressOFF();
 
                 new AlertDialog.Builder(mContext)
-                        .setTitle("안내")
+                        .setTitle("")
                         .setMessage("현재 매장 위치를 더욱 쉽게 찾기 위해 위치 서비스를 켜주세요.")
                         .setPositiveButton("설정", new DialogInterface.OnClickListener() {
                             @Override
@@ -1026,8 +1032,8 @@ public class MainActivity extends AppCompatActivity
                     scanBeaconList.add(jo.getString("beaconMacAddress"));
                     scanBeaconInfo.put(jo.getString("beaconMacAddress"), jo.getString("wideManagerId"));
                     Log.d(TAG, "Beacon.txt 파일 읽음: " + jo.getString("beaconMacAddress"));
-                    Log.d(TAG, "Beacon.txt 파일 읽음: " + scanBeaconInfo.containsKey(jo.getString("beaconMacAddress")));
-                    scanBeaconDistance.add(999.0);
+//                    Log.d(TAG, "Beacon.txt 파일 읽음: " + scanBeaconInfo.containsKey(jo.getString("beaconMacAddress")));
+//                    scanBeaconDistance.add(999.0);
                 }
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -1037,7 +1043,14 @@ public class MainActivity extends AppCompatActivity
                 e.printStackTrace();
             }
 
-            startBeaconScan();
+            Log.d(TAG, "scanBeaconList.size(): " + scanBeaconList.size());
+            if (scanBeaconList.size() > 0) {
+                startBeaconScan();
+            }
+            else {
+                mWebView.loadUrl("javascript:showAlert('주변에 매장이 없습니다.')");
+            }
+
             return null;
         }
 
@@ -1048,19 +1061,29 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    public class NearbyBeaconListTask extends AsyncTask<Double, Void, String> {
+    public class NearbyBeaconListTask extends AsyncTask<String, Void, String> {
         private static final String TAG = "NearbyBeaconListTask";
+
+        private final String mManagerId;
+
+        public NearbyBeaconListTask(String managerId) {
+            mManagerId = managerId;
+        }
 
 
         @Override
-        protected String doInBackground(Double... params) {
+        protected String doInBackground(String... strings) {
             HttpURLConnection urlConn = null;
             StringBuffer sbParams = new StringBuffer();
 
-            Log.d(TAG, "lat: " + params[0]);
-            Log.d(TAG, "lng: " + params[1]);
-            sbParams.append("lat").append("=").append(params[0]).append("&");
-            sbParams.append("lng").append("=").append(params[1]);
+            Log.d(TAG, "wideManagerId 확인: " + mManagerId);
+//            Log.d(TAG, "lat: " + params[0]);
+//            Log.d(TAG, "lng: " + params[1]);
+//            sbParams.append("lat").append("=").append(params[0]).append("&");
+//            sbParams.append("lng").append("=").append(params[1]);
+
+
+            sbParams.append("wideManagerId").append("=").append(mManagerId);
 
             try {
                 URL url = new URL(DOMAIN_NAME + NEARBY_BEACON_LIST_PATH);
@@ -1137,54 +1160,54 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    public class BeaconScanResult extends Thread {
-        private static final String TAG = "BeaconScanResult";
-        public boolean isCon = true;
-
-        @Override
-        public void run() {
-            if (scanBeaconDistance.size() < 1) {
-                Log.d(TAG, "주변에 비콘 없음");
-                return;
-            }
-            while (isCon) {
-                try {
-                    Thread.sleep(3000);
-
-                    double min = scanBeaconDistance.get(0);
-//                    Log.d(TAG, "최소 거리 값 확인: " + min);
-                    int cnt = 0;
-                    for (int i = 1; i < scanBeaconList.size(); i++) {
-                        double dis = scanBeaconDistance.get(i);
-                        if (dis < min) {
-                            min = dis;
-                            cnt = i;
-                        }
-                    }
-
-                    if (min != 999.0) {
-                        if (beacon_marker == null) {
-                            Log.d("tScanResult begin", scanBeaconList.get(cnt));
-                            beacon_marker = new Beacon_Marker(scanBeaconList.get(cnt));
-//                            new MarkerFileLoad().execute(beacon_marker.m_Macaddress);
-
-                        } else if (!beacon_marker.m_Macaddress.equals(scanBeaconList.get(cnt))) {
-                            Log.d("tScanResult ", scanBeaconList.get(cnt));
-                            beacon_marker = new Beacon_Marker(scanBeaconList.get(cnt));
-//                            new MarkerFileLoad().execute(beacon_marker.m_Macaddress);
-                        }
-
-                        stopBeaconScan();
-
-                        //scanBeaconList.get(cnt)에 맞는 매장을 찾아 상세 화면 띄우기
-                    }
-
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
+//    public class BeaconScanResult extends Thread {
+//        private static final String TAG = "BeaconScanResult";
+//        public boolean isCon = true;
+//
+//        @Override
+//        public void run() {
+//            if (scanBeaconDistance.size() < 1) {
+//                Log.d(TAG, "주변에 비콘 없음");
+//                return;
+//            }
+//            while (isCon) {
+//                try {
+//                    Thread.sleep(3000);
+//
+//                    double min = scanBeaconDistance.get(0);
+////                    Log.d(TAG, "최소 거리 값 확인: " + min);
+//                    int cnt = 0;
+//                    for (int i = 1; i < scanBeaconList.size(); i++) {
+//                        double dis = scanBeaconDistance.get(i);
+//                        if (dis < min) {
+//                            min = dis;
+//                            cnt = i;
+//                        }
+//                    }
+//
+//                    if (min != 999.0) {
+//                        if (beacon_marker == null) {
+//                            Log.d("tScanResult begin", scanBeaconList.get(cnt));
+//                            beacon_marker = new Beacon_Marker(scanBeaconList.get(cnt));
+////                            new MarkerFileLoad().execute(beacon_marker.m_Macaddress);
+//
+//                        } else if (!beacon_marker.m_Macaddress.equals(scanBeaconList.get(cnt))) {
+//                            Log.d("tScanResult ", scanBeaconList.get(cnt));
+//                            beacon_marker = new Beacon_Marker(scanBeaconList.get(cnt));
+////                            new MarkerFileLoad().execute(beacon_marker.m_Macaddress);
+//                        }
+//
+//                        stopBeaconScan();
+//
+//                        //scanBeaconList.get(cnt)에 맞는 매장을 찾아 상세 화면 띄우기
+//                    }
+//
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//    }
 
 
     @Override
@@ -1220,10 +1243,10 @@ public class MainActivity extends AppCompatActivity
                     if (resultCode == 1) {
                         objRoot.put("responseCode", "SUCCESS");
                         objRoot.put("wideManagerId", data.getStringExtra("wideManagerId"));
-                        objRoot.put("couponNo", data.getStringExtra("couponNo"));
-                        objRoot.put("membershipCustomerNo", String.valueOf(data.getIntExtra("membershipCustomerNo", 0)));
+                        objRoot.put("couponNo", data.getIntExtra("couponNo", 0));
+                        objRoot.put("membershipCustomerNo", data.getIntExtra("membershipCustomerNo", 0));
                         objRoot.put("couponDiscountTypeCode", data.getStringExtra("couponDiscountTypeCode"));
-                        objRoot.put("couponDiscountTypeValue", data.getStringExtra("couponDiscountTypeValue"));
+                        objRoot.put("couponDiscountTypeValue", data.getIntExtra("couponDiscountTypeValue", 0));
 
                         Log.d(TAG, "혜택 insert: " + objRoot.toString());
                         mWebView.postUrl(DOMAIN_NAME + GAME_BENEFIT_REGISTER_PATH, EncodingUtils.getBytes(objRoot.toString(), "UTF-8"));
@@ -1240,9 +1263,10 @@ public class MainActivity extends AppCompatActivity
                     if (resultCode == 1) {
                         objRoot.put("responseCode", "SUCCESS");
                         objRoot.put("wideManagerId", data.getStringExtra("wideManagerId"));
-                        objRoot.put("couponNo", String.valueOf(data.getIntExtra("couponNo", 0)));
-                        objRoot.put("membershipCustomerNo", String.valueOf(data.getIntExtra("membershipCustomerNo", 0)));
+                        objRoot.put("couponNo", data.getIntExtra("couponNo", 0));
+                        objRoot.put("membershipCustomerNo", data.getIntExtra("membershipCustomerNo", 0));
                         objRoot.put("couponDiscountTypeCode", data.getStringExtra("couponDiscountTypeCode"));
+                        objRoot.put("couponDiscountTypeValue", data.getIntExtra("couponDiscountTypeValue", 0));
 
                         Log.d(TAG, "혜택 insert: " + objRoot.toString());
                         mWebView.postUrl(DOMAIN_NAME + GAME_BENEFIT_REGISTER_PATH, EncodingUtils.getBytes(objRoot.toString(), "UTF-8"));
@@ -1270,10 +1294,7 @@ public class MainActivity extends AppCompatActivity
             HttpURLConnection urlConn = null;
             StringBuffer sbParams = new StringBuffer();
 
-            Log.d(TAG, "" +
-                    "" +
-                    "" +
-                    " 확인: " + mWideMangerId);
+            Log.d(TAG, "확인: " + mWideMangerId);
             Log.d(TAG, "wideCustomerNo 확인: " + wideCustomerVO.getWideCustomerNo());
             Log.d(TAG, "wideCustomerPhone 확인: " + wideCustomerVO.getWideCustomerPhone());
 
@@ -1334,34 +1355,53 @@ public class MainActivity extends AppCompatActivity
                     if (responseCode.equals("0")) {
                         //게임실행오류 alert;
                         return;
+                    } else if (responseCode.equals("2") || responseCode.equals("3")) {
+                        //고객이 모든 혜택을 다 받음
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                new AlertDialog.Builder(getApplicationContext())
+//                                        .setTitle("안내")
+//                                        .setMessage("모든 혜택을 다 받으셨습니다.")
+//                                        .setPositiveButton("확인", new DialogInterface.OnClickListener() {
+//                                            @Override
+//                                            public void onClick(DialogInterface dialog, int which) {
+//
+//                                            }
+//                                        })
+//                                        .show();
+//                            }
+//                        });
+                        mWebView.loadUrl("javascript:showAlert('모든 혜택을 다 받으셨습니다. \n다음에 다시 이용해주세요.')");
+                    } else if (responseCode.equals("1")) {
+                        String gameSetting = objRoot.getString("gameSetting");
+                        String membershipCustomerVO = objRoot.getString("membershipCustomerVO");
+                        Log.d(TAG, "게임설정 확인: " + gameSetting);
+                        Log.d(TAG, "멤버십고객 확인: " + membershipCustomerVO);
+
+                        Intent intent = null;
+
+                        switch (objRoot.getJSONObject("gameSetting").optString("markerGameTypeCode")) {
+                            case "1":
+                                //게임 실행!
+                                intent = new Intent(MainActivity.this, Game1.class);
+                                intent.putExtra("gameSetting", gameSetting);
+                                intent.putExtra("membershipCustomerVO", membershipCustomerVO);
+
+                                startActivityForResult(intent, 7);
+                                break;
+                            case "2":
+                                //게임 실행!
+                                intent = new Intent(MainActivity.this, Game2.class);
+                                intent.putExtra("gameSetting", gameSetting);
+                                intent.putExtra("membershipCustomerVO", membershipCustomerVO);
+
+                                startActivityForResult(intent, 77);
+                                break;
+                        }
+
+
                     }
-
-                    String gameSetting = objRoot.getString("gameSetting");
-                    String membershipCustomerVO = objRoot.getString("membershipCustomerVO");
-                    Log.d(TAG, "게임설정 확인: " + gameSetting);
-                    Log.d(TAG, "멤버십고객 확인: " + membershipCustomerVO);
-
-                    Intent intent = null;
-
-                    switch (objRoot.getJSONObject("gameSetting").optString("markerGameTypeCode")) {
-                        case "1":
-                            //게임 실행!
-                            intent = new Intent(MainActivity.this, Game1.class);
-                            intent.putExtra("gameSetting", gameSetting);
-                            intent.putExtra("membershipCustomerVO", membershipCustomerVO);
-
-                            startActivityForResult(intent, 7);
-                            break;
-                        case "2":
-                            //게임 실행!
-                            intent = new Intent(MainActivity.this, Game2.class);
-                            intent.putExtra("gameSetting", gameSetting);
-                            intent.putExtra("membershipCustomerVO", membershipCustomerVO);
-
-                            startActivityForResult(intent, 77);
-                            break;
-                    }
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
