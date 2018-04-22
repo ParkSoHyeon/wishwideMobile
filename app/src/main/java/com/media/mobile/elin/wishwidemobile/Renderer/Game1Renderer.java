@@ -507,8 +507,14 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 //                    touchEventCode = 2;
 //                }
 //            }
-            if(imageTargetName.equals("stones"))
-            {
+//            for (MarkerVO markerVO : mGameSettingVO.getMarkerList()) {
+//                if (imageTargetName.equals(markerVO.getMarkerId())) {
+//                    characterNum = mGameSettingVO.getTotalCharacterCnt();
+//                    touchEventCode = 2;
+//                }
+//            }
+
+            if (imageTargetName.equals("stones")) {
                 characterNum = mGameSettingVO.getTotalCharacterCnt();
                 touchEventCode = 2;
             }
@@ -535,7 +541,10 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             currentTarget = 0;
 
             modelViewMatrix[currentTarget] = Tool.convertPose2GLMatrix(trackableResult.getPose());
-            
+
+            Matrix44F modelviewmatrix = Tool.convertPose2GLMatrix(trackableResult.getPose());
+            Matrix44F inverseMV = SampleMath.Matrix44FInverse(modelviewmatrix);
+            Matrix44F invTranspMV = SampleMath.Matrix44FTranspose(inverseMV);
 
             targetPositiveDimensions[currentTarget] = imageTarget.getSize();
             
@@ -555,6 +564,7 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
                 mIsRecognizedMarker = true;
 
                 float[] modelViewMatrixKeyframe = Tool.convertPose2GLMatrix(trackableResult.getPose()).getData();
+
                 float[] modelViewProjectionKeyframe = new float[16];
                 // Matrix.translateM(modelViewMatrixKeyframe, 0, 0.0f, 0.0f,
                 // targetPositiveDimensions[currentTarget].getData()[0]);
@@ -570,34 +580,88 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
                 //cpyoon
                 //Method to translate using m_translates
+                int indexRL, indexTB = 0;    //좌우 위치와 상하 위치가 저장되어 있는 index
                 if (randNum == 0) {
-                    Matrix.translateM(
-                            modelViewMatrixKeyframe,
-                            0,
-                            m_translates[trans][0],
-                            2.0f,
-                            m_translates[trans][1]);
+                    indexRL = 0;
+                    indexTB = 1;
                 }
                 else if (randNum == 1) {
-                    Matrix.translateM(
-                            modelViewMatrixKeyframe,
-                            0,
-                            m_translates[trans][2],
-                            2.0f,
-                            m_translates[trans][3]);
+                    indexRL = 2;
+                    indexTB = 3;
                 }
                 else {
+                    indexRL = 4;
+                    indexTB = 5;
+                }
+
+                //카메라 방향에 따라 정면에 캐릭터 띄우기
+                if (invTranspMV.getData()[12] < 0 && invTranspMV.getData()[13] < 0) {
+                    Log.d(LOGTAG, "1");
+
                     Matrix.translateM(
                             modelViewMatrixKeyframe,
                             0,
-                            m_translates[trans][4],
+                            m_translates[trans][indexRL],
                             2.0f,
-                            m_translates[trans][5]);
+                            m_translates[trans][indexTB]);
+                }
+                else if (invTranspMV.getData()[12] > 0 && invTranspMV.getData()[13] < 0) {
+                    Log.d(LOGTAG, "2");
+                    Matrix.translateM(
+                            modelViewMatrixKeyframe,
+                            0,
+                            -2.0f,
+                            m_translates[trans][indexRL],
+                            m_translates[trans][indexTB]);
+
+
+                    Matrix.rotateM(modelViewMatrixKeyframe,
+                            0,
+                            -270.0f,
+                            0.0f,
+                            0.0f,    //m_rotates[trans][0]
+                            90.0f);
+                }
+                else if (invTranspMV.getData()[12] > 0 && invTranspMV.getData()[13] > 0) {
+                    Log.d(LOGTAG, "3");
+
+                    Matrix.translateM(
+                            modelViewMatrixKeyframe,
+                            0,
+                            m_translates[trans][indexRL],
+                            -2.0f,
+                            m_translates[trans][indexTB]);
+
+
+                    Matrix.rotateM(modelViewMatrixKeyframe,
+                            0,
+                            180.0f,
+                            0.0f,
+                            0.0f,    //m_rotates[trans][0]
+                            90.0f);
+                }
+                else if (invTranspMV.getData()[12] < 0 && invTranspMV.getData()[13] > 0) {
+                    Log.d(LOGTAG, "4");
+
+                    Matrix.translateM(
+                            modelViewMatrixKeyframe,
+                            0,
+                            2.0f,
+                            m_translates[trans][indexRL],
+                            m_translates[trans][indexTB]);
+
+
+                    Matrix.rotateM(modelViewMatrixKeyframe,
+                            0,
+                            270.0f,
+                            0.0f,
+                            0.0f,    //m_rotates[trans][0]
+                            90.0f);
                 }
 
                 Matrix.rotateM(modelViewMatrixKeyframe,
                         0,
-                        95.0f,
+                        90.0f,
                         90.0f,
                         0.0f,    //m_rotates[trans][0]
                         0.0f);

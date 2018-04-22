@@ -17,19 +17,32 @@ import java.util.List;
 public class FileFetcher {
     private static final String TAG = "FileFetcher";
     private final static String strAppPath = Environment.getExternalStorageDirectory().getPath() + "/Wishwide/game/";
+    private final static String strAppDatasetPath = Environment.getExternalStorageDirectory().getPath() + "/Wishwide/game/dataset/";
+    private final static String strAppCharacterPath = Environment.getExternalStorageDirectory().getPath() + "/Wishwide/game/character/";
 
+
+    public void downloadGameCharacterFile(GameCharacterFileVO gameCharacterFileVO, String gameType) {
+        new GameCharacterFileDownloadTask(gameCharacterFileVO, gameType).execute();
+    }
 
 
     //Cloud에서 다운로드한 파일을 콘텐츠 폴더에 파일명을 "콘텐츠명.확장자"로 저장
-    public void downloadFile(GameCharacterFileVO gameCharacterFileVO, String gameType) {
-        new FileDownloadTask(gameCharacterFileVO, gameType).execute();
+    public void downloadDataSetFile(String dataSetUrl,
+                                    String dataSetFileName,
+                                    int dataSetFileSize,
+                                    String gameType) {
+        new DataSetFileDownloadTask(
+                dataSetUrl,
+                dataSetFileName,
+                dataSetFileSize,
+                gameType).execute();
     }
 
-    public class FileDownloadTask extends AsyncTask<String, Void, String> {
+    private class GameCharacterFileDownloadTask extends AsyncTask<String, Void, String> {
         private final GameCharacterFileVO mGameCharacterFileVO;
         private final String mGameType;
 
-        public FileDownloadTask(GameCharacterFileVO gameCharacterFileVO, String gameType) {
+        public GameCharacterFileDownloadTask(GameCharacterFileVO gameCharacterFileVO, String gameType) {
             mGameCharacterFileVO = gameCharacterFileVO;
             mGameType = gameType;
         }
@@ -38,7 +51,7 @@ public class FileFetcher {
         protected String doInBackground(String... params) {
 
 //            Log.i(TAG, "콘텐츠 아이템 확인 : " + mGameCharacterFileVO);
-            File contentsDir = new File(strAppPath);
+            File contentsDir = new File(strAppCharacterPath);
             int readByte = 0;
 
             //콘텐츠 관리 폴더 존재 확인, 없으면 생성
@@ -62,7 +75,7 @@ public class FileFetcher {
 
                 inputStream = new BufferedInputStream(connection.getInputStream());
 
-                outputStream = new FileOutputStream(strAppPath + mGameCharacterFileVO.getCharacterFileName());
+                outputStream = new FileOutputStream(strAppCharacterPath + mGameCharacterFileVO.getCharacterFileName());
                 byte[] buffer = new byte[connection.getContentLength()];
 
                 while ((readByte = inputStream.read(buffer)) != -1) {
@@ -92,7 +105,7 @@ public class FileFetcher {
                 } catch (IOException e) {
                 }
             }
-            return strAppPath + mGameCharacterFileVO.getCharacterFileName();
+            return strAppCharacterPath + mGameCharacterFileVO.getCharacterFileName();
         }
 
         @Override
@@ -103,7 +116,7 @@ public class FileFetcher {
             }
 
             if (mGameType.equals("1")) {
-                Game1.mCompletedFileCnt++;
+                Game1.mCompletedCharacterFileCnt++;
             }
             else if (mGameType.equals("2")) {
                 Game2.mCompletedFileCnt++;
@@ -112,8 +125,102 @@ public class FileFetcher {
         }
     }
 
-    public List<String> getFilePaths() {
-        File[] files = new File(strAppPath).listFiles();
+
+    private class DataSetFileDownloadTask extends AsyncTask<String, Void, String> {
+        private final String mDataSetUrl;
+        private final String mDataSetFileName;
+        private final int mDataSetFileSize;
+        private final String mGameType;
+
+        public DataSetFileDownloadTask(
+                String dataSetUrl,
+                String dataSetFileName,
+                int dataSetFileSize,
+                String gameType) {
+            mDataSetUrl = dataSetUrl;
+            mDataSetFileName = dataSetFileName;
+            mDataSetFileSize = dataSetFileSize;
+            mGameType = gameType;
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+
+//            Log.i(TAG, "콘텐츠 아이템 확인 : " + mGameCharacterFileVO);
+            File contentsDir = new File(strAppDatasetPath);
+            int readByte = 0;
+
+            //콘텐츠 관리 폴더 존재 확인, 없으면 생성
+            boolean isContentExist = checkDirectory(contentsDir);
+
+//            Log.d(TAG, "폴더 존재 확인: " + isContentExist);
+            if (!isContentExist) {
+                makeDirectory(contentsDir);
+            } else {
+//                removeFileAll();
+            }
+
+            HttpURLConnection connection = null;
+            InputStream inputStream = null;
+            FileOutputStream outputStream = null;
+            try {
+                //인터넷 연결
+                URL url = new URL(mDataSetUrl);
+                connection = (HttpURLConnection) url.openConnection();
+                connection.connect();
+
+                inputStream = new BufferedInputStream(connection.getInputStream());
+
+                outputStream = new FileOutputStream(strAppDatasetPath + mDataSetFileName);
+                byte[] buffer = new byte[connection.getContentLength()];
+
+                while ((readByte = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, readByte);
+                }
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+
+                try {
+                    if (outputStream != null) {
+                        outputStream.close();
+                    }
+
+                    if (inputStream != null) {
+                        inputStream.close();
+                    }
+
+                    if (connection != null) {
+                        connection.disconnect();
+                    }
+
+                } catch (IOException e) {
+                }
+            }
+            return strAppDatasetPath + mDataSetFileName;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+
+            while (!checkCompleteFile(s, mDataSetFileSize)) {
+            }
+
+            if (mGameType.equals("1")) {
+                Game1.mCompletedDataSetFileCnt++;
+            }
+            else if (mGameType.equals("2")) {
+                Game2.mCompletedDataSetFileCnt++;
+            }
+        }
+    }
+
+    public List<String> getGameCharacterFilePaths() {
+        File[] files = new File(strAppCharacterPath).listFiles();
 
         List<String> filePaths = new ArrayList();
 

@@ -17,13 +17,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
+import android.os.*;
 import android.util.Log;
 import android.view.*;
 import android.view.GestureDetector.OnDoubleTapListener;
@@ -58,6 +53,7 @@ public class Game2 extends Activity implements
         SampleAppMenuInterface, Animation.AnimationListener {
 
     private static final String LOGTAG = "Game2";
+    private final static String strAppDatasetPath = Environment.getExternalStorageDirectory().getPath() + "/Wishwide/game/dataset/";
 
     SampleApplicationSession_Video vuforiaAppSession;
 
@@ -71,6 +67,7 @@ public class Game2 extends Activity implements
     private ImageView mImgEffectView;
     private TextView mTvGame2Guide;
     public TextView[] mTvCorrectEffect;
+
 
     // Helpers to detect events such as double tapping:
     private GestureDetector mGestureDetector = null;
@@ -110,8 +107,11 @@ public class Game2 extends Activity implements
 
     private LoadingDialogHandler loadingDialogHandler = new LoadingDialogHandler(this);
 
-    // Alert Dialog used to display SDK errors
+    // Alert Dialog used to display SDK errors and received benefit guide
     private AlertDialog mDialog;
+    private TextView mTvReceivedBenefitGuide;
+    private Button mBtnCase1, mBtnCase2;
+
 
     boolean mIsInitialized = false;
 
@@ -122,6 +122,7 @@ public class Game2 extends Activity implements
     FileFetcher mFileFetcher;
     private FileDownloader<GameCharacterFileVO> mFileDownloader;
     public static int mCompletedFileCnt = 0;
+    public static int mCompletedDataSetFileCnt = 0;
 
     private Toast mToast;
 
@@ -141,10 +142,13 @@ public class Game2 extends Activity implements
         mFileDownloader.setFileDownloaderListener(new FileDownloader.FileDownloaderListener<GameCharacterFileVO>() {
             @Override
             public void onFileDownloaded() {
-                if (mCompletedFileCnt == mGameSettingVO.getGameCharacterFileList().size()) {
+                if ((mCompletedFileCnt == mGameSettingVO.getGameCharacterFileList().size()) && (mCompletedDataSetFileCnt == 2)) {
                     initializeAR();
 
                     mCompletedFileCnt = 0;
+                    mCompletedDataSetFileCnt = 0;
+
+                    mFileDownloader.clearQueue();
 
                     return;
                 }
@@ -170,6 +174,19 @@ public class Game2 extends Activity implements
 
         //게임 캐릭터 파일 다운로드
         mFileFetcher = new FileFetcher();
+        //dat 파일 다운로드
+        mFileFetcher.downloadDataSetFile(
+                mGameSettingVO.getMarkerDatFileUrl(),
+                mGameSettingVO.getMarkerDatFileName(),
+                mGameSettingVO.getMarkerDatFileSize(),
+                mGameSettingVO.getMarkerGameTypeCode());
+
+        //xml 파일 다운로드
+        mFileFetcher.downloadDataSetFile(
+                mGameSettingVO.getMarkerXmlFileUrl(),
+                mGameSettingVO.getMarkerXmlFileName(),
+                mGameSettingVO.getMarkerXmlFileSize(),
+                mGameSettingVO.getMarkerGameTypeCode());
         downloadTextures();
     }
 
@@ -409,52 +426,93 @@ public class Game2 extends Activity implements
 
 
     private void showBenefitGainMessage(final String type, final String msg, final String... couponInfo) {
-        //축하합니다!\nㅌ를 획득하셨습니다.\n내일 다시 도전해주세요.
-        //꽝!\n다시 도전해주세요.
         runOnUiThread(new Runnable() {
             public void run() {
                 if (mDialog != null) {
-                    mDialog.setCanceledOnTouchOutside(false);
                     mDialog.dismiss();
                 }
+
+                View dialogView = LayoutInflater.from(Game2.this)
+                        .inflate(R.layout.dialog_confirm, null);
+
+
+                mTvReceivedBenefitGuide = (TextView) dialogView.findViewById(R.id.tv_received_benefit_guide);
+                mBtnCase1 = (Button) dialogView.findViewById(R.id.btn_case_1);
+                mBtnCase2 = (Button) dialogView.findViewById(R.id.btn_case_2);
 
 
                 // Generates an Alert Dialog to show the error message
                 AlertDialog.Builder builder = new AlertDialog.Builder(
                         Game2.this);
 
-//                View dialogView = findViewById(R.layout.dialog_game2);
-//                TextView tvGuide = (TextView) dialogView.findViewById(R.id.tv_guide);
-//                tvGuide.setText(msg);
 
-                builder
-//                        .setView(dialogView)
-                        .setMessage(msg)
-                        .setIcon(0)
-                        .setPositiveButton("확인",
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        Intent intent = new Intent();
-                                        intent.putExtra("wideManagerId", mGameSettingVO.getWideManagerId());
-                                        Log.d(LOGTAG, "멤버쉽 정보 확인: " + mMembershipCustomerVO.toString());
-                                        intent.putExtra("membershipCustomerNo", mMembershipCustomerVO.getMembershipCustomerNo());
-                                        intent.putExtra("couponDiscountTypeCode", type);
-                                        intent.putExtra("couponNo", Integer.parseInt(couponInfo[0]));
-                                        if (couponInfo.length == 2) {
-                                            intent.putExtra("couponDiscountTypeValue", Integer.parseInt(couponInfo[1]));
-                                        }
-                                        else {
-                                            intent.putExtra("couponDiscountTypeValue", 0);
-                                        }
+                builder.setOnKeyListener(new DialogInterface.OnKeyListener() {
+                    @Override
+                    public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+                        if (keyCode == KeyEvent.KEYCODE_BACK) {
+                            //Back 버튼 동작 막기
+                            return true;
+                        }
+
+                        return false;
+                    }
+                });
 
 
-                                        setResult(1, intent);
+                mTvReceivedBenefitGuide.setText(msg);
 
-                                        finish();
-                                    }
-                                });
+                //서버에 보낼 쿠폰, 멤버쉽 정보 intent에 put
+                final Intent intent = new Intent();
+                intent.putExtra("wideManagerId", mGameSettingVO.getWideManagerId());
+                Log.d(LOGTAG, "멤버쉽 정보 확인: " + mMembershipCustomerVO.toString());
+                intent.putExtra("membershipCustomerNo", mMembershipCustomerVO.getMembershipCustomerNo());
+                intent.putExtra("couponDiscountTypeCode", type);
+                intent.putExtra("couponNo", Integer.parseInt(couponInfo[0]));
+                if (couponInfo.length == 2) {
+                    intent.putExtra("couponDiscountTypeValue", Integer.parseInt(couponInfo[1]));
+                }
+                else {
+                    intent.putExtra("couponDiscountTypeValue", 0);
+                }
 
-                mDialog = builder.create();
+                if (type.equals("S")) {
+                    intent.putExtra("movePage", "listStampAndPoint");
+                    mBtnCase1.setText("도장 보러가기");
+                }
+                else if (type.equals("P")) {
+                    intent.putExtra("movePage", "listStampAndPoint");
+                    mBtnCase1.setText("포인트 보러가기");
+                }
+                else {
+                    intent.putExtra("movePage", "listCoupon");
+                    mBtnCase1.setText("쿠폰 보러가기");
+                }
+
+
+                mBtnCase1.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        setResult(1, intent);
+
+                        finish();
+                    }
+                });
+
+                mBtnCase2.setText("나가기");
+                mBtnCase2.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        setResult(1, intent);
+
+                        finish();
+                    }
+                });
+
+
+                mDialog = builder
+                            .setView(dialogView)
+                            .create();
+                mDialog.setCanceledOnTouchOutside(false);
                 mDialog.show();
             }
         });
@@ -574,7 +632,7 @@ public class Game2 extends Activity implements
         List<GameCharacterFileVO> gameCharacterFileList = mGameSettingVO.getGameCharacterFileList();
 
         for (GameCharacterFileVO vo : gameCharacterFileList) {
-            mFileFetcher.downloadFile(vo, mGameSettingVO.getMarkerGameTypeCode());
+            mFileFetcher.downloadGameCharacterFile(vo, mGameSettingVO.getMarkerGameTypeCode());
         }
 
         mFileDownloader.queueFile();
@@ -595,7 +653,7 @@ public class Game2 extends Activity implements
         Log.d(LOGTAG, "순서 캐릭터 수: " + orderingCharacterCnt);
         Log.d(LOGTAG, "순서x 캐릭터 수: " + unorderingCharacterCnt);
 
-        List<String> filePaths = mFileFetcher.getFilePaths();
+        List<String> filePaths = mFileFetcher.getGameCharacterFilePaths();
         mCharacterSeq = new ArrayList<>();
 
         List<GameCharacterFileVO> totalGameCharacterFileList = mGameSettingVO.getGameCharacterFileList();
@@ -854,6 +912,12 @@ public class Game2 extends Activity implements
 
         //cpyoon
         // Load the data sets:
+        //디바이스 SD 카드에 저장되어 있는 DataSet 파일 로드
+//        if (!dataSetStonesAndChips.load(strAppDatasetPath + mGameSettingVO.getMarkerXmlFileName(), STORAGE_TYPE.STORAGE_ABSOLUTE)) {
+//            Log.d(LOGTAG, "Failed to load data set.");
+//            return false;
+//        }
+        //assets 파일에 저장되어 있는 DataSet 파일 로드
         if (!dataSetStonesAndChips.load("StonesAndChips.xml", STORAGE_TYPE.STORAGE_APPRESOURCE)) {
             Log.d(LOGTAG, "Failed to load data set.");
             return false;
@@ -1151,18 +1215,47 @@ public class Game2 extends Activity implements
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
 
+            if (mDialog != null) {
+                mDialog.dismiss();
+            }
+
+            View dialogView = LayoutInflater.from(Game2.this)
+                    .inflate(R.layout.dialog_confirm, null);
+
+            mTvReceivedBenefitGuide = (TextView) dialogView.findViewById(R.id.tv_received_benefit_guide);
+            mBtnCase1 = (Button) dialogView.findViewById(R.id.btn_case_1);
+            mBtnCase2 = (Button) dialogView.findViewById(R.id.btn_case_2);
+
+
+            // Generates an Alert Dialog to show the error message
+            AlertDialog.Builder builder = new AlertDialog.Builder(
+                    Game2.this);
+
+            mTvReceivedBenefitGuide.setText("게임을 종료하시겠습니까?");
+
+            mBtnCase1.setText("예");
+            mBtnCase1.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    finish();
+                }
+            });
+
+
+            mBtnCase2.setText("아니요");
+            mBtnCase2.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mDialog.dismiss();
+                }
+            });
+
             //다이아로그박스 출력
-            new AlertDialog.Builder(this)
-                    .setTitle("게임 종료")
-                    .setMessage("게임을 종료하시겠습니까?")
-                    .setPositiveButton("예", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            finish();
-                        }
-                    })
-                    .setNegativeButton("아니오", null)
-                    .show();
+            mDialog = builder
+                    .setView(dialogView)
+                    .create();
+            mDialog.setCanceledOnTouchOutside(false);
+            mDialog.show();
 
             return true;
         }

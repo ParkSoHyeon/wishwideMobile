@@ -3,7 +3,10 @@ package com.media.mobile.elin.wishwidemobile.Activity;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.*;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -16,8 +19,6 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -33,17 +34,20 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDialog;
 import android.support.v7.widget.Toolbar;
-import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.webkit.*;
 import android.widget.*;
-import com.media.mobile.elin.wishwidemobile.*;
 import com.media.mobile.elin.wishwidemobile.Model.Beacon_Marker;
 import com.media.mobile.elin.wishwidemobile.Model.WideCustomerVO;
+import com.media.mobile.elin.wishwidemobile.PermissionConstant;
+import com.media.mobile.elin.wishwidemobile.R;
+import com.media.mobile.elin.wishwidemobile.SharedPreferencesConstant;
+import com.media.mobile.elin.wishwidemobile.WebUrlConstance;
 import com.wizturn.sdk.central.Central;
 import com.wizturn.sdk.central.CentralManager;
 import com.wizturn.sdk.peripheral.Peripheral;
@@ -109,6 +113,7 @@ public class MainActivity extends AppCompatActivity
     public final Map scanBeaconInfo = new HashMap();
 
     private AppCompatDialog progressDialog;
+    private AlertDialog mDialog;
 
 
     @SuppressLint("JavascriptInterface")
@@ -276,41 +281,78 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public boolean onJsAlert(WebView view, String url, String message, final JsResult result) {
-                new AlertDialog.Builder(view.getContext())
-                        .setTitle("안내")
-                        .setMessage(message)
-                        .setPositiveButton(android.R.string.ok,
-                                new AlertDialog.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        result.confirm();
-                                    }
-                                })
-                        .setCancelable(true)
-                        .create()
-                        .show();
+                View dialogView = LayoutInflater.from(view.getContext())
+                        .inflate(R.layout.dialog_alert, null);
+
+                TextView mTvReceivedBenefitGuide = (TextView) dialogView.findViewById(R.id.tv_received_benefit_guide);
+                Button mBtnOK = (Button) dialogView.findViewById(R.id.btn_ok);
+
+
+                // Generates an Alert Dialog to show the error message
+                AlertDialog.Builder builder = new AlertDialog.Builder(
+                        view.getContext());
+
+                mTvReceivedBenefitGuide.setText(message);
+
+                mBtnOK.setText(android.R.string.ok);
+                mBtnOK.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        result.confirm();
+                    }
+                });
+
+
+                //다이아로그박스 출력
+                mDialog = builder
+                        .setView(dialogView)
+                        .create();
+                mDialog.show();
 
                 return true;
             }
 
             @Override
             public boolean onJsConfirm(WebView view, String url, String message, final JsResult result) {
-                new AlertDialog.Builder(view.getContext())
-                        .setTitle("안내")
-                        .setMessage(message)
-                        .setPositiveButton(android.R.string.ok,
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        result.confirm();
-                                    }
-                                })
-                        .setNegativeButton(android.R.string.cancel,
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        result.cancel();
-                                    }
-                                })
-                        .create()
-                        .show();
+                View dialogView = LayoutInflater.from(view.getContext())
+                        .inflate(R.layout.dialog_confirm, null);
+
+                TextView mTvReceivedBenefitGuide = (TextView) dialogView.findViewById(R.id.tv_received_benefit_guide);
+                Button mBtnCase1 = (Button) dialogView.findViewById(R.id.btn_case_1);
+                Button mBtnCase2 = (Button) dialogView.findViewById(R.id.btn_case_2);
+
+
+                // Generates an Alert Dialog to show the error message
+                AlertDialog.Builder builder = new AlertDialog.Builder(
+                        view.getContext());
+
+                mTvReceivedBenefitGuide.setText(message);
+
+                mBtnCase1.setText(android.R.string.ok);
+                mBtnCase1.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        result.confirm();
+                        mDialog.dismiss();
+                    }
+                });
+
+
+                mBtnCase2.setText(android.R.string.cancel);
+                mBtnCase2.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        result.cancel();
+                        mDialog.dismiss();
+                    }
+                });
+
+                //다이아로그박스 출력
+                mDialog = builder
+                        .setView(dialogView)
+                        .create();
+                mDialog.show();
+
 
                 return true;
             }
@@ -536,7 +578,7 @@ public class MainActivity extends AppCompatActivity
                 mWebView.loadUrl(DOMAIN_NAME + COUPON_LIST_PATH);
                 break;
         }
-        progressON(this, "로딩 중...");
+//        progressON(this, "로딩 중...");
     }
 
 
@@ -557,7 +599,7 @@ public class MainActivity extends AppCompatActivity
 
         @JavascriptInterface
         public void callStore(String tel) {
-            startActivity(new Intent("android.intent.action.CALL", Uri.parse("tel:" + tel)));
+            startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + tel)));
         }
 
 
@@ -566,10 +608,24 @@ public class MainActivity extends AppCompatActivity
             new GameSettingTask(managerId).execute();
         }
 
+
         @JavascriptInterface
         public void callNearbyBeacon(String managerId) {
             new NearbyBeaconListTask(managerId).execute();
         }
+
+
+        @JavascriptInterface
+        public void callBrowser(String url) {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        }
+
+
+        @JavascriptInterface
+        public void callClearWebViewHistory() {
+            mWebView.clearHistory();
+        }
+
 
         @JavascriptInterface
         public void callIsExecuteGame(final String isExecuteGame) {
@@ -754,18 +810,46 @@ public class MainActivity extends AppCompatActivity
             }
 
             return true;
-        } else {
+        }
+        else {
+            View dialogView = LayoutInflater.from(MainActivity.this)
+                    .inflate(R.layout.dialog_confirm, null);
+
+            TextView mTvReceivedBenefitGuide = (TextView) dialogView.findViewById(R.id.tv_received_benefit_guide);
+            Button mBtnCase1 = (Button) dialogView.findViewById(R.id.btn_case_1);
+            Button mBtnCase2 = (Button) dialogView.findViewById(R.id.btn_case_2);
+
+
+            // Generates an Alert Dialog to show the error message
+            AlertDialog.Builder builder = new AlertDialog.Builder(
+                    MainActivity.this);
+
+            mTvReceivedBenefitGuide.setText("Wishwide 앱을 종료하시겠습니까?");
+
+            mBtnCase1.setText("예");
+            mBtnCase1.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    android.os.Process.killProcess(android.os.Process.myPid());
+                    mDialog.dismiss();
+                }
+            });
+
+
+            mBtnCase2.setText("아니요");
+            mBtnCase2.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mDialog.dismiss();
+                }
+            });
+
             //다이아로그박스 출력
-            new AlertDialog.Builder(this)
-                    .setTitle("프로그램 종료")
-                    .setMessage("프로그램을 종료하시겠습니까?")
-                    .setPositiveButton("예", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            android.os.Process.killProcess(android.os.Process.myPid());
-                        }
-                    })
-                    .setNegativeButton("아니오", null).show();
+            mDialog = builder
+                    .setView(dialogView)
+                    .create();
+            mDialog.setCanceledOnTouchOutside(false);
+            mDialog.show();
         }
 
         return super.onKeyDown(keyCode, event);
@@ -790,7 +874,7 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 //        TabLayout.Tab tab;
-        progressON(this, "로딩 중...");
+//        progressON(this, "로딩 중...");
         switch (id) {
             case R.id.nav_visited_store:    //방문한매장
                 mBtn2.performClick();
@@ -858,7 +942,7 @@ public class MainActivity extends AppCompatActivity
 
     //위치 서비스 요청
     private void requestLocationUpdate() {
-        progressON(this, "로딩 중...");
+//        progressON(this, "로딩 중...");
         List<String> deniedPermissions = getDeniedPermissions(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION);
@@ -873,28 +957,52 @@ public class MainActivity extends AppCompatActivity
                 mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             }
 
-            mIsGPSEnabled = mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            //isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+//            mIsGPSEnabled = mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            mIsGPSEnabled = mLocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+            Log.d(TAG, "네트워크여부 확인: " + mIsGPSEnabled);
 
             if (!mIsGPSEnabled) {
                 progressOFF();
 
-                new AlertDialog.Builder(mContext)
-                        .setTitle("")
-                        .setMessage("현재 매장 위치를 더욱 쉽게 찾기 위해 위치 서비스를 켜주세요.")
-                        .setPositiveButton("설정", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
 
-                                startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-                            }
-                        })
-                        .setNegativeButton("다음에", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                mWebView.loadUrl(DOMAIN_NAME + HOME_PATH + "?lat=0&lng=0");
-                            }
-                        }).show();
+                View dialogView = LayoutInflater.from(MainActivity.this)
+                        .inflate(R.layout.dialog_confirm, null);
+
+                TextView mTvReceivedBenefitGuide = (TextView) dialogView.findViewById(R.id.tv_received_benefit_guide);
+                Button mBtnCase1 = (Button) dialogView.findViewById(R.id.btn_case_1);
+                Button mBtnCase2 = (Button) dialogView.findViewById(R.id.btn_case_2);
+
+
+                // Generates an Alert Dialog to show the error message
+                AlertDialog.Builder builder = new AlertDialog.Builder(
+                        MainActivity.this);
+
+                mTvReceivedBenefitGuide.setText("현재 매장 위치를 더욱 쉽게 찾기 위해 위치 서비스를 켜주세요.");
+
+                mBtnCase1.setText("설정");
+                mBtnCase1.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                        mDialog.dismiss();
+                    }
+                });
+
+
+                mBtnCase2.setText("다음에");
+                mBtnCase2.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mWebView.loadUrl(DOMAIN_NAME + HOME_PATH + "?lat=0&lng=0");
+                        mDialog.dismiss();
+                    }
+                });
+
+                //다이아로그박스 출력
+                mDialog = builder
+                        .setView(dialogView)
+                        .create();
+                mDialog.show();
             }
 
 
@@ -1003,6 +1111,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    //서버에서 가져온 매장 주변 비콘 리스트 파일로 저장하는 Task
     public class BeaconFileRead extends AsyncTask<Void, Void, String> {
         private static final String TAG = "BeaconFileRead";
 
@@ -1061,6 +1170,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    //매장 주변 비콘 리스트 가져오는 Task
     public class NearbyBeaconListTask extends AsyncTask<String, Void, String> {
         private static final String TAG = "NearbyBeaconListTask";
 
@@ -1242,6 +1352,7 @@ public class MainActivity extends AppCompatActivity
                 try {
                     if (resultCode == 1) {
                         objRoot.put("responseCode", "SUCCESS");
+                        objRoot.put("movePage", data.getStringExtra("movePage"));
                         objRoot.put("wideManagerId", data.getStringExtra("wideManagerId"));
                         objRoot.put("couponNo", data.getIntExtra("couponNo", 0));
                         objRoot.put("membershipCustomerNo", data.getIntExtra("membershipCustomerNo", 0));
@@ -1262,6 +1373,7 @@ public class MainActivity extends AppCompatActivity
                 try {
                     if (resultCode == 1) {
                         objRoot.put("responseCode", "SUCCESS");
+                        objRoot.put("movePage", data.getStringExtra("movePage"));
                         objRoot.put("wideManagerId", data.getStringExtra("wideManagerId"));
                         objRoot.put("couponNo", data.getIntExtra("couponNo", 0));
                         objRoot.put("membershipCustomerNo", data.getIntExtra("membershipCustomerNo", 0));

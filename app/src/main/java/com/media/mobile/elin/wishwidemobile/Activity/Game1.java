@@ -18,17 +18,12 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
+import android.os.*;
 import android.util.Log;
 import android.view.*;
 import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.ViewGroup.LayoutParams;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.*;
 import com.media.mobile.elin.wishwidemobile.Control.SampleApplicationControl_Video;
 import com.media.mobile.elin.wishwidemobile.FileDownloader;
@@ -58,6 +53,7 @@ public class Game1 extends Activity implements
         SampleApplicationControl_Video, SampleAppMenuInterface {
 
     private static final String LOGTAG = "Game1";
+    private final static String strAppDatasetPath = Environment.getExternalStorageDirectory().getPath() + "/Wishwide/game/dataset/";
 
     SampleApplicationSession_Video vuforiaAppSession;
 
@@ -105,6 +101,8 @@ public class Game1 extends Activity implements
 
     // Alert Dialog used to display SDK errors
     private AlertDialog mDialog;
+    private TextView mTvReceivedBenefitGuide;
+    private Button mBtnCase1, mBtnCase2;
 
     boolean mIsInitialized = false;
 
@@ -113,7 +111,8 @@ public class Game1 extends Activity implements
 
     FileFetcher mFileFetcher;
     private FileDownloader<GameCharacterFileVO> mFileDownloader;
-    public static int mCompletedFileCnt = 0;
+    public static int mCompletedCharacterFileCnt = 0;
+    public static int mCompletedDataSetFileCnt = 0;
 
     private Toast mToast;
 
@@ -132,9 +131,13 @@ public class Game1 extends Activity implements
         mFileDownloader.setFileDownloaderListener(new FileDownloader.FileDownloaderListener<GameCharacterFileVO>() {
             @Override
             public void onFileDownloaded() {
-                if (mCompletedFileCnt == mGameSettingVO.getTotalCharacterCnt()) {
+                if ((mCompletedCharacterFileCnt == mGameSettingVO.getTotalCharacterCnt()) && (mCompletedDataSetFileCnt == 2)) {
                     initializeAR();
-                    mCompletedFileCnt = 0;
+
+                    mCompletedCharacterFileCnt = 0;
+                    mCompletedDataSetFileCnt = 0;
+
+                    mFileDownloader.clearQueue();
 
                     return;
                 }
@@ -159,8 +162,22 @@ public class Game1 extends Activity implements
 
         startLoadingAnimation();
 
-        //게임 캐릭터 파일 다운로드
+        
         mFileFetcher = new FileFetcher();
+        //dat 파일 다운로드
+        mFileFetcher.downloadDataSetFile(
+                mGameSettingVO.getMarkerDatFileUrl(),
+                mGameSettingVO.getMarkerDatFileName(),
+                mGameSettingVO.getMarkerDatFileSize(),
+                mGameSettingVO.getMarkerGameTypeCode());
+
+        //xml 파일 다운로드
+        mFileFetcher.downloadDataSetFile(
+                mGameSettingVO.getMarkerXmlFileUrl(),
+                mGameSettingVO.getMarkerXmlFileName(),
+                mGameSettingVO.getMarkerXmlFileSize(),
+                mGameSettingVO.getMarkerGameTypeCode());
+        //게임 캐릭터 파일 다운로드
         downloadTextures();
     }
 
@@ -281,9 +298,34 @@ public class Game1 extends Activity implements
                     mDialog.dismiss();
                 }
 
+                View dialogView = LayoutInflater.from(Game1.this)
+                        .inflate(R.layout.dialog_confirm, null);
+
+                mTvReceivedBenefitGuide = (TextView) dialogView.findViewById(R.id.tv_received_benefit_guide);
+                mBtnCase1 = (Button) dialogView.findViewById(R.id.btn_case_1);
+                mBtnCase2 = (Button) dialogView.findViewById(R.id.btn_case_2);
+
+
                 // Generates an Alert Dialog to show the error message
                 AlertDialog.Builder builder = new AlertDialog.Builder(
                         Game1.this);
+
+
+                builder.setOnKeyListener(new DialogInterface.OnKeyListener() {
+                    @Override
+                    public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+                        if (keyCode == KeyEvent.KEYCODE_BACK) {
+                            //Back 버튼 동작 막기
+                            return true;
+                        }
+
+                        return false;
+                    }
+                });
+
+
+                mTvReceivedBenefitGuide.setText(msg);
+
 
                 if (type.equals("BOOM")) {
                     //꽝 이미지 표시
@@ -293,61 +335,86 @@ public class Game1 extends Activity implements
                     new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            Log.d(LOGTAG, "원상태로");
                             mFlEffectView.setVisibility(View.GONE);
                         }
                     }, 300);
 
+                    mBtnCase1.setText("재도전");
+                    mBtnCase1.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            initializeAR();
+                        }
+                    });
 
-                    builder
-                            .setMessage(msg)
-                            .setTitle("알림")
-                            .setIcon(0)
-                            .setPositiveButton("도전",
-                                    new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface dialog, int id) {
 
-                                        }
-                                    })
-                            .setNegativeButton("나가기",
-                                    new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            finish();
-                                        }
-                                    });
+                    mBtnCase2.setText("나가기");
+                    mBtnCase2.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            setResult(2, new Intent());
+
+                            finish();
+                        }
+                    });
                 }
                 else {
-                    builder
-                            .setMessage(msg)
-                            .setTitle("알림")
-                            .setIcon(0)
-                            .setPositiveButton("확인",
-                                    new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface dialog, int id) {
-                                            Intent intent = new Intent();
-                                            intent.putExtra("wideManagerId", mGameSettingVO.getWideManagerId());
-                                            Log.d(LOGTAG, "멤버쉽 정보 확인: " + mMembershipCustomerVO.toString());
-                                            intent.putExtra("membershipCustomerNo", mMembershipCustomerVO.getMembershipCustomerNo());
-                                            intent.putExtra("couponDiscountTypeCode", type);
-                                            intent.putExtra("couponNo", Integer.parseInt(couponInfo[0]));
-                                            if (couponInfo.length == 2) {
-                                                intent.putExtra("couponDiscountTypeValue", Integer.parseInt(couponInfo[1]));
-                                            }
-                                            else {
-                                                intent.putExtra("couponDiscountTypeValue", 0);
-                                            }
+                    //서버에 보낼 쿠폰, 멤버쉽 정보 intent에 put
+                    final Intent intent = new Intent();
+                    intent.putExtra("wideManagerId", mGameSettingVO.getWideManagerId());
+                    Log.d(LOGTAG, "멤버쉽 정보 확인: " + mMembershipCustomerVO.toString());
+                    intent.putExtra("membershipCustomerNo", mMembershipCustomerVO.getMembershipCustomerNo());
+                    intent.putExtra("couponDiscountTypeCode", type);
+                    intent.putExtra("couponNo", Integer.parseInt(couponInfo[0]));
+                    if (couponInfo.length == 2) {
+                        intent.putExtra("couponDiscountTypeValue", Integer.parseInt(couponInfo[1]));
+                    }
+                    else {
+                        intent.putExtra("couponDiscountTypeValue", 0);
+                    }
+
+                    if (type.equals("S")) {
+                        intent.putExtra("movePage", "listStampAndPoint");
+                        mBtnCase1.setText("도장 보러가기");
+                    }
+                    else if (type.equals("P")) {
+                        intent.putExtra("movePage", "listStampAndPoint");
+                        mBtnCase1.setText("포인트 보러가기");
+                    }
+                    else {
+                        intent.putExtra("movePage", "listCoupon");
+                        mBtnCase1.setText("쿠폰 보러가기");
+                    }
 
 
+                    mBtnCase1.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            setResult(1, intent);
 
-                                            setResult(1, intent);
+                            finish();
+                        }
+                    });
 
-                                            finish();
-                                        }
-                                    });
+
+                    mBtnCase2.setText("나가기");
+                    mBtnCase1.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            intent.putExtra("movePage", "detailStore");
+                            setResult(1, intent);
+
+                            finish();
+                        }
+                    });
+
                 }
 
-                mDialog = builder.create();
+
+                mDialog = builder
+                        .setView(dialogView)
+                        .create();
+                mDialog.setCanceledOnTouchOutside(false);
                 mDialog.show();
             }
         });
@@ -376,6 +443,7 @@ public class Game1 extends Activity implements
             }
         });
     }
+
 
     public void hideGame1Guide() {
         final Context context = this;
@@ -510,7 +578,7 @@ public class Game1 extends Activity implements
         List<GameCharacterFileVO> gameCharacterFileList = mGameSettingVO.getGameCharacterFileList();
 
         for (GameCharacterFileVO vo : gameCharacterFileList) {
-            mFileFetcher.downloadFile(vo, mGameSettingVO.getMarkerGameTypeCode());
+            mFileFetcher.downloadGameCharacterFile(vo, mGameSettingVO.getMarkerGameTypeCode());
         }
 
         mFileDownloader.queueFile();
@@ -522,7 +590,7 @@ public class Game1 extends Activity implements
         //cpyoon
         //Load texture file (png, jpg, etc)
 
-        List<String> filePaths = mFileFetcher.getFilePaths();
+        List<String> filePaths = mFileFetcher.getGameCharacterFilePaths();
 
         for (String filePath : filePaths) {
             Log.d(LOGTAG, "filePath 정보 확인: " + filePaths) ;
@@ -584,6 +652,7 @@ public class Game1 extends Activity implements
         stopAR();
     }
 
+
     private void stopAR() {
         if (mGlView != null) {
             mGlView.setVisibility(View.INVISIBLE);
@@ -592,7 +661,7 @@ public class Game1 extends Activity implements
 
         mReturningFromFullScreen = false;
 
-//        mFileFetcher.removeFileAll();
+        mFileFetcher.removeFileAll();
 
         vuforiaAppSession.pauseAR();
     }
@@ -723,6 +792,7 @@ public class Game1 extends Activity implements
 
     @Override
     public boolean doLoadTrackersData() {
+        Log.d(LOGTAG, "doLoadTrackersData()..." + strAppDatasetPath + mGameSettingVO.getMarkerXmlFileName());
         // Get the image tracker:
         TrackerManager trackerManager = TrackerManager.getInstance();
         ObjectTracker objectTracker = (ObjectTracker) trackerManager
@@ -743,6 +813,12 @@ public class Game1 extends Activity implements
 
         //cpyoon
         // Load the data sets:
+        //디바이스 SD 카드에 저장되어 있는 DataSet 파일 로드
+//        if (!dataSetStonesAndChips.load(strAppDatasetPath + mGameSettingVO.getMarkerXmlFileName(), STORAGE_TYPE.STORAGE_ABSOLUTE)) {
+//            Log.d(LOGTAG, "Failed to load data set.");
+//            return false;
+//        }
+        //assets 파일에 저장되어 있는 DataSet 파일 로드
         if (!dataSetStonesAndChips.load("StonesAndChips.xml", STORAGE_TYPE.STORAGE_APPRESOURCE)) {
             Log.d(LOGTAG, "Failed to load data set.");
             return false;
@@ -1012,19 +1088,47 @@ public class Game1 extends Activity implements
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if (mDialog != null) {
+                mDialog.dismiss();
+            }
+
+            View dialogView = LayoutInflater.from(Game1.this)
+                    .inflate(R.layout.dialog_confirm, null);
+
+            mTvReceivedBenefitGuide = (TextView) dialogView.findViewById(R.id.tv_received_benefit_guide);
+            mBtnCase1 = (Button) dialogView.findViewById(R.id.btn_case_1);
+            mBtnCase2 = (Button) dialogView.findViewById(R.id.btn_case_2);
+
+
+            // Generates an Alert Dialog to show the error message
+            AlertDialog.Builder builder = new AlertDialog.Builder(
+                    Game1.this);
+
+            mTvReceivedBenefitGuide.setText("게임을 종료하시겠습니까?");
+
+            mBtnCase1.setText("예");
+            mBtnCase1.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    finish();
+                }
+            });
+
+
+            mBtnCase2.setText("아니요");
+            mBtnCase2.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mDialog.dismiss();
+                }
+            });
 
             //다이아로그박스 출력
-            new AlertDialog.Builder(this)
-                    .setTitle("게임 종료")
-                    .setMessage("게임을 종료하시겠습니까?")
-                    .setPositiveButton("예", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            finish();
-                        }
-                    })
-                    .setNegativeButton("아니오", null)
-                    .show();
+            mDialog = builder
+                        .setView(dialogView)
+                        .create();
+            mDialog.setCanceledOnTouchOutside(false);
+            mDialog.show();
 
             return true;
         }

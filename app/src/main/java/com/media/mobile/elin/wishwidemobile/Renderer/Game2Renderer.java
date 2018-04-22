@@ -15,6 +15,7 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -118,7 +119,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     //좌표, 크기, 회전 설정하는 변수
     private float m_translates[][];
     private float m_scales[][];
-    private float m_rotates[][];
+    private float m_rotates[];
     private int randNum = new Random().nextInt(3);
 
     private Vector<Texture> mTextures;
@@ -284,33 +285,12 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         int totalCharacterCnt = mGameSettingVO.getTotalCharacterCnt();
 
         m_translates = new float[10][6];
-//        m_scales = new float[totalCharacterCnt][3];
-        m_rotates = new float[totalCharacterCnt][3];
+        m_rotates = new float[totalCharacterCnt];
 
         for (int i = 0; i < totalCharacterCnt; i++) {
-            for (int j = 0; j < 3; j++) {
-//
-//                if (j == 0) {   //x축
-//                    m_translates[i][j] = randFloat(-4.5f, 4.5f);
-//                }
-//                else if (j == 1) {  //y축
-//                    m_translates[i][j] = randFloat(-0.6f, 3.5f);
-//                }
-//                else {  //z축
-//                    m_translates[i][j] = randFloat(0.0f, 0.0f);
-//                }
-//
-//                m_scales[i][j] = 0.23f;//randFloat(0.04f, 0.1f);
-                m_rotates[i][j] = randFloat(-60f, 60f);
-//                Log.d(LOGTAG, "[" + i + "][" + j + "]: " +  m_translates[i][j]);
-            }
+            m_rotates[i] = randFloat(-70.0f, 70.0f);
+//            Log.d(LOGTAG, "[" + i + "]" +  m_rotates[i]);
         }
-//        if (j == 0) {   //x축
-//                    m_translates[i][j] = randFloat(-4.5f, 4.5f);
-//                }
-//                else if (j == 1) {  //y축
-//                    m_translates[i][j] = randFloat(-0.6f, 3.5f);
-//                }
 
         m_translates[0][0] = 1.357f;  //1 - x
         m_translates[0][1] = 0.411f;  //1 - y
@@ -462,9 +442,16 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             mActivity.showGame2Guide("매장 테이블 위에 있는 마커를 인식해주세요.");
         }
         else {
-            for (int i = 0; i < mActivity.mTvCorrectEffect.length; i++) {
-                mActivity.mTvCorrectEffect[i].setVisibility(View.VISIBLE);
-            }
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    for (int i = 0; i < mActivity.mTvCorrectEffect.length; i++) {
+                        mActivity.mTvCorrectEffect[i].setVisibility(View.VISIBLE);
+                    }
+                }
+            });
+
+
         }
 
 
@@ -491,7 +478,7 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             int characterNum = 0;
             int touchEventCode = -1;
 
-            //hong
+            //hongz
             //check whether the marker is included in the target beacon
             //매장과 지금 매장이 같으면
 //            for (int i = 0; i < mGameSettingVO.getMarkerCnt(); i++) {
@@ -501,10 +488,19 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 //                    touchEventCode = 2;
 //                }
 //            }
+
+//            for (MarkerVO markerVO : mGameSettingVO.getMarkerList()) {
+//                if (imageTargetName.equals(markerVO.getMarkerId())) {
+//                    characterNum = mGameSettingVO.getTotalCharacterCnt();
+//                    touchEventCode = 2;
+//                }
+//            }
+
             if (imageTargetName.equals("stones")) {
                 characterNum = mGameSettingVO.getTotalCharacterCnt();
                 touchEventCode = 2;
             }
+
 
             //is not same
             if (touchEventCode == -1) return;
@@ -533,44 +529,6 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
             Matrix44F inverseMV = SampleMath.Matrix44FInverse(modelviewmatrix);
             Matrix44F invTranspMV = SampleMath.Matrix44FTranspose(inverseMV);
 
-            float rotateA = 0.0f;
-            float rotateX = 0.0f;
-            float rotateZ = 0.0f;
-            float transX=  0.0f;
-            float transY = 0.0f;
-            float transZ= 0.0f;
-
-
-            //카메라 방향 체크
-            if(invTranspMV.getData()[12] < 0 && invTranspMV.getData()[13] < 0) {
-                Log.d(LOGTAG, "1");
-                rotateA = 90.0f;
-                rotateX = 90.0f;
-                rotateZ = 0.0f;
-                transX = 0.0f;
-                transY = 2.0f;
-                transZ = 0.0f;
-            }
-            else if(invTranspMV.getData()[12] > 0 && invTranspMV.getData()[13] < 0) {
-                Log.d(LOGTAG, "2");
-                rotateA = 90.0f;
-                rotateX = 90.0f;
-                rotateZ = 90.0f;
-                transX = -2.0f;
-                transY = 0.0f;
-                transZ = 0.0f;
-            }
-            else if(invTranspMV.getData()[12] > 0 && invTranspMV.getData()[13] > 0) {
-                Log.d(LOGTAG, "3");
-                //rotateX = -90.0f;
-                transY = -2.0f;
-//                rotateY=180f;
-            }
-            else if(invTranspMV.getData()[12] < 0 && invTranspMV.getData()[13] > 0) {
-                Log.d(LOGTAG, "4");
-                //rotateX = 270.0f;
-                transY = 0f;
-            }
 
             targetPositiveDimensions[currentTarget] = imageTarget.getSize();
 
@@ -587,10 +545,11 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
                 // If the movie is ready to start playing or it has reached the end
                 // of playback we render the keyframe
 
-                mActivity.showGame2Guide("\"" + mGameSettingVO.getMarkerGameValue() + "\"단어를 순서대로 캐치하세요. ");
+                mActivity.showGame2Guide("\"" + mGameSettingVO.getMarkerGameValue() + "\" 단어를 순서대로 캐치하세요. ");
                 mIsRecognizedMarker = true;
 
                 float[] modelViewMatrixKeyframe = Tool.convertPose2GLMatrix(trackableResult.getPose()).getData();
+
                 float[] modelViewProjectionKeyframe = new float[16];
                 // Matrix.translateM(modelViewMatrixKeyframe, 0, 0.0f, 0.0f,
                 // targetPositiveDimensions[currentTarget].getData()[0]);
@@ -606,45 +565,94 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
                 //cpyoon
                 //Method to translate using m_translates
-//                if (randNum == 0) {
-//                    Matrix.translateM(
-//                            modelViewMatrixKeyframe,
-//                            0,
-//                            m_translates[trans][0],
-//                            2.0f,
-//                            m_translates[trans][1]);
-//                }
-//                else if (randNum == 1) {
-//                    Matrix.translateM(
-//                            modelViewMatrixKeyframe,
-//                            0,
-//                            m_translates[trans][2],
-//                            2.0f,
-//                            m_translates[trans][3]);
-//                }
-//                else {
-//                    Matrix.translateM(
-//                            modelViewMatrixKeyframe,
-//                            0,
-//                            m_translates[trans][4],
-//                            2.0f,
-//                            m_translates[trans][5]);
-//                }
+                int indexRL, indexTB = 0;    //좌우 위치와 상하 위치가 저장되어 있는 index
+                if (randNum == 0) {
+                    indexRL = 0;
+                    indexTB = 1;
+                }
+                else if (randNum == 1) {
+                    indexRL = 2;
+                    indexTB = 3;
+                }
+                else {
+                    indexRL = 4;
+                    indexTB = 5;
+                }
 
-                Matrix.translateM(
-                        modelViewMatrixKeyframe,
-                        0,
-                        m_translates[trans][4] + transX,
-                        transY,
-                        m_translates[trans][5] + transZ);
+
+                //카메라 방향에 따라 정면에 캐릭터 띄우기
+                if (invTranspMV.getData()[12] < 0 && invTranspMV.getData()[13] < 0) {
+                    Log.d(LOGTAG, "1");
+
+                    Matrix.translateM(
+                            modelViewMatrixKeyframe,
+                            0,
+                            m_translates[trans][indexRL],
+                            2.0f,
+                            m_translates[trans][indexTB]);
+                }
+                else if (invTranspMV.getData()[12] > 0 && invTranspMV.getData()[13] < 0) {
+                    Log.d(LOGTAG, "2");
+                    Matrix.translateM(
+                            modelViewMatrixKeyframe,
+                            0,
+                            -2.0f,
+                            m_translates[trans][indexRL],
+                            m_translates[trans][indexTB]);
+
+
+                    Matrix.rotateM(modelViewMatrixKeyframe,
+                            0,
+                            -270.0f,
+                            0.0f,
+                            0.0f,    //m_rotates[trans][0]
+                            90.0f);
+                }
+                else if (invTranspMV.getData()[12] > 0 && invTranspMV.getData()[13] > 0) {
+                    Log.d(LOGTAG, "3");
+
+                    Matrix.translateM(
+                            modelViewMatrixKeyframe,
+                            0,
+                            m_translates[trans][indexRL],
+                            -2.0f,
+                            m_translates[trans][indexTB]);
+
+
+                    Matrix.rotateM(modelViewMatrixKeyframe,
+                            0,
+                            180.0f,
+                            0.0f,
+                            0.0f,    //m_rotates[trans][0]
+                            90.0f);
+                }
+                else if (invTranspMV.getData()[12] < 0 && invTranspMV.getData()[13] > 0) {
+                    Log.d(LOGTAG, "4");
+
+                    Matrix.translateM(
+                            modelViewMatrixKeyframe,
+                            0,
+                            2.0f,
+                            m_translates[trans][indexRL],
+                            m_translates[trans][indexTB]);
+
+
+                    Matrix.rotateM(modelViewMatrixKeyframe,
+                            0,
+                            270.0f,
+                            0.0f,
+                            0.0f,    //m_rotates[trans][0]
+                            90.0f);
+                }
 
 
                 Matrix.rotateM(modelViewMatrixKeyframe,
                         0,
-                        rotateA,
-                        rotateX,
+                        90.0f,
+                        90.0f,
                         0.0f,    //m_rotates[trans][0]
-                        rotateZ);
+                        0.0f);
+
 
                 Matrix.scaleM(
                         modelViewMatrixKeyframe,
@@ -661,13 +669,6 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
                         modelViewMatrixKeyframe,
                         0);
 
-//                Matrix.rotateM(
-//                        modelViewProjectionKeyframe,
-//                        0,
-//                        random.nextFloat(),
-//                        random.nextFloat(),
-//                        random.nextFloat(),
-//                        random.nextFloat());
 
                 //cpyoon
                 //get object modelviewmatrix
@@ -740,70 +741,70 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     }
 
 
-    void setVideoDimensions(int target, float videoWidth, float videoHeight,
-                            float[] textureCoordMatrix) {
-        // The quad originaly comes as a perfect square, however, the video
-        // often has a different aspect ration such as 4:3 or 16:9,
-        // To mitigate this we have two options:
-        // 1) We can either scale the width (typically up)
-        // 2) We can scale the height (typically down)
-        // Which one to use is just a matter of preference. This example scales
-        // the height down.
-        // (see the render call in renderFrame)
-        videoQuadAspectRatio[target] = videoHeight / videoWidth;
+//    void setVideoDimensions(int target, float videoWidth, float videoHeight,
+//                            float[] textureCoordMatrix) {
+//        // The quad originaly comes as a perfect square, however, the video
+//        // often has a different aspect ration such as 4:3 or 16:9,
+//        // To mitigate this we have two options:
+//        // 1) We can either scale the width (typically up)
+//        // 2) We can scale the height (typically down)
+//        // Which one to use is just a matter of preference. This example scales
+//        // the height down.
+//        // (see the render call in renderFrame)
+//        videoQuadAspectRatio[target] = videoHeight / videoWidth;
+//
+//        float mtx[] = textureCoordMatrix;
+//        float tempUVMultRes[] = new float[2];
+//
+//        if (target == 0) {
+//            tempUVMultRes = uvMultMat4f(
+//                    videoQuadTextureCoordsTransformedStones[0],
+//                    videoQuadTextureCoordsTransformedStones[1],
+//                    videoQuadTextureCoords[0], videoQuadTextureCoords[1], mtx);
+//            videoQuadTextureCoordsTransformedStones[0] = tempUVMultRes[0];
+//            videoQuadTextureCoordsTransformedStones[1] = tempUVMultRes[1];
+//            tempUVMultRes = uvMultMat4f(
+//                    videoQuadTextureCoordsTransformedStones[2],
+//                    videoQuadTextureCoordsTransformedStones[3],
+//                    videoQuadTextureCoords[2], videoQuadTextureCoords[3], mtx);
+//            videoQuadTextureCoordsTransformedStones[2] = tempUVMultRes[0];
+//            videoQuadTextureCoordsTransformedStones[3] = tempUVMultRes[1];
+//            tempUVMultRes = uvMultMat4f(
+//                    videoQuadTextureCoordsTransformedStones[4],
+//                    videoQuadTextureCoordsTransformedStones[5],
+//                    videoQuadTextureCoords[4], videoQuadTextureCoords[5], mtx);
+//            videoQuadTextureCoordsTransformedStones[4] = tempUVMultRes[0];
+//            videoQuadTextureCoordsTransformedStones[5] = tempUVMultRes[1];
+//            tempUVMultRes = uvMultMat4f(
+//                    videoQuadTextureCoordsTransformedStones[6],
+//                    videoQuadTextureCoordsTransformedStones[7],
+//                    videoQuadTextureCoords[6], videoQuadTextureCoords[7], mtx);
+//            videoQuadTextureCoordsTransformedStones[6] = tempUVMultRes[0];
+//            videoQuadTextureCoordsTransformedStones[7] = tempUVMultRes[1];
+//        }
+//
+//        // textureCoordMatrix = mtx;
+//    }
 
-        float mtx[] = textureCoordMatrix;
-        float tempUVMultRes[] = new float[2];
 
-        if (target == 0) {
-            tempUVMultRes = uvMultMat4f(
-                    videoQuadTextureCoordsTransformedStones[0],
-                    videoQuadTextureCoordsTransformedStones[1],
-                    videoQuadTextureCoords[0], videoQuadTextureCoords[1], mtx);
-            videoQuadTextureCoordsTransformedStones[0] = tempUVMultRes[0];
-            videoQuadTextureCoordsTransformedStones[1] = tempUVMultRes[1];
-            tempUVMultRes = uvMultMat4f(
-                    videoQuadTextureCoordsTransformedStones[2],
-                    videoQuadTextureCoordsTransformedStones[3],
-                    videoQuadTextureCoords[2], videoQuadTextureCoords[3], mtx);
-            videoQuadTextureCoordsTransformedStones[2] = tempUVMultRes[0];
-            videoQuadTextureCoordsTransformedStones[3] = tempUVMultRes[1];
-            tempUVMultRes = uvMultMat4f(
-                    videoQuadTextureCoordsTransformedStones[4],
-                    videoQuadTextureCoordsTransformedStones[5],
-                    videoQuadTextureCoords[4], videoQuadTextureCoords[5], mtx);
-            videoQuadTextureCoordsTransformedStones[4] = tempUVMultRes[0];
-            videoQuadTextureCoordsTransformedStones[5] = tempUVMultRes[1];
-            tempUVMultRes = uvMultMat4f(
-                    videoQuadTextureCoordsTransformedStones[6],
-                    videoQuadTextureCoordsTransformedStones[7],
-                    videoQuadTextureCoords[6], videoQuadTextureCoords[7], mtx);
-            videoQuadTextureCoordsTransformedStones[6] = tempUVMultRes[0];
-            videoQuadTextureCoordsTransformedStones[7] = tempUVMultRes[1];
-        }
-
-        // textureCoordMatrix = mtx;
-    }
-
-
-    // Multiply the UV coordinates by the given transformation matrix
-    float[] uvMultMat4f(float transformedU, float transformedV, float u,
-                        float v, float[] pMat) {
-        float x = pMat[0] * u + pMat[4] * v /* + pMat[ 8]*0.f */ + pMat[12]
-                * 1.f;
-        float y = pMat[1] * u + pMat[5] * v /* + pMat[ 9]*0.f */ + pMat[13]
-                * 1.f;
-        // float z = pMat[2]*u + pMat[6]*v + pMat[10]*0.f + pMat[14]*1.f; // We
-        // dont need z and w so we comment them out
-        // float w = pMat[3]*u + pMat[7]*v + pMat[11]*0.f + pMat[15]*1.f;
-
-        float result[] = new float[2];
-        // transformedU = x;
-        // transformedV = y;
-        result[0] = x;
-        result[1] = y;
-        return result;
-    }
+//     Multiply the UV coordinates by the given transformation matrix
+//    float[] uvMultMat4f(float transformedU, float transformedV, float u,
+//                        float v, float[] pMat) {
+//        float x = pMat[0] * u + pMat[4] * v /* + pMat[ 8]*0.f */ + pMat[12]
+//                * 1.f;
+//        float y = pMat[1] * u + pMat[5] * v /* + pMat[ 9]*0.f */ + pMat[13]
+//                * 1.f;
+//        // float z = pMat[2]*u + pMat[6]*v + pMat[10]*0.f + pMat[14]*1.f; // We
+//        // dont need z and w so we comment them out
+//        // float w = pMat[3]*u + pMat[7]*v + pMat[11]*0.f + pMat[15]*1.f;
+//
+//        float result[] = new float[2];
+//        // transformedU = x;
+//        // transformedV = y;
+//        result[0] = x;
+//        result[1] = y;
+//        return result;
+//    }
 
     public void setTextures(Vector<Texture> textures) {
         mTextures = textures;
