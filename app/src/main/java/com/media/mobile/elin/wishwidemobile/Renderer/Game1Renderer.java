@@ -21,7 +21,6 @@ import android.util.Log;
 import com.media.mobile.elin.wishwidemobile.Activity.Game1;
 import com.media.mobile.elin.wishwidemobile.Control.SampleAppRendererControl;
 import com.media.mobile.elin.wishwidemobile.Model.GameSettingVO;
-import com.media.mobile.elin.wishwidemobile.Model.MarkerVO;
 import com.media.mobile.elin.wishwidemobile.Session.SampleApplicationSession_Video;
 import com.media.mobile.elin.wishwidemobile.utils.SampleMath;
 import com.media.mobile.elin.wishwidemobile.utils.SampleUtils;
@@ -64,21 +63,20 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     
     // We cannot use the default texture coordinates of the quad since these
     // will change depending on the video itself
-    private float videoQuadTextureCoords[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, };
+    private float videoQuadTextureCoords[] = { 0.0f, 0.0f, 1f, 0.0f, 1f, 1f, 0.0f, 1f, };
     
     // This variable will hold the transformed coordinates (changes every frame)
-    private float videoQuadTextureCoordsTransformedStones[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, };
+    private float videoQuadTextureCoordsTransformedStones[] = { 0.0f, 0.0f, 1f, 0.0f, 1f, 1f, 0.0f, 1f, };
     
     private float videoQuadTextureCoordsTransformedChips[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, };
-    
-    // Trackable dimensions
-    Vec3F targetPositiveDimensions[] = new Vec3F[Game1.NUM_TARGETS];
-    
+
+    Vec3F targetPositiveDimensions = new Vec3F();
+
     static int NUM_QUAD_VERTEX = 4;
     static int NUM_QUAD_INDEX = 6;
 
 
-    private int randNum = new Random().nextInt(3);
+    public static int randNum = new Random().nextInt(3);
 
     //Object Size
     private  final float TARGETAREA = 1f;
@@ -109,9 +107,9 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     private boolean mIsRecognizedMarker = false;
     
     // Needed to calculate whether a screen tap is inside the target
-    Matrix44F modelViewMatrix[] = new Matrix44F[Game1.NUM_TARGETS];
+    Matrix44F modelViewMatrix;
     //The Object ModelViewMatrix corresponding to the target marker
-    Matrix44F m_objectsmodelViewMatrix[][];
+    Matrix44F m_objectsmodelViewMatrix[];
 
     //cpyoon
     //objects position setting {x,y,z}
@@ -131,8 +129,8 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
     // These hold the aspect ratio of both the video and the
     // keyframe
-    float videoQuadAspectRatio[] = new float[Game1.NUM_TARGETS];
-    float keyframeQuadAspectRatio[] = new float[Game1.NUM_TARGETS];
+    float videoQuadAspectRatio;
+    float keyframeQuadAspectRatio;
     
     
     public Game1Renderer(Game1 activity, SampleApplicationSession_Video session)
@@ -148,18 +146,11 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
         mGameSettingVO = mActivity.mGameSettingVO;
 
-        Log.d(LOGTAG, "mGameSettingVO.getTotalCharacterCnt() 확인: " +  mGameSettingVO.getTotalCharacterCnt());
-        m_objectsmodelViewMatrix = new Matrix44F[Game1.NUM_TARGETS][mGameSettingVO.getTotalCharacterCnt()];
+        m_objectsmodelViewMatrix = new Matrix44F[mGameSettingVO.getTotalCharacterCnt()];
+        modelViewMatrix = new Matrix44F();
 
-        for (int i = 0; i < Game1.NUM_TARGETS; i++)
-            targetPositiveDimensions[i] = new Vec3F();
-        
-        for (int i = 0; i < Game1.NUM_TARGETS; i++)
-            modelViewMatrix[i] = new Matrix44F();
-
-        for(int i=0;i<Game1.NUM_TARGETS;i++)
-            for( int j=0;j<mGameSettingVO.getTotalCharacterCnt();j++)
-                m_objectsmodelViewMatrix[i][j] = new Matrix44F();
+        for(int j = 0; j < mGameSettingVO.getTotalCharacterCnt(); j++)
+            m_objectsmodelViewMatrix[j] = new Matrix44F();
     }
     
 
@@ -279,8 +270,8 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         keyframeTexSampler2DHandle = GLES20.glGetUniformLocation(keyframeShaderID, "texSampler2D");
 
         //put marker size
-        keyframeQuadAspectRatio[0] = (float) mTextures.get(0).mHeight / (float) mTextures.get(0).mWidth;
-        keyframeQuadAspectRatio[Game1.CHIPS] = (float) mTextures.get(1).mHeight / (float) mTextures.get(1).mWidth;
+        keyframeQuadAspectRatio = (float) mTextures.get(0).mHeight / (float) mTextures.get(0).mWidth;
+//        keyframeQuadAspectRatio[Game1.CHIPS] = (float) mTextures.get(1).mHeight / (float) mTextures.get(1).mWidth;
 
         quadVertices = fillBuffer(quadVerticesArray);
         quadTexCoords = fillBuffer(quadTexCoordsArray);
@@ -294,25 +285,25 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
         m_translates = new float[10][6];
 //        m_scales = new float[totalCharacterCnt][3];
-        m_rotates = new float[totalCharacterCnt][3];
+//        m_rotates = new float[totalCharacterCnt][3];
 
-        for (int i = 0; i < totalCharacterCnt; i++) {
-            for (int j = 0; j < 3; j++) {
-//                if (j == 0) {   //x축
-//                    m_translates[i][j] = randFloat(-1.0f, 1.0f);
-//                }
-//                else if (j == 1) {  //y축
-//                    m_translates[i][j] = randFloat(-1.7f, 1.7f);
-//                }
-//                else {  //z축
-//                    m_translates[i][j] = randFloat(0.2f, 0.2f);
-//                }
-//
-//                m_scales[i][j] = 0.1f;//randFloat(0.04f, 0.1f);
-                m_rotates[i][j] = randFloat(-60f, 60f);
-                Log.d(LOGTAG, "[" + i + "][" + j + "]: " +  m_translates[i][j]);
-            }
-        }
+//        for (int i = 0; i < totalCharacterCnt; i++) {
+//            for (int j = 0; j < 3; j++) {
+////                if (j == 0) {   //x축
+////                    m_translates[i][j] = randFloat(-1.0f, 1.0f);
+////                }
+////                else if (j == 1) {  //y축
+////                    m_translates[i][j] = randFloat(-1.7f, 1.7f);
+////                }
+////                else {  //z축
+////                    m_translates[i][j] = randFloat(0.2f, 0.2f);
+////                }
+////
+////                m_scales[i][j] = 0.1f;//randFloat(0.04f, 0.1f);
+//                m_rotates[i][j] = randFloat(-60f, 60f);
+////                Log.d(LOGTAG, "[" + i + "][" + j + "]: " +  m_translates[i][j]);
+//            }
+//        }
 
 
         m_translates[0][0] = 1.357f;  //1 - x
@@ -478,22 +469,22 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         }
 
         float temp[] = { 0.0f, 0.0f, 0.0f };
-        for (int i = 0; i < Game1.NUM_TARGETS; i++)
-        {
-            targetPositiveDimensions[i].setData(temp);
-        }
-        
+        targetPositiveDimensions.setData(temp);
+
         // Did we find any trackables this frame?
-        for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++)
-        {
+        if (state.getNumTrackableResults() > 0) {
+            int tIdx = 0;
             // Get the trackable:
             TrackableResult trackableResult = state.getTrackableResult(tIdx);
-            
+
             ImageTarget imageTarget = (ImageTarget) trackableResult.getTrackable();
             ImageTargetResult imageTargetResult = (ImageTargetResult)trackableResult;
+//            Log.d(LOGTAG, "imageTarget.getSize() 확인: " +
+//                    imageTarget.getSize().getData()[0] + " " + imageTarget.getSize().getData()[1] + " " + imageTarget.getSize().getData()[2]);
+
 
             String imageTargetName = imageTarget.getName();
-            Log.d(LOGTAG, "타켓명: " + imageTargetName);
+//            Log.d(LOGTAG, "타켓명: " + imageTargetName);
             int characterNum = 0;
             int touchEventCode = -1;
 
@@ -534,25 +525,49 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
                     }
                 }
             }
-            int currentTarget;
-            
+
             // We store the modelview matrix to be used later by the tap
             // calculation
-            currentTarget = 0;
 
-            modelViewMatrix[currentTarget] = Tool.convertPose2GLMatrix(trackableResult.getPose());
+            modelViewMatrix = Tool.convertPose2GLMatrix(trackableResult.getPose());
 
+
+            targetPositiveDimensions = imageTarget.getSize();
+//            Log.d(LOGTAG, "마커 사이즈 확인: " +
+//                    targetPositiveDimensions.getData()[0] + " " +
+//                    targetPositiveDimensions.getData()[1] + " " +
+//                    targetPositiveDimensions.getData()[2]);
+
+            // The pose delivers the center of the target, thus the dimensions
+            // go from -width/2 to width/2, same for height
+//            temp[0] = targetPositiveDimensions.getData()[0] / 2.0f;
+//            temp[1] = targetPositiveDimensions.getData()[1] / 2.0f;
+//            targetPositiveDimensions.setData(temp);
+
+            //camera position and orientation 추출
             Matrix44F modelviewmatrix = Tool.convertPose2GLMatrix(trackableResult.getPose());
             Matrix44F inverseMV = SampleMath.Matrix44FInverse(modelviewmatrix);
             Matrix44F invTranspMV = SampleMath.Matrix44FTranspose(inverseMV);
 
-            targetPositiveDimensions[currentTarget] = imageTarget.getSize();
-            
-            // The pose delivers the center of the target, thus the dimensions
-            // go from -width/2 to width/2, same for height
-            temp[0] = targetPositiveDimensions[currentTarget].getData()[0] / 2.0f;
-            temp[1] = targetPositiveDimensions[currentTarget].getData()[1] / 2.0f;
-            targetPositiveDimensions[currentTarget].setData(temp);
+//            float[] tempMatrix = invTranspMV.getData();
+//            tempMatrix[12] = 0.8465671f;
+//            tempMatrix[13] = 0.017374111f;
+//            tempMatrix[14] = 1.1985523f;
+//            invTranspMV.setData(tempMatrix);
+
+//            System.out.println("modelviewmatrix(" + modelviewmatrix.getData()[0] + " " + modelviewmatrix.getData()[1] + " " + modelviewmatrix.getData()[2] + " " + modelviewmatrix.getData()[3]);
+//            System.out.println(modelviewmatrix.getData()[4] + " " + modelviewmatrix.getData()[5] + " " + modelviewmatrix.getData()[6] + " " + modelviewmatrix.getData()[7]);
+//            System.out.println(modelviewmatrix.getData()[8] + " " + modelviewmatrix.getData()[9] + " " + modelviewmatrix.getData()[10] + " " + modelviewmatrix.getData()[11]);
+//            System.out.println(modelviewmatrix.getData()[12] + " " + modelviewmatrix.getData()[13] + " " + modelviewmatrix.getData()[14] + " " + modelviewmatrix.getData()[15] + ")");
+//            System.out.println("바뀌었다");
+
+            //추출한 데이터 다시 되돌리기(index 12~15는 약간 오차 있음)
+            Matrix44F textMatrix = SampleMath.Matrix44FTranspose(invTranspMV);
+            Matrix44F testInverseMV = SampleMath.Matrix44FInverse(textMatrix);
+
+//            if (invTranspMV.getData()[12] < 0 && invTra
+
+
 
             //cpyoon
             //make objects
@@ -563,20 +578,17 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
                 mActivity.showGame1Guide("캐릭터를 하나 잡으세요.");
                 mIsRecognizedMarker = true;
 
-                float[] modelViewMatrixKeyframe = Tool.convertPose2GLMatrix(trackableResult.getPose()).getData();
+//                float[] modelViewMatrixKeyframe = Tool.convertPose2GLMatrix(trackableResult.getPose()).getData();
+                float[] modelViewMatrixKeyframe = testInverseMV.getData();
 
                 float[] modelViewProjectionKeyframe = new float[16];
                 // Matrix.translateM(modelViewMatrixKeyframe, 0, 0.0f, 0.0f,
                 // targetPositiveDimensions[currentTarget].getData()[0]);
 
-                // Here we use the aspect ratio of the keyframe since it
-                // is likely that it is not a perfect square
 
                 float ratio = 1.0f;
-                if (mTextures.get(currentTarget).mSuccess)
-                    ratio = keyframeQuadAspectRatio[currentTarget];
-                else
-                    ratio = targetPositiveDimensions[currentTarget].getData()[1] / targetPositiveDimensions[currentTarget].getData()[0];
+                ratio = targetPositiveDimensions.getData()[1] / targetPositiveDimensions.getData()[0];
+
 
                 //cpyoon
                 //Method to translate using m_translates
@@ -595,69 +607,78 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
                 }
 
                 //카메라 방향에 따라 정면에 캐릭터 띄우기
-                if (invTranspMV.getData()[12] < 0 && invTranspMV.getData()[13] < 0) {
-                    Log.d(LOGTAG, "1");
+//                if (invTranspMV.getData()[12] < 0 && invTranspMV.getData()[13] < 0) {
+//                    Log.d(LOGTAG, "1");
+//
+//                    Matrix.translateM(
+//                            modelViewMatrixKeyframe,
+//                            0,
+//                            m_translates[trans][indexRL],
+//                            2.0f,
+//                            m_translates[trans][indexTB]);
+//                }
+//                else if (invTranspMV.getData()[12] > 0 && invTranspMV.getData()[13] < 0) {
+//                    Log.d(LOGTAG, "2");
+//                    Matrix.translateM(
+//                            modelViewMatrixKeyframe,
+//                            0,
+//                            -2.0f,
+//                            m_translates[trans][indexRL],
+//                            m_translates[trans][indexTB]);
+//
+//
+//                    Matrix.rotateM(modelViewMatrixKeyframe,
+//                            0,
+//                            -270.0f,
+//                            0.0f,
+//                            0.0f,    //m_rotates[trans][0]
+//                            90.0f);
+//                }
+//                else if (invTranspMV.getData()[12] > 0 && invTranspMV.getData()[13] > 0) {
+//                    Log.d(LOGTAG, "3");
+//
+//                    Matrix.translateM(
+//                            modelViewMatrixKeyframe,
+//                            0,
+//                            m_translates[trans][indexRL],
+//                            -2.0f,
+//                            m_translates[trans][indexTB]);
+//
+//
+//                    Matrix.rotateM(modelViewMatrixKeyframe,
+//                            0,
+//                            180.0f,
+//                            0.0f,
+//                            0.0f,    //m_rotates[trans][0]
+//                            90.0f);
+//                }
+//                else if (invTranspMV.getData()[12] < 0 && invTranspMV.getData()[13] > 0) {
+//                    Log.d(LOGTAG, "4");
+//
+//                    Matrix.translateM(
+//                            modelViewMatrixKeyframe,
+//                            0,
+//                            2.0f,
+//                            m_translates[trans][indexRL],
+//                            m_translates[trans][indexTB]);
+//
+//
+//                    Matrix.rotateM(modelViewMatrixKeyframe,
+//                            0,
+//                            270.0f,
+//                            0.0f,
+//                            0.0f,    //m_rotates[trans][0]
+//                            90.0f);
+//                }
 
-                    Matrix.translateM(
-                            modelViewMatrixKeyframe,
-                            0,
-                            m_translates[trans][indexRL],
-                            2.0f,
-                            m_translates[trans][indexTB]);
-                }
-                else if (invTranspMV.getData()[12] > 0 && invTranspMV.getData()[13] < 0) {
-                    Log.d(LOGTAG, "2");
-                    Matrix.translateM(
-                            modelViewMatrixKeyframe,
-                            0,
-                            -2.0f,
-                            m_translates[trans][indexRL],
-                            m_translates[trans][indexTB]);
 
+                Matrix.translateM(
+                        modelViewMatrixKeyframe,
+                        0,
+                        m_translates[trans][indexRL],
+                        2.0f,
+                        m_translates[trans][indexTB]);
 
-                    Matrix.rotateM(modelViewMatrixKeyframe,
-                            0,
-                            -270.0f,
-                            0.0f,
-                            0.0f,    //m_rotates[trans][0]
-                            90.0f);
-                }
-                else if (invTranspMV.getData()[12] > 0 && invTranspMV.getData()[13] > 0) {
-                    Log.d(LOGTAG, "3");
-
-                    Matrix.translateM(
-                            modelViewMatrixKeyframe,
-                            0,
-                            m_translates[trans][indexRL],
-                            -2.0f,
-                            m_translates[trans][indexTB]);
-
-
-                    Matrix.rotateM(modelViewMatrixKeyframe,
-                            0,
-                            180.0f,
-                            0.0f,
-                            0.0f,    //m_rotates[trans][0]
-                            90.0f);
-                }
-                else if (invTranspMV.getData()[12] < 0 && invTranspMV.getData()[13] > 0) {
-                    Log.d(LOGTAG, "4");
-
-                    Matrix.translateM(
-                            modelViewMatrixKeyframe,
-                            0,
-                            2.0f,
-                            m_translates[trans][indexRL],
-                            m_translates[trans][indexTB]);
-
-
-                    Matrix.rotateM(modelViewMatrixKeyframe,
-                            0,
-                            270.0f,
-                            0.0f,
-                            0.0f,    //m_rotates[trans][0]
-                            90.0f);
-                }
 
                 Matrix.rotateM(modelViewMatrixKeyframe,
                         0,
@@ -666,12 +687,30 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
                         0.0f,    //m_rotates[trans][0]
                         0.0f);
 
+                //cpyoon
+                //get object modelviewmatrix
+                //used for touch event handling
+                Matrix44F matrix = new Matrix44F();
+                matrix.setData(modelViewMatrixKeyframe);
+                m_objectsmodelViewMatrix[trans] =  matrix;
+
+//                Matrix.scaleM(
+//                        modelViewMatrixKeyframe,
+//                        0,
+//                        0.23f,
+//                        0.23f,
+//                        0.23f);
+
                 Matrix.scaleM(
                         modelViewMatrixKeyframe,
                         0,
-                        0.23f,
-                        0.23f,
-                        0.23f);
+                        targetPositiveDimensions.getData()[0],
+                        targetPositiveDimensions.getData()[0] * ratio,
+                        targetPositiveDimensions.getData()[0]);
+//                Log.d(LOGTAG, "마커 사이즈 확인: " +
+//                        targetPositiveDimensions.getData()[0] + " " +
+//                        targetPositiveDimensions.getData()[1] * ratio + " " +
+//                        targetPositiveDimensions.getData()[0]);
 
                 Matrix.multiplyMM(
                         modelViewProjectionKeyframe,
@@ -681,12 +720,7 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
                         modelViewMatrixKeyframe,
                         0);
 
-                //cpyoon
-                //get object modelviewmatrix
-                //used for touch event handling
-                Matrix44F matrix = new Matrix44F();
-                matrix.setData(modelViewMatrixKeyframe);
-                m_objectsmodelViewMatrix[currentTarget][trans] =  matrix ;
+
 
                 GLES20.glUseProgram(keyframeShaderID);
 
@@ -701,7 +735,7 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
 
                 GLES20.glEnable(GLES20.GL_BLEND);
-                GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+//                GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 
 
 
@@ -721,7 +755,6 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 
                 SampleUtils.checkGLError("VideoPlayback renderFrame");
             }
-
         }
 
         GLES20.glDisable(GLES20.GL_BLEND);
@@ -734,20 +767,39 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
     //cpyoon
     //touch event handling
     //check touched object corresponding target marker
-    public int isTapOnScreenInsideTarget(int target, float x, float y)
+    public int isTapOnScreenInsideTarget(float x, float y)
     {
-        for(int trans = 0;trans<m_translates.length;trans++) {
+        for(int trans = 0; trans < m_objectsmodelViewMatrix.length; trans++) {
+
             //cpyoon
             // Here we calculate that the touch event is inside the target
             Vec3F intersection;
             DisplayMetrics metrics = new DisplayMetrics();
             mActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-            intersection = SampleMath.getPointToPlaneIntersection(SampleMath.Matrix44FInverse(tappingProjectionMatrix), m_objectsmodelViewMatrix[target][trans], metrics.widthPixels, metrics.heightPixels, new Vec2F(x, y), new Vec3F(0, 0, 0), new Vec3F(0, 0, 1));
+            intersection = SampleMath.getPointToPlaneIntersection(
+                    SampleMath.Matrix44FInverse(tappingProjectionMatrix),
+                    m_objectsmodelViewMatrix[trans],
+                    metrics.widthPixels,
+                    metrics.heightPixels,
+                    new Vec2F(x, y),
+                    new Vec3F(0, 0, 0),
+                    new Vec3F(0, 0, 1));
+
+
             //cpyoon
             // The target returns as pose the center of the trackable. The following
             // if-statement simply checks that the tap is within this range
-                if ((intersection.getData()[0] >= -(TARGETAREA) && (intersection.getData()[0] <= (TARGETAREA))) && (intersection.getData()[1] >= -(TARGETAREA)) && (intersection.getData()[1]<= (TARGETAREA)))
+            if(intersection!=null) {
+                Log.d(LOGTAG, trans + "intersection 값 확인: " + intersection.getData()[0] + " " + intersection.getData()[1] + " " + intersection.getData()[2]);
+                if ((intersection.getData()[0] >= -(targetPositiveDimensions.getData()[0]))
+                        && (intersection.getData()[0] <= (targetPositiveDimensions.getData()[0]))
+                        && (intersection.getData()[1] >= -(targetPositiveDimensions.getData()[1]))
+                        && (intersection.getData()[1] <= (targetPositiveDimensions.getData()[1])))
                     return trans;
+            }
+            else {
+                Log.d(LOGTAG, "intersection null 확인: " + trans);
+            }
         }
         return -1;
     }
@@ -764,7 +816,7 @@ public class Game1Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
         // Which one to use is just a matter of preference. This example scales
         // the height down.
         // (see the render call in renderFrame)
-        videoQuadAspectRatio[target] = videoHeight / videoWidth;
+        videoQuadAspectRatio = videoHeight / videoWidth;
         
         float mtx[] = textureCoordMatrix;
         float tempUVMultRes[] = new float[2];

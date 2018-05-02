@@ -195,7 +195,7 @@ public class SampleMath
         r.setData(temp);
         return r;
     }
-    
+
     
     public static float Matrix44FDeterminate(Matrix44F m)
     {
@@ -358,7 +358,7 @@ public class SampleMath
         r.setData(temp);
         return r;
     }
-    
+
     
     public static Vec3F linePlaneIntersection(Vec3F lineStart, Vec3F lineEnd,
                                               Vec3F pointOnPlane, Vec3F planeNormal)

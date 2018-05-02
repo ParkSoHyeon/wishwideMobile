@@ -3,8 +3,8 @@ package com.media.mobile.elin.wishwidemobile.Activity;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -36,10 +36,7 @@ import android.support.v7.app.AppCompatDialog;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.KeyEvent;
-import android.view.LayoutInflater;
-import android.view.MenuItem;
-import android.view.View;
+import android.view.*;
 import android.webkit.*;
 import android.widget.*;
 import com.media.mobile.elin.wishwidemobile.Model.Beacon_Marker;
@@ -48,6 +45,7 @@ import com.media.mobile.elin.wishwidemobile.PermissionConstant;
 import com.media.mobile.elin.wishwidemobile.R;
 import com.media.mobile.elin.wishwidemobile.SharedPreferencesConstant;
 import com.media.mobile.elin.wishwidemobile.WebUrlConstance;
+import com.tsengvn.typekit.TypekitContextWrapper;
 import com.wizturn.sdk.central.Central;
 import com.wizturn.sdk.central.CentralManager;
 import com.wizturn.sdk.peripheral.Peripheral;
@@ -99,7 +97,7 @@ public class MainActivity extends AppCompatActivity
 
     //위치서비스 관련 멤버변수
     private LocationManager mLocationManager;
-    boolean mIsGPSEnabled, mIsNetworkEnabled;
+    boolean mIsNetworkEnabled;
     private LocationListener mLocationListener;
 
     //beacon list
@@ -114,6 +112,12 @@ public class MainActivity extends AppCompatActivity
 
     private AppCompatDialog progressDialog;
     private AlertDialog mDialog;
+
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(TypekitContextWrapper.wrap(base));
+    }
 
 
     @SuppressLint("JavascriptInterface")
@@ -181,7 +185,12 @@ public class MainActivity extends AppCompatActivity
                 if (deniedPermissions.size() > 0) {
                     requestPermission(deniedPermissions.toArray(new String[deniedPermissions.size()]), GAME_START_PERMISSION);
                 } else {
-                    mWebView.loadUrl("javascript:callNearbyBeacon()");
+                    if (centralManager.isBluetoothEnabled()) {
+                        mWebView.loadUrl("javascript:callNearbyBeacon()");
+                    }
+                    else {
+                        startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), 36);
+                    }
 //                    mWebView.loadUrl("javascript:callGameSetting()");
 
                 }
@@ -196,9 +205,12 @@ public class MainActivity extends AppCompatActivity
             public void onLocationChanged(Location location) {
                 Log.d(TAG, "위치 확인:" + location.getLatitude() + ", " + location.getLongitude());
 
-                mWebView.loadUrl(DOMAIN_NAME + HOME_PATH + "?lat=" + location.getLatitude() + "&lng=" + location.getLongitude());
+                //최초 위치 정보를 받아왔을 경우
+                Location lastKnownLocation = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                if (lastKnownLocation == null) {
+                    mWebView.loadUrl(DOMAIN_NAME + HOME_PATH + "?lat=" + location.getLatitude() + "&lng=" + location.getLongitude());
+                }
                 progressOFF();
-                requestRemoveUpdate();
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -238,7 +250,6 @@ public class MainActivity extends AppCompatActivity
                         stopBeaconScan();
 
                         mWebView.loadUrl("javascript:callGameSetting()");
-
 //                        mWebView.loadUrl(DOMAIN_NAME + STORE_DETAIL_PATH + "?wideManagerId=" + valueName);
 
 //                        runOnUiThread(new Runnable() {
@@ -257,10 +268,9 @@ public class MainActivity extends AppCompatActivity
 //                                builder.show();
 //                            }
 //                        });
-
                     }
 
-                    System.out.println(keyName + " = " + valueName);
+//                    System.out.println(keyName + " = " + valueName);
                 }
 
 
@@ -299,6 +309,7 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onClick(View v) {
                         result.confirm();
+                        mDialog.dismiss();
                     }
                 });
 
@@ -372,7 +383,8 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                Log.d(TAG, "onPageStarted()..." + url);
+//                Log.d(TAG, "onPageStarted()..." + url);
+                progressON(MainActivity.this, "로딩 중...");
                 super.onPageStarted(view, url, favicon);
             }
 
@@ -382,17 +394,22 @@ public class MainActivity extends AppCompatActivity
                 super.onPageFinished(view, url);
 
                 mSwipeRefresh.setRefreshing(false);
+                mSwipeRefresh.setEnabled(true);
 
                 mARFloatingActionButton.setVisibility(View.GONE);
 //                mTabLayout.setVisibility(View.VISIBLE);
                 mLlTabs.setVisibility(View.VISIBLE);
+                mToolbar.setVisibility(View.VISIBLE);
                 mActionBarDrawerToggle.setDrawerIndicatorEnabled(true);
-
 
                 switch (url) {
                     case DOMAIN_NAME:   //로그인
+                        mToolbar.setVisibility(View.GONE);
                         mActionBarDrawerToggle.setDrawerIndicatorEnabled(false);    //menu(navigation) gone setting
                         mLlTabs.setVisibility(View.GONE);
+
+//                        setWebViewScrollable(false);
+                        mSwipeRefresh.setEnabled(false);
 
 //                        TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 
@@ -403,38 +420,24 @@ public class MainActivity extends AppCompatActivity
 //
 //                            mWebView.loadUrl("javascript:getDevicePhoneNum(" + localPhoneNum + ")");
 //                        }
-
+                        mWebView.clearHistory();
                         break;
-                    case JOIN_PATH:
+                    case DOMAIN_NAME + JOIN_PATH: //회원가입
+//                        mToolbar.setVisibility(View.GONE);
                         mActionBarDrawerToggle.setDrawerIndicatorEnabled(false);    //menu(navigation) gone setting
                         mLlTabs.setVisibility(View.GONE);
+
                         break;
                     case DOMAIN_NAME + VISITED_STORE_LIST_PATH: //방문한 매장
-                        mBtn2.setTextColor(Color.BLUE);
                         break;
                     case DOMAIN_NAME + STORE_DETAIL_PATH:   //매장상세
                         break;
                     case DOMAIN_NAME + RECEIVED_GIFT_LIST_PATH:
                     case DOMAIN_NAME + SEND_GIFT_LIST_PATH:
-                        mBtn1.setTextColor(Color.BLACK);
-                        mBtn2.setTextColor(Color.BLACK);
-                        mBtn3.setTextColor(Color.BLACK);
-                        mBtn4.setTextColor(Color.BLACK);
-                        mBtn5.setTextColor(Color.BLACK);
                         break;
                     case COUPON_LIST_PATH:
-                        mBtn1.setTextColor(Color.BLACK);
-                        mBtn2.setTextColor(Color.BLACK);
-                        mBtn3.setTextColor(Color.BLACK);
-                        mBtn4.setTextColor(Color.BLACK);
-                        mBtn5.setTextColor(Color.BLUE);
                         break;
                     case STAMP_AND_POINT_LIST_PATH:
-                        mBtn1.setTextColor(Color.BLACK);
-                        mBtn2.setTextColor(Color.BLACK);
-                        mBtn3.setTextColor(Color.BLACK);
-                        mBtn4.setTextColor(Color.BLUE);
-                        mBtn5.setTextColor(Color.BLACK);
                     default:
                         break;
                 }
@@ -527,8 +530,6 @@ public class MainActivity extends AppCompatActivity
         mBtn4.setOnClickListener(this);
         mBtn5.setOnClickListener(this);
 
-        mBtn1.setTextColor(Color.BLUE);
-
         mNavigationView = (NavigationView) findViewById(R.id.nav_view);
         mNavigationView.setNavigationItemSelectedListener(this);
 
@@ -541,44 +542,73 @@ public class MainActivity extends AppCompatActivity
         mSwipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.getSettings().setDomStorageEnabled(true);
+        mWebView.getSettings().setUseWideViewPort(true);
+        mWebView.getSettings().setLoadWithOverviewMode(true);
+        mWebView.setInitialScale(1);
+        mWebView.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.SINGLE_COLUMN);
         mWebAndAppBridge = new WebAndAppBridge(mWebView);
         mWebView.addJavascriptInterface(mWebAndAppBridge, "WebAndAppBridge");
 
+
+
+
+//        Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+//        DisplayMetrics displayMetrics = new DisplayMetrics();
+//        display.getMetrics(displayMetrics);
+//
+//        Log.d("VPB", "widthPixels="+displayMetrics.widthPixels);
+//        Log.d("VPB", "heightPixels="+displayMetrics.heightPixels);
+//        Log.d("VPB", "densityDpi="+displayMetrics.densityDpi);
+//        Log.d("VPB", "density="+displayMetrics.density);
+//        Log.d("VPB", "scaledDensity="+displayMetrics.scaledDensity);
+//        Log.d("VPB", "xdpi="+displayMetrics.xdpi);
+//        Log.d("VPB", "ydpi="+displayMetrics.ydpi);
+//
+//        mWebView.setScaleX(displayMetrics.widthPixels/360f/displayMetrics.scaledDensity);
+//        mWebView.setScaleY(displayMetrics.heightPixels/640f/displayMetrics.scaledDensity);
+
         mTvProfile = (TextView) findViewById(R.id.tv_profile);
+
     }
 
 
     @Override
     public void onClick(View v) {
-        mBtn1.setTextColor(Color.BLACK);
-        mBtn2.setTextColor(Color.BLACK);
-        mBtn3.setTextColor(Color.BLACK);
-        mBtn4.setTextColor(Color.BLACK);
-        mBtn5.setTextColor(Color.BLACK);
 
         switch (v.getId()) {
             case R.id.btn_1:
-                mBtn1.setTextColor(Color.BLUE);
                 requestLocationUpdate();
                 break;
             case R.id.btn_2:
-                mBtn2.setTextColor(Color.BLUE);
                 mWebView.loadUrl(DOMAIN_NAME + VISITED_STORE_LIST_PATH);
                 break;
             case R.id.btn_3:
-                mBtn3.setTextColor(Color.BLUE);
                 mWebView.loadUrl(DOMAIN_NAME + GIFT_STORE_LIST_PATH);
                 break;
             case R.id.btn_4:
-                mBtn4.setTextColor(Color.BLUE);
                 mWebView.loadUrl(DOMAIN_NAME + STAMP_AND_POINT_LIST_PATH);
                 break;
             case R.id.btn_5:
-                mBtn5.setTextColor(Color.BLUE);
                 mWebView.loadUrl(DOMAIN_NAME + COUPON_LIST_PATH);
                 break;
         }
 //        progressON(this, "로딩 중...");
+    }
+
+
+    //웹뷰 스크롤 제어
+    public void setWebViewScrollable(final boolean isScroll) {
+        mWebView.setOnTouchListener(new View.OnTouchListener() {
+            public boolean onTouch(View v, MotionEvent event) {
+                if (isScroll) {
+                    return false;
+                }
+                else {
+                    return (event.getAction() == MotionEvent.ACTION_MOVE);
+                }
+            }
+        });
+
     }
 
 
@@ -892,19 +922,9 @@ public class MainActivity extends AppCompatActivity
 //                tab.select();
                 break;
             case R.id.nav_received_gift:    //받은선물내역(선물함)
-                mBtn1.setTextColor(Color.BLACK);
-                mBtn2.setTextColor(Color.BLACK);
-                mBtn3.setTextColor(Color.BLACK);
-                mBtn4.setTextColor(Color.BLACK);
-                mBtn5.setTextColor(Color.BLACK);
                 mWebView.loadUrl(DOMAIN_NAME + RECEIVED_GIFT_LIST_PATH);
                 break;
             case R.id.nav_send_gift:    //보낸선물내역
-                mBtn1.setTextColor(Color.BLACK);
-                mBtn2.setTextColor(Color.BLACK);
-                mBtn3.setTextColor(Color.BLACK);
-                mBtn4.setTextColor(Color.BLACK);
-                mBtn5.setTextColor(Color.BLACK);
                 mWebView.loadUrl(DOMAIN_NAME + SEND_GIFT_LIST_PATH);
                 break;
             case R.id.nav_coupon:   //쿠폰함내역(쿠폰함)
@@ -958,10 +978,10 @@ public class MainActivity extends AppCompatActivity
             }
 
 //            mIsGPSEnabled = mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            mIsGPSEnabled = mLocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-            Log.d(TAG, "네트워크여부 확인: " + mIsGPSEnabled);
+            mIsNetworkEnabled = mLocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-            if (!mIsGPSEnabled) {
+
+            if (!mIsNetworkEnabled) {
                 progressOFF();
 
 
@@ -1011,18 +1031,21 @@ public class MainActivity extends AppCompatActivity
                 Log.d(TAG, "최초 위치 정보 가져옴, 위치 정보 update 필요");
                 mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
             } else {
-                boolean isOlderLocation = (System.currentTimeMillis() - lastKnownLocation.getTime()) > (1000 * 60 * 2);   //15초 지남
+                mWebView.loadUrl(DOMAIN_NAME + HOME_PATH +
+                        "?lat=" + lastKnownLocation.getLatitude() + "&lng=" + lastKnownLocation.getLongitude());
 
-                Log.d(TAG, isOlderLocation + ", 이전 location: " + lastKnownLocation.getLatitude() + ", " + lastKnownLocation.getLongitude());
-
-                if (isOlderLocation) {
-                    Log.d(TAG, "15초 지남, 위치 정보 update 필요");
-                    mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
-                } else {
-                    Log.d(TAG, "최신 위치 정보임을 확인");
-                    mWebView.loadUrl(DOMAIN_NAME + HOME_PATH +
-                            "?lat=" + lastKnownLocation.getLatitude() + "&lng=" + lastKnownLocation.getLongitude());
-                }
+//                boolean isOlderLocation = (System.currentTimeMillis() - lastKnownLocation.getTime()) > (1000 * 60 * 2);   //15초 지남
+//
+//                Log.d(TAG, isOlderLocation + ", 이전 location: " + lastKnownLocation.getLatitude() + ", " + lastKnownLocation.getLongitude());
+//
+//                if (isOlderLocation) {
+//                    Log.d(TAG, "15초 지남, 위치 정보 update 필요");
+//                    mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
+//                } else {
+//                    Log.d(TAG, "최신 위치 정보임을 확인");
+//                    mWebView.loadUrl(DOMAIN_NAME + HOME_PATH +
+//                            "?lat=" + lastKnownLocation.getLatitude() + "&lng=" + lastKnownLocation.getLongitude());
+//                }
             }
 
         }
@@ -1031,7 +1054,9 @@ public class MainActivity extends AppCompatActivity
 
     //위치 서비스 종료
     private void requestRemoveUpdate() {
-        mLocationManager.removeUpdates(mLocationListener);
+        if ((mLocationManager != null) && (mLocationListener != null)) {
+            mLocationManager.removeUpdates(mLocationListener);
+        }
     }
 
 
@@ -1108,6 +1133,15 @@ public class MainActivity extends AppCompatActivity
             default:
                 break;
         }
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        requestRemoveUpdate();
+        scanBeaconInfo.clear();
+        scanBeaconList.clear();
     }
 
 
@@ -1337,7 +1371,6 @@ public class MainActivity extends AppCompatActivity
                     //로그아웃
                     Log.d(TAG, "로그아웃 시도");
                     mWebView.loadUrl(DOMAIN_NAME);
-                    mWebView.clearHistory();
                 } else if (resultCode == 2) {
                     //설정 변경
                     Log.d(TAG, "설정 변경");
@@ -1386,6 +1419,9 @@ public class MainActivity extends AppCompatActivity
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+                break;
+            case 36:
+                mWebView.loadUrl("javascript:callNearbyBeacon()");
                 break;
         }
     }

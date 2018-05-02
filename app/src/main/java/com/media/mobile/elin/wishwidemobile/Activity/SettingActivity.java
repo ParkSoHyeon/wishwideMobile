@@ -49,8 +49,8 @@ public class SettingActivity
             @Override
             public void onClick(View v) {
                 SharedPreferences.Editor editor = mSharedPreferences.edit();
-                editor.putBoolean(WHETHER_PERMISSION_GUIDE_SHOW_KEY, true);
                 editor.clear();
+                editor.putBoolean(WHETHER_PERMISSION_GUIDE_SHOW_KEY, true);
                 editor.commit();
 
                 setResult(1);

@@ -33,7 +33,6 @@ import com.media.mobile.elin.wishwidemobile.FileFetcher;
 import com.media.mobile.elin.wishwidemobile.Model.*;
 import com.media.mobile.elin.wishwidemobile.R;
 import com.media.mobile.elin.wishwidemobile.Renderer.Game2Renderer;
-import com.media.mobile.elin.wishwidemobile.SampleAppMenu.SampleAppMenuInterface;
 import com.media.mobile.elin.wishwidemobile.Session.SampleApplicationException;
 import com.media.mobile.elin.wishwidemobile.Session.SampleApplicationSession_Video;
 import com.media.mobile.elin.wishwidemobile.utils.LoadingDialogHandler;
@@ -49,8 +48,7 @@ import java.util.*;
 
 // The AR activity for the VideoPlayback sample.
 public class Game2 extends Activity implements
-        SampleApplicationControl_Video,
-        SampleAppMenuInterface, Animation.AnimationListener {
+        SampleApplicationControl_Video, Animation.AnimationListener {
 
     private static final String LOGTAG = "Game2";
     private final static String strAppDatasetPath = Environment.getExternalStorageDirectory().getPath() + "/Wishwide/game/dataset/";
@@ -913,15 +911,15 @@ public class Game2 extends Activity implements
         //cpyoon
         // Load the data sets:
         //디바이스 SD 카드에 저장되어 있는 DataSet 파일 로드
-//        if (!dataSetStonesAndChips.load(strAppDatasetPath + mGameSettingVO.getMarkerXmlFileName(), STORAGE_TYPE.STORAGE_ABSOLUTE)) {
-//            Log.d(LOGTAG, "Failed to load data set.");
-//            return false;
-//        }
-        //assets 파일에 저장되어 있는 DataSet 파일 로드
-        if (!dataSetStonesAndChips.load("StonesAndChips.xml", STORAGE_TYPE.STORAGE_APPRESOURCE)) {
+        if (!dataSetStonesAndChips.load(strAppDatasetPath + mGameSettingVO.getMarkerXmlFileName(), STORAGE_TYPE.STORAGE_ABSOLUTE)) {
             Log.d(LOGTAG, "Failed to load data set.");
             return false;
         }
+        //assets 파일에 저장되어 있는 DataSet 파일 로드
+//        if (!dataSetStonesAndChips.load("StonesAndChips.xml", STORAGE_TYPE.STORAGE_APPRESOURCE)) {
+//            Log.d(LOGTAG, "Failed to load data set.");
+//            return false;
+//        }
 
         // Activate the data set:
         if (!objectTracker.activateDataSet(dataSetStonesAndChips)) {
@@ -1164,24 +1162,24 @@ public class Game2 extends Activity implements
     }
 
 
-    @Override
-    public boolean menuProcess(int command) {
-
-        boolean result = true;
-
-        switch (command) {
-            case CMD_BACK:
-                finish();
-                break;
-
-            case CMD_FULLSCREEN_VIDEO:
-
-                break;
-
-        }
-
-        return result;
-    }
+//    @Override
+//    public boolean menuProcess(int command) {
+//
+//        boolean result = true;
+//
+//        switch (command) {
+//            case CMD_BACK:
+//                finish();
+//                break;
+//
+//            case CMD_FULLSCREEN_VIDEO:
+//
+//                break;
+//
+//        }
+//
+//        return result;
+//    }
 
 
     Handler m_Handler = new Handler() {

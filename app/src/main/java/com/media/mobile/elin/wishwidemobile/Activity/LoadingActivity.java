@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import com.media.mobile.elin.wishwidemobile.R;
@@ -19,33 +21,30 @@ public class LoadingActivity extends AppCompatActivity implements SharedPreferen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_loading);
 
+
         mSharedPreferences = this.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE);
 
-        //preferences shared 사용해 로그인 이력 있는지 확인
-        String wideCustomerPhone = mSharedPreferences.getString(WIDE_CUSTOMER_PHONE_KEY, "");
 
-//        int permissionCamera = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA);
-//        if(permissionCamera == PackageManager.PERMISSION_DENIED) {
-//            System.out.println("권한 없음 요청해야해");
-//            Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
-//            startActivity(intent);
-//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 4);
-//        } else {
-//            System.out.println("권한 있음");
-//            Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
-//            startActivity(intent);
-//        }
+        //로딩창 2초간 띄우기
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                String wideCustomerPhone = mSharedPreferences.getString(WIDE_CUSTOMER_PHONE_KEY, "");
 
-        Intent intent = new Intent(LoadingActivity.this, MainActivity.class);
-        Log.d(TAG, "전화번호 확인: " + wideCustomerPhone);
-        if (!(wideCustomerPhone.equals(""))) {
-            intent.putExtra("responseCode", "AUTO");
-            intent.putExtra("wideCustomerPhone", wideCustomerPhone);
-        }
-        else {
-            intent.putExtra("responseCode", "LOGIN");
-        }
+                //preferences shared 사용해 로그인 이력 있는지 확인
+                Intent intent = new Intent(LoadingActivity.this, MainActivity.class);
+                Log.d(TAG, "전화번호 확인: " + wideCustomerPhone);
+                if (!(wideCustomerPhone.equals(""))) {
+                    intent.putExtra("responseCode", "AUTO");
+                    intent.putExtra("wideCustomerPhone", wideCustomerPhone);
+                }
+                else {
+                    intent.putExtra("responseCode", "LOGIN");
+                }
 
-        startActivity(intent);
+                startActivity(intent);
+            }
+        }, 1000);
+
     }
 }

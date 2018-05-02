@@ -10,16 +10,17 @@
 
     <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab"
+            android:theme="@style/AppTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/fab_margin"
-            app:srcCompat="@android:drawable/ic_dialog_email"/>
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_game"/>
 
     <android.support.design.widget.AppBarLayout
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
-
             android:theme="@style/AppTheme.AppBarOverlay">
 
         <android.support.v7.widget.Toolbar
@@ -30,83 +31,85 @@
                 app:popupTheme="@style/AppTheme.PopupOverlay">
 
             <ImageView
-                    android:src="@drawable/wishwide_logo"
+                    app:srcCompat="@drawable/ic_logo"
                     android:layout_gravity="center"
                     android:layout_width="500px"
                     android:layout_height="wrap_content"/>
         </android.support.v7.widget.Toolbar>
 
+    </android.support.design.widget.AppBarLayout>
+
+    <android.support.design.widget.AppBarLayout
+            android:layout_gravity="bottom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
         <LinearLayout
                 android:id="@+id/ll_tabs"
+                android:orientation="horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="40dp">
+                android:layout_height="wrap_content">
+
             <Button
-                    android:id="@+id/btn_1"
-                    android:text="내주변"
-                    android:background="@color/white"
-                    android:textSize="11dp"
-                    android:layout_width="72dp"
-                    android:layout_height="wrap_content"/>
-            <Button
+
                     android:id="@+id/btn_2"
-                    android:text="방문한매장"
+                    android:text="멤버십매장"
+                    android:padding="@dimen/activity_margin_8"
+                    android:drawablePadding="@dimen/activity_margin_8"
+                    android:textSize="@dimen/text_size_11"
+                    android:textColor="@color/colorDarkBlack"
                     android:background="@color/white"
-                    android:textSize="11dp"
-                    android:layout_width="72dp"
+                    android:drawableTop="@drawable/ic_shop"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"/>
             <Button
                     android:id="@+id/btn_3"
                     android:text="선물가게"
+                    android:padding="@dimen/activity_margin_8"
+                    android:drawablePadding="@dimen/activity_margin_8"
+                    android:textSize="@dimen/text_size_11"
+                    android:textColor="@color/colorDarkBlack"
                     android:background="@color/white"
-                    android:textSize="11dp"
-                    android:layout_width="72dp"
+                    android:drawableTop="@drawable/ic_gift"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"/>
+            <Button
+                    android:id="@+id/btn_1"
+                    android:text="홈"
+                    android:padding="@dimen/activity_margin_8"
+                    android:drawablePadding="@dimen/activity_margin_8"
+                    android:textSize="@dimen/text_size_11"
+                    android:textColor="@color/colorDarkBlack"
+                    android:background="@color/white"
+                    android:drawableTop="@drawable/ic_home"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"/>
             <Button
                     android:id="@+id/btn_4"
                     android:text="도장/포인트"
+                    android:padding="@dimen/activity_margin_8"
+                    android:drawablePadding="@dimen/activity_margin_8"
+                    android:textSize="@dimen/text_size_11"
+                    android:textColor="@color/colorDarkBlack"
                     android:background="@color/white"
-                    android:textSize="11dp"
-                    android:layout_width="72dp"
+                    android:drawableTop="@drawable/ic_stamp"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"/>
             <Button
                     android:id="@+id/btn_5"
                     android:text="쿠폰"
+                    android:padding="@dimen/activity_margin_8"
+                    android:drawablePadding="@dimen/activity_margin_8"
+                    android:textSize="@dimen/text_size_11"
+                    android:textColor="@color/colorDarkBlack"
                     android:background="@color/white"
-                    android:textSize="11dp"
-                    android:layout_width="72dp"
+                    android:drawableTop="@drawable/ic_coupon"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"/>
         </LinearLayout>
-
-        <!--<android.support.design.widget.TabLayout-->
-                <!--android:id="@+id/tabs"-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--app:tabSelectedTextColor="#FFBB00"-->
-                <!--app:tabIndicatorHeight="0dp"-->
-                <!--app:tabTextColor="@color/black"-->
-                <!--app:tabMode="scrollable">-->
-            <!--<android.support.design.widget.TabItem-->
-                    <!--android:layout_width="wrap_content"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:text="@string/menu_home"/>-->
-            <!--<android.support.design.widget.TabItem-->
-                    <!--android:layout_width="wrap_content"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:text="방문한 매장"/>-->
-            <!--<android.support.design.widget.TabItem-->
-                    <!--android:layout_width="wrap_content"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:text="선물가게"/>-->
-            <!--<android.support.design.widget.TabItem-->
-                    <!--android:layout_width="wrap_content"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:text="도장/포인트"/>-->
-            <!--<android.support.design.widget.TabItem-->
-                    <!--android:layout_width="wrap_content"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:text="쿠폰"/>-->
-        <!--</android.support.design.widget.TabLayout>-->
-
     </android.support.design.widget.AppBarLayout>
-
 </android.support.design.widget.CoordinatorLayout>

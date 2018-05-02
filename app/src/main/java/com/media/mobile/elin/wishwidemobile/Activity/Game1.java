@@ -31,7 +31,6 @@ import com.media.mobile.elin.wishwidemobile.FileFetcher;
 import com.media.mobile.elin.wishwidemobile.Model.*;
 import com.media.mobile.elin.wishwidemobile.R;
 import com.media.mobile.elin.wishwidemobile.Renderer.Game1Renderer;
-import com.media.mobile.elin.wishwidemobile.SampleAppMenu.SampleAppMenuInterface;
 import com.media.mobile.elin.wishwidemobile.Session.SampleApplicationException;
 import com.media.mobile.elin.wishwidemobile.Session.SampleApplicationSession_Video;
 import com.media.mobile.elin.wishwidemobile.utils.LoadingDialogHandler;
@@ -50,7 +49,7 @@ import java.util.Vector;
 
 // The AR activity for the VideoPlayback sample.
 public class Game1 extends Activity implements
-        SampleApplicationControl_Video, SampleAppMenuInterface {
+        SampleApplicationControl_Video {
 
     private static final String LOGTAG = "Game1";
     private final static String strAppDatasetPath = Environment.getExternalStorageDirectory().getPath() + "/Wishwide/game/dataset/";
@@ -73,7 +72,7 @@ public class Game1 extends Activity implements
     //cpyoon
     //the Target markers:
     public static final int NUM_TARGETS = 2;
-//    public static final int STONES = 0;
+    //    public static final int STONES = 0;
     public static final int CHIPS = 1;
     public static final String TARGETNAME[] = {"Stone", "Chips"};
 
@@ -162,7 +161,7 @@ public class Game1 extends Activity implements
 
         startLoadingAnimation();
 
-        
+
         mFileFetcher = new FileFetcher();
         //dat 파일 다운로드
         mFileFetcher.downloadDataSetFile(
@@ -205,66 +204,59 @@ public class Game1 extends Activity implements
             public boolean onSingleTapConfirmed(MotionEvent e) {
                 //touch event must have beacon target
                 if (mGameSettingVO != null) {
-                    if (true) {
-                        //cpyoon
-                        // Verify that the tap happened inside the object
-                        if (mRenderer != null) {
-                            int target = 0;
+                    //cpyoon
+                    // Verify that the tap happened inside the object
+                    if (mRenderer != null) {
+                        int result = mRenderer.isTapOnScreenInsideTarget(e.getX(), e.getY());
+                        Log.d(LOGTAG, "뭐 누름? " + result);
 
-                            int result = mRenderer.isTapOnScreenInsideTarget(target, e.getX(), e.getY());
-
-                            if (result >= 0) {
+                        if (result >= 0) {
 //                                mToast.setText("select target : " + TARGETNAME[target] + " objects : " + result);
 //                                mToast.show();
 
-                                int gameCharacterNum = mGameSettingVO.getTotalCharacterCnt();
-                                int gameBenefitNum = mGameSettingVO.getBenefitCnt();
-                                int randomNum = new Random().nextInt(gameCharacterNum);
-                                List<GameBenefitVO> gameBenefitList = mGameSettingVO.getGameBenefitList();
+                            int gameCharacterNum = mGameSettingVO.getTotalCharacterCnt();
+                            int gameBenefitNum = mGameSettingVO.getBenefitCnt();
+                            int randomNum = new Random().nextInt(gameCharacterNum);
+                            List<GameBenefitVO> gameBenefitList = mGameSettingVO.getGameBenefitList();
 
-                                Log.d(LOGTAG, "유효혜택 수: " + gameBenefitNum);
-                                Log.d(LOGTAG, "선택된 값: " + randomNum);
-                                Log.d(LOGTAG, "결과: " + (randomNum < gameBenefitNum));
+                            Log.d(LOGTAG, "유효혜택 수: " + gameBenefitNum);
+                            Log.d(LOGTAG, "선택된 값: " + randomNum);
+                            Log.d(LOGTAG, "결과: " + (randomNum < gameBenefitNum));
 
-                                if (randomNum < gameBenefitNum) {
-                                    //혜택
-                                    GameBenefitVO gameBenefitVO = gameBenefitList.get(randomNum);
-                                    if (gameBenefitVO.getCouponDiscountTypeCode().equals("P")) {
-                                        showBenefitGainMessage(
-                                                gameBenefitVO.getCouponDiscountTypeCode(),
-                                                "축하합니다!\n" + gameBenefitVO.getCouponDiscountValue() + "p를 획득하셨습니다.\n내일 다시 도전해주세요.",
-                                                String.valueOf(gameBenefitVO.getCouponNo()),
-                                                String.valueOf(gameBenefitVO.getCouponDiscountValue()));
-                                    }
-                                    else if (gameBenefitVO.getCouponDiscountTypeCode().equals("S")) {
-                                        showBenefitGainMessage(
-                                                gameBenefitVO.getCouponDiscountTypeCode(),
-                                                "축하합니다!\n도장 " + gameBenefitVO.getCouponDiscountValue() + "개를 획득하셨습니다.\n내일 다시 도전해주세요.",
-                                                String.valueOf(gameBenefitVO.getCouponNo()),
-                                                String.valueOf(gameBenefitVO.getCouponDiscountValue()));
-                                    }
-                                    else {
-                                        String msg = "";
-                                        if (gameBenefitVO.getCouponDiscountTypeCode().equals("DCP")) {
-                                            msg = "축하합니다!\n" + gameBenefitVO.getProductTitle() + " " + gameBenefitVO.getCouponDiscountValue() + "원 할인쿠폰을 획득하셨습니다.\n내일 다시 도전해주세요.";
-                                        }
-                                        else if (gameBenefitVO.getCouponDiscountTypeCode().equals("DCR")) {
-                                            msg = "축하합니다!\n" + gameBenefitVO.getProductTitle() + " " + gameBenefitVO.getCouponDiscountValue() + "% 할인쿠폰을 획득하셨습니다.\n내일 다시 도전해주세요.";
-                                        }
-                                        showBenefitGainMessage(
-                                                gameBenefitVO.getCouponDiscountTypeCode(),
-                                                msg,
-                                                String.valueOf(gameBenefitVO.getCouponNo()));
-                                    }
+//                            if (randomNum < gameBenefitNum) {
+//                                //혜택
+//                                GameBenefitVO gameBenefitVO = gameBenefitList.get(randomNum);
+//                                if (gameBenefitVO.getCouponDiscountTypeCode().equals("P")) {
+//                                    showBenefitGainMessage(
+//                                            gameBenefitVO.getCouponDiscountTypeCode(),
+//                                            "축하합니다!\n" + gameBenefitVO.getCouponDiscountValue() + "p를 획득하셨습니다.\n내일 다시 도전해주세요.",
+//                                            String.valueOf(gameBenefitVO.getCouponNo()),
+//                                            String.valueOf(gameBenefitVO.getCouponDiscountValue()));
+//                                } else if (gameBenefitVO.getCouponDiscountTypeCode().equals("S")) {
+//                                    showBenefitGainMessage(
+//                                            gameBenefitVO.getCouponDiscountTypeCode(),
+//                                            "축하합니다!\n도장 " + gameBenefitVO.getCouponDiscountValue() + "개를 획득하셨습니다.\n내일 다시 도전해주세요.",
+//                                            String.valueOf(gameBenefitVO.getCouponNo()),
+//                                            String.valueOf(gameBenefitVO.getCouponDiscountValue()));
+//                                } else {
+//                                    String msg = "";
+//                                    if (gameBenefitVO.getCouponDiscountTypeCode().equals("DCP")) {
+//                                        msg = "축하합니다!\n" + gameBenefitVO.getProductTitle() + " " + gameBenefitVO.getCouponDiscountValue() + "원 할인쿠폰을 획득하셨습니다.\n내일 다시 도전해주세요.";
+//                                    } else if (gameBenefitVO.getCouponDiscountTypeCode().equals("DCR")) {
+//                                        msg = "축하합니다!\n" + gameBenefitVO.getProductTitle() + " " + gameBenefitVO.getCouponDiscountValue() + "% 할인쿠폰을 획득하셨습니다.\n내일 다시 도전해주세요.";
+//                                    }
+//                                    showBenefitGainMessage(
+//                                            gameBenefitVO.getCouponDiscountTypeCode(),
+//                                            msg,
+//                                            String.valueOf(gameBenefitVO.getCouponNo()));
+//                                }
+//
+//                            } else {
+//                                //꽝
+//                                showBenefitGainMessage("BOOM", "꽝!\n다시 도전해주세요.");
+//                            }
 
-                                }
-                                else {
-                                    //꽝
-                                    showBenefitGainMessage("BOOM", "꽝!\n다시 도전해주세요.");
-                                }
-
-                                return true;
-                            }
+                            return true;
                         }
                     }
                 }
@@ -343,7 +335,8 @@ public class Game1 extends Activity implements
                     mBtnCase1.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            initializeAR();
+                            mDialog.dismiss();
+                            Game1Renderer.randNum = new Random().nextInt(3);
                         }
                     });
 
@@ -357,8 +350,7 @@ public class Game1 extends Activity implements
                             finish();
                         }
                     });
-                }
-                else {
+                } else {
                     //서버에 보낼 쿠폰, 멤버쉽 정보 intent에 put
                     final Intent intent = new Intent();
                     intent.putExtra("wideManagerId", mGameSettingVO.getWideManagerId());
@@ -368,20 +360,17 @@ public class Game1 extends Activity implements
                     intent.putExtra("couponNo", Integer.parseInt(couponInfo[0]));
                     if (couponInfo.length == 2) {
                         intent.putExtra("couponDiscountTypeValue", Integer.parseInt(couponInfo[1]));
-                    }
-                    else {
+                    } else {
                         intent.putExtra("couponDiscountTypeValue", 0);
                     }
 
                     if (type.equals("S")) {
                         intent.putExtra("movePage", "listStampAndPoint");
                         mBtnCase1.setText("도장 보러가기");
-                    }
-                    else if (type.equals("P")) {
+                    } else if (type.equals("P")) {
                         intent.putExtra("movePage", "listStampAndPoint");
                         mBtnCase1.setText("포인트 보러가기");
-                    }
-                    else {
+                    } else {
                         intent.putExtra("movePage", "listCoupon");
                         mBtnCase1.setText("쿠폰 보러가기");
                     }
@@ -593,8 +582,10 @@ public class Game1 extends Activity implements
         List<String> filePaths = mFileFetcher.getGameCharacterFilePaths();
 
         for (String filePath : filePaths) {
-            Log.d(LOGTAG, "filePath 정보 확인: " + filePaths) ;
+            Log.d(LOGTAG, "filePath 정보 확인: " + filePaths);
         }
+
+        mTextures.add(Texture.loadTextureFromApk("VideoPlayback/gift.png", getAssets()));
 
         for (String filePath : filePaths) {
 
@@ -603,7 +594,7 @@ public class Game1 extends Activity implements
 
         Log.d(LOGTAG, "이미지 통합: " + mTextures);
         for (int i = 0; i < mTextures.size(); i++) {
-           Log.d(LOGTAG, "이미지 정보 확인: " + mTextures.get(i)) ;
+            Log.d(LOGTAG, "이미지 정보 확인: " + mTextures.get(i));
         }
     }
 
@@ -960,9 +951,6 @@ public class Game1 extends Activity implements
 
             vuforiaAppSession.startAR(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_DEFAULT);
 
-//            mSampleAppMenu = new SampleAppMenu(this, this, "Video Playback",
-//                    mGlView, mUILayout, null);
-            setSampleAppMenuSettings();
 
             mIsInitialized = true;
 
@@ -1048,43 +1036,6 @@ public class Game1 extends Activity implements
     final private static int CMD_FULLSCREEN_VIDEO = 1;
 
 
-    // This method sets the menu's settings
-    private void setSampleAppMenuSettings() {
-//        SampleAppMenuGroup group;
-//
-//        group = mSampleAppMenu.addGroup("", false);
-//        group.addTextItem(getString(R.string.menu_back), -1);
-//
-//        group = mSampleAppMenu.addGroup("", true);
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-//            group.addSelectionItem(getString(R.string.menu_playFullscreenVideo),
-//                    CMD_FULLSCREEN_VIDEO, mPlayFullscreenVideo);
-//        }
-//
-//        mSampleAppMenu.attachMenu();
-    }
-
-
-    @Override
-    public boolean menuProcess(int command) {
-
-        boolean result = true;
-
-        switch (command) {
-            case CMD_BACK:
-                finish();
-                break;
-
-            case CMD_FULLSCREEN_VIDEO:
-
-                break;
-
-        }
-
-        return result;
-    }
-
-
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
@@ -1125,8 +1076,8 @@ public class Game1 extends Activity implements
 
             //다이아로그박스 출력
             mDialog = builder
-                        .setView(dialogView)
-                        .create();
+                    .setView(dialogView)
+                    .create();
             mDialog.setCanceledOnTouchOutside(false);
             mDialog.show();
 

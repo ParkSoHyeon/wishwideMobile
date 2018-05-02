@@ -13,6 +13,8 @@
     <color name="incorrect_color">#E6FF0000</color>
     <color name="correct_color">#E61DDB16</color>
     <color name="colorWhite">#FFFFFF</color>
+    <color name="colorVividCyan">#00abdd</color>
+    <color name="colorDarkBlack">#222</color>
 
     <color name="overlay_bottom_bar_separators">#1E1E1E</color>
     <color name="overlay_bottom_bar_background">#1E1E1E</color>

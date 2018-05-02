@@ -23,6 +23,7 @@ import android.view.View;
 import com.media.mobile.elin.wishwidemobile.Activity.Game2;
 import com.media.mobile.elin.wishwidemobile.Control.SampleAppRendererControl;
 import com.media.mobile.elin.wishwidemobile.Model.GameSettingVO;
+import com.media.mobile.elin.wishwidemobile.Model.MarkerVO;
 import com.media.mobile.elin.wishwidemobile.Session.SampleApplicationSession_Video;
 import com.media.mobile.elin.wishwidemobile.utils.SampleMath;
 import com.media.mobile.elin.wishwidemobile.utils.SampleUtils;
@@ -489,17 +490,17 @@ public class Game2Renderer implements GLSurfaceView.Renderer, SampleAppRendererC
 //                }
 //            }
 
-//            for (MarkerVO markerVO : mGameSettingVO.getMarkerList()) {
-//                if (imageTargetName.equals(markerVO.getMarkerId())) {
-//                    characterNum = mGameSettingVO.getTotalCharacterCnt();
-//                    touchEventCode = 2;
-//                }
-//            }
-
-            if (imageTargetName.equals("stones")) {
-                characterNum = mGameSettingVO.getTotalCharacterCnt();
-                touchEventCode = 2;
+            for (MarkerVO markerVO : mGameSettingVO.getMarkerList()) {
+                if (imageTargetName.equals(markerVO.getMarkerId())) {
+                    characterNum = mGameSettingVO.getTotalCharacterCnt();
+                    touchEventCode = 2;
+                }
             }
+
+//            if (imageTargetName.equals("stones")) {
+//                characterNum = mGameSettingVO.getTotalCharacterCnt();
+//                touchEventCode = 2;
+//            }
 
 
             //is not same
