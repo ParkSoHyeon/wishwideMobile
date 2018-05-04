@@ -1539,7 +1539,7 @@ public class MainActivity extends AppCompatActivity
                                 break;
                             case "2":
                                 //게임 실행!
-                                intent = new Intent(MainActivity.this, Game2.class);
+                                intent = new Intent(MainActivity.this, VideoPlayback2.class);
                                 intent.putExtra("gameSetting", gameSetting);
                                 intent.putExtra("membershipCustomerVO", membershipCustomerVO);
 

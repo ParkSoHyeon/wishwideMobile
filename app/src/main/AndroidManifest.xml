@@ -98,7 +98,7 @@
                 android:theme="@style/Theme.AppCompat.NoActionBar">
         </activity>
         <activity
-                android:name=".Activity.Game2"
+                android:name=".Activity.VideoPlayback2"
                 android:theme="@style/Theme.AppCompat.NoActionBar">
         </activity>
         <activity
