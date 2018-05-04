@@ -3,8 +3,8 @@ package com.media.mobile.elin.wishwidemobile;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
-import com.media.mobile.elin.wishwidemobile.Activity.Game1;
 import com.media.mobile.elin.wishwidemobile.Activity.Game2;
+import com.media.mobile.elin.wishwidemobile.Activity.VideoPlayback;
 import com.media.mobile.elin.wishwidemobile.Model.GameCharacterFileVO;
 
 import java.io.*;
@@ -116,7 +116,7 @@ public class FileFetcher {
             }
 
             if (mGameType.equals("1")) {
-                Game1.mCompletedCharacterFileCnt++;
+                VideoPlayback.mCompletedCharacterFileCnt++;
             }
             else if (mGameType.equals("2")) {
                 Game2.mCompletedFileCnt++;
@@ -211,7 +211,7 @@ public class FileFetcher {
             }
 
             if (mGameType.equals("1")) {
-                Game1.mCompletedDataSetFileCnt++;
+                VideoPlayback.mCompletedDataSetFileCnt++;
             }
             else if (mGameType.equals("2")) {
                 Game2.mCompletedDataSetFileCnt++;

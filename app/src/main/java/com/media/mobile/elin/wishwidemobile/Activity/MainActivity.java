@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
@@ -1532,7 +1531,7 @@ public class MainActivity extends AppCompatActivity
                         switch (objRoot.getJSONObject("gameSetting").optString("markerGameTypeCode")) {
                             case "1":
                                 //게임 실행!
-                                intent = new Intent(MainActivity.this, Game1.class);
+                                intent = new Intent(MainActivity.this, VideoPlayback.class);
                                 intent.putExtra("gameSetting", gameSetting);
                                 intent.putExtra("membershipCustomerVO", membershipCustomerVO);
 
