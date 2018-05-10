@@ -370,7 +370,7 @@ public class VideoPlayback extends Activity implements
                     mBtnCase1.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            setResult(1, intent);
+                            setResult(22, intent);
 
                             finish();
                         }
@@ -382,7 +382,7 @@ public class VideoPlayback extends Activity implements
                         @Override
                         public void onClick(View v) {
                             intent.putExtra("movePage", "detailStore");
-                            setResult(1, intent);
+                            setResult(22, intent);
 
                             finish();
                         }
@@ -552,21 +552,25 @@ public class VideoPlayback extends Activity implements
         //Load texture file (png, jpg, etc)
         List<String> filePaths = mFileFetcher.getGameCharacterFilePaths();
 
-        for (String filePath : filePaths) {
-            Log.d(LOGTAG, "filePath 정보 확인: " + filePaths);
-        }
+//        for (String filePath : filePaths) {
+//            Log.d(LOGTAG, "filePath 정보 확인: " + filePaths);
+//        }
 
-        mTextures.add(Texture.loadTextureFromApk("VideoPlayback/gift.png", getAssets()));
+//        mTextures.add(Texture.loadTextureFromApk("VideoPlayback/testar.png", getAssets()));
+//        mTextures.add(Texture.loadTextureFromApk("VideoPlayback/testar.png", getAssets()));
+//        mTextures.add(Texture.loadTextureFromApk("VideoPlayback/testar.png", getAssets()));
+//        mTextures.add(Texture.loadTextureFromApk("VideoPlayback/testar.png", getAssets()));
+//        mTextures.add(Texture.loadTextureFromApk("VideoPlayback/testar.png", getAssets()));
 
         for (String filePath : filePaths) {
 
             mTextures.add(Texture.loadTextureFromInputStream(filePath));
         }
 
-        Log.d(LOGTAG, "이미지 통합: " + mTextures);
-        for (int i = 0; i < mTextures.size(); i++) {
-            Log.d(LOGTAG, "이미지 정보 확인: " + mTextures.get(i));
-        }
+//        Log.d(LOGTAG, "이미지 통합: " + mTextures);
+//        for (int i = 0; i < mTextures.size(); i++) {
+//            Log.d(LOGTAG, "이미지 정보 확인: " + mTextures.get(i));
+//        }
     }
     
     

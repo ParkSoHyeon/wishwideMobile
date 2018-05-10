@@ -55,7 +55,7 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
     private int videoPlaybackTexSamplerOESHandle = 0;
 
     // Video Playback Textures for the two targets
-    int videoPlaybackTextureID;
+    int videoPlaybackTextureID[] = new int[1];
     
     // Keyframe and icon rendering specific
     private int keyframeShaderID = 0;
@@ -73,13 +73,13 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
     public static int randNum = new Random().nextInt(3);
 
     //Object Size
-    private  final float TARGETAREA = 1f;
+    private  final float TARGETAREA = 1.2f;
 
-    double quadVerticesArray[] = { -1.0f, -1.0f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, 0.0f };
+    double quadVerticesArray[] = { -1.0f, -1.0f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, 0.0f };    //캐릭터 크기
     
-    double quadTexCoordsArray[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f };
+    double quadTexCoordsArray[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f };   //Texture 크기
     
-    double quadNormalsArray[] = { 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, };
+    double quadNormalsArray[] = { 0, 0, 2, 0, 0, 2, 0, 0, 2, 0, 0, 2, };
     
     short quadIndicesArray[] = { 0, 1, 2, 2, 3, 0 };
     
@@ -180,6 +180,7 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
     }
 
 
+    private int renderDelay = 0;
     // Called to draw the current frame.
     public void onDrawFrame(GL10 gl)
     {
@@ -229,8 +230,8 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
         // Notice that the textures are not typical GL_TEXTURE_2D textures
         // but instead are GL_TEXTURE_EXTERNAL_OES extension textures
         // This is required by the Android SurfaceTexture
-        GLES20.glGenTextures(1, new int[]{videoPlaybackTextureID}, 0);
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, videoPlaybackTextureID);
+        GLES20.glGenTextures(1, videoPlaybackTextureID, 0);
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, videoPlaybackTextureID[0]);
         GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
         GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0);
@@ -289,8 +290,8 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
 //            }
 //        }
 
-        m_translates[0][0] = 0f;  //1 - x
-        m_translates[0][1] = 0.3f;  //1 - y
+        m_translates[0][0] = 0.5f;  //1 - x
+        m_translates[0][1] = 0.0f;  //1 - y
         m_translates[0][2] = 2.0f;  //2 - x
         m_translates[0][3] = 2.0f;  //2 - y
         m_translates[0][4] = 0.19f;  //3 - x
@@ -304,56 +305,56 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
         m_translates[1][5] = 1.109f;
 
         m_translates[2][0] = -1.0f;
-        m_translates[2][1] = 1.0f;
+        m_translates[2][1] = 0.8f;
         m_translates[2][2] = 0.0f;
         m_translates[2][3] = 0.0f;
         m_translates[2][4] = 2.0f;
         m_translates[2][5] = -0.55f;
 
-        m_translates[3][0] = -.5f;
-        m_translates[3][1] = 0.9f;
+        m_translates[3][0] = -0.5f;
+        m_translates[3][1] = -0.4f;
         m_translates[3][2] = 1.2f;
         m_translates[3][3] = -0.8f;
         m_translates[3][4] = 0.43f;
         m_translates[3][5] = 1.71f;
 
-        m_translates[4][0] = 0.5f;
-        m_translates[4][1] = 0.7f;
+        m_translates[4][0] = 0.0f;
+        m_translates[4][1] = -0.8f;
         m_translates[4][2] = -1.456f;
         m_translates[4][3] = 1.35f;
         m_translates[4][4] = 0.101f;
         m_translates[4][5] = 0.89f;
 
         m_translates[5][0] = 2.0f;
-        m_translates[5][1] = 2.0f;
+        m_translates[5][1] = 1.2f;
         m_translates[5][2] = 0.0f;
         m_translates[5][3] = 0.0f;
         m_translates[5][4] = -1.71f;
         m_translates[5][5] = -0.07f;
 
         m_translates[6][0] = -0.67f;
-        m_translates[6][1] = 1.3f;
+        m_translates[6][1] = 0.0f;
         m_translates[6][2] = 0.67f;
         m_translates[6][3] = 1.46f;
         m_translates[6][4] = 1.999f;
         m_translates[6][5] = 0.501f;
 
         m_translates[7][0] = 2.112f;
-        m_translates[7][1] = 0.0f;
+        m_translates[7][1] = 1.0f;
         m_translates[7][2] = -0.136f;
         m_translates[7][3] = 2.342f;
         m_translates[7][4] = -1.82f;
         m_translates[7][5] = 1.605f;
 
         m_translates[8][0] = 1.0f;
-        m_translates[8][1] = -0.912f;
+        m_translates[8][1] = 0.8f;
         m_translates[8][2] = -0.559f;
         m_translates[8][3] = 1.0f;
         m_translates[8][4] = 2.15f;
         m_translates[8][5] = 1.61f;
 
         m_translates[9][0] = -1.54f;
-        m_translates[9][1] = -0.5f;
+        m_translates[9][1] = 0.9f;
         m_translates[9][2] = 1.651f;
         m_translates[9][3] = 1.0f;
         m_translates[9][4] = 1.0f;
@@ -426,6 +427,7 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
     public void renderFrame(State state, float[] projectionMatrix)
     {
         if(mGameSettingVO == null) return;
+
         // Renders video background replacing Renderer.DrawVideoBackground()
         mSampleAppRendererVideo.renderVideoBackground();
 
@@ -442,18 +444,17 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
 
         GLES20.glEnable(GLES20.GL_BLEND);
 
+        if(tappingProjectionMatrix == null)
+        {
+            tappingProjectionMatrix = new Matrix44F();
+            tappingProjectionMatrix.setData(projectionMatrix);
+        }
 
         //마커 인식 전
         if (!mIsRecognizedMarker) {
             mActivity.showGame1Guide("매장 테이블 위에 있는 마커를 인식해주세요.");
         }
 
-
-        if(tappingProjectionMatrix == null)
-        {
-            tappingProjectionMatrix = new Matrix44F();
-            tappingProjectionMatrix.setData(projectionMatrix);
-        }
 
         float temp[] = { 0.0f, 0.0f, 0.0f };
         targetPositiveDimensions.setData(temp);
@@ -512,7 +513,7 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
 
             // We store the modelview matrix to be used later by the tap
             // calculation
-            float matrix1[] = Tool.convertPose2GLMatrix(trackableResult.getPose()).getData();
+//            float matrix1[] = Tool.convertPose2GLMatrix(trackableResult.getPose()).getData();
 //            matrix1[0]=0.042890187f;
 //            matrix1[1]=-0.998534f;
 //            matrix1[2]=-0.033018753f;
@@ -522,7 +523,11 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
 //            matrix1[8]=-0.65250427f;
 //            matrix1[9]=-0.002969464f;
 //            matrix1[10]=-0.75777924f;
-            modelViewMatrix.setData(matrix1);
+//            modelViewMatrix.setData(matrix1);
+            renderDelay %= 3;
+            if (renderDelay++ == 0) {
+                modelViewMatrix=Tool.convertPose2GLMatrix(trackableResult.getPose());
+            }
 
             targetPositiveDimensions = imageTarget.getSize();
 
@@ -559,7 +564,7 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
 
             //make objects
             //if you want to create an object selectively, must change for syntax
-            for(int trans=0; trans < characterNum; trans++) {
+            for(int trans = 0; trans < mTextures.size(); trans++) {
                 // If the movie is ready to start playing or it has reached the end
                 // of playback we render the keyframe
                 mActivity.showGame1Guide("캐릭터를 하나 잡으세요.");
@@ -583,29 +588,18 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
 
                 // Here we use the aspect ratio of the keyframe since it
                 // is likely that it is not a perfect square
-
-
-                float ratio = 1.0f;
-                if (mTextures.get(0).mSuccess)
-                    ratio = keyframeQuadAspectRatio;
-                else
-                    ratio = targetPositiveDimensions.getData()[1] / targetPositiveDimensions.getData()[0];
+//                float ratio = 1.0f;
+//                if (mTextures.get(0).mSuccess)
+//                    ratio = keyframeQuadAspectRatio;
+//                else
+//                    ratio = targetPositiveDimensions.getData()[1] / targetPositiveDimensions.getData()[0];
 
 
                 //Method to translate using m_translates
 //                Log.e("Test1", translateMatrix[0]+ ", "+translateMatrix[1]+ ", "+translateMatrix[2]+ ", "+translateMatrix[3]+ ", ");
 //                Log.e("Test2", translateMatrix[4]+ ", "+translateMatrix[5]+ ", "+translateMatrix[6]+ ", "+translateMatrix[7]+ ", ");
 //                Log.e("Test3", translateMatrix[8]+ ", "+translateMatrix[9]+ ", "+translateMatrix[10]+ ", "+translateMatrix[11]+ ", ");
-//                Log.e("Test4", translateMatrix[12]+ ", "+translateMatrix[13]+ ", "+translateMatrix[14]+ ", "+translateMatrix[15]+ ", ");
-
-//                Log.e("Test5", translateMatrix[0]+ ", "+translateMatrix[1]+ ", "+translateMatrix[2]+ ", "+translateMatrix[3]+ ", ");
-//                Log.e("Test6", translateMatrix[4]+ ", "+translateMatrix[5]+ ", "+translateMatrix[6]+ ", "+translateMatrix[7]+ ", ");
-//                Log.e("Test7", translateMatrix[8]+ ", "+translateMatrix[9]+ ", "+translateMatrix[10]+ ", "+translateMatrix[11]+ ", ");
-//                Log.e("Test8", translateMatrix[12]+ ", "+translateMatrix[13]+ ", "+translateMatrix[14]+ ", "+translateMatrix[15]+ ", ");
-                //위치 설정
-                translateMatrix[4]= -0.33674696f;
-                translateMatrix[5]= -0.037394043f;
-                translateMatrix[6]= 0.9408524f;
+                Log.e("Test4", translateMatrix[12]+ ", "+translateMatrix[13]+ ", "+translateMatrix[14]+ ", "+translateMatrix[15]+ ", ");
 
 
                 int indexRL, indexTB = 0;    //좌우 위치와 상하 위치가 저장되어 있는 index
@@ -623,41 +617,48 @@ public class VideoPlaybackRenderer implements GLSurfaceView.Renderer, SampleAppR
                 }
 
 
-                Matrix.translateM(translateMatrix,
-                        0, m_translates[trans][0],
-                        1.0f,
+                //위치 설정
+                translateMatrix[4] = -0.33674696f;
+                translateMatrix[5] = -0.037394043f;
+                translateMatrix[6] = 0.9408524f;
+
+
+                Matrix.translateM(
+                        translateMatrix,
+                        0,
+                        m_translates[trans][0],
+                        1.0f ,
                         m_translates[trans][1]);
+
+//                Log.e("Test5", modelViewMatrixKeyframe[0]+ ", "+modelViewMatrixKeyframe[1]+ ", "+modelViewMatrixKeyframe[2]+ ", "+modelViewMatrixKeyframe[3]+ ", ");
+//                Log.e("Test6", modelViewMatrixKeyframe[4]+ ", "+modelViewMatrixKeyframe[5]+ ", "+modelViewMatrixKeyframe[6]+ ", "+modelViewMatrixKeyframe[7]+ ", ");
+//                Log.e("Test7", modelViewMatrixKeyframe[8]+ ", "+modelViewMatrixKeyframe[9]+ ", "+modelViewMatrixKeyframe[10]+ ", "+modelViewMatrixKeyframe[11]+ ", ");
+//                Log.e("Test8", modelViewMatrixKeyframe[12]+ ", "+modelViewMatrixKeyframe[13]+ ", "+modelViewMatrixKeyframe[14]+ ", "+modelViewMatrixKeyframe[15]+ ", ");
 
                 //회전 설정
                 modelViewMatrixKeyframe[0]= 0.005300097f;
                 modelViewMatrixKeyframe[1]=-0.99907345f;
                 modelViewMatrixKeyframe[2]=-0.042711787f;
-                modelViewMatrixKeyframe[4]= -0.025353879f;
+                modelViewMatrixKeyframe[4]=-0.025353879f;
                 modelViewMatrixKeyframe[5]=-0.04283292f;
                 modelViewMatrixKeyframe[6]=0.99876046f;
                 modelViewMatrixKeyframe[8]=-0.99966455f;
                 modelViewMatrixKeyframe[9]=-0.004210618f;
                 modelViewMatrixKeyframe[10]=-0.0255574f;
-                modelViewMatrixKeyframe[12]=translateMatrix[12];
-                modelViewMatrixKeyframe[13]=translateMatrix[13];
-                modelViewMatrixKeyframe[14]=translateMatrix[14];
+                modelViewMatrixKeyframe[12] = translateMatrix[12];
+                modelViewMatrixKeyframe[13] = translateMatrix[13];
+                modelViewMatrixKeyframe[14] = translateMatrix[14];
+
 
                 Matrix.rotateM(modelViewMatrixKeyframe,  0,  90.0f,  90.0f,  0.0f,  0.0f);
+
 
                 Matrix.scaleM(modelViewMatrixKeyframe, 0,
                         targetPositiveDimensions.getData()[0],
                         targetPositiveDimensions.getData()[0],
                         targetPositiveDimensions.getData()[0]);
 
-
-//                if (!isFixedState) {
-                    Matrix.multiplyMM(modelViewProjectionKeyframe, 0, projectionMatrix, 0, modelViewMatrixKeyframe, 0);
-//                    fixedModelViewMatrixKeyframe.add(trans, modelViewProjectionKeyframe);
-//
-//                }
-//                else {
-//                    Matrix.multiplyMM(fixedModelViewMatrixKeyframe.get(trans), 0, projectionMatrix, 0, modelViewMatrixKeyframe, 0);
-//                }
+                Matrix.multiplyMM(modelViewProjectionKeyframe, 0, projectionMatrix, 0, modelViewMatrixKeyframe, 0);
 
                 //cpyoon
                 //get object modelviewmatrix

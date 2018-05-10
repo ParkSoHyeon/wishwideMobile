@@ -31,8 +31,8 @@ public class SampleAppRenderer_Video {
 
     private Renderer mRenderer = null;
     private int currentView = VIEW.VIEW_SINGULAR;
-    float mNearPlane = -1.0f;
-    float mFarPlane = -1.0f;
+    float mNearPlane = -2.0f;
+    float mFarPlane = -2.0f;
 
     GLTextureUnit videoBackgroundTex = null;
 

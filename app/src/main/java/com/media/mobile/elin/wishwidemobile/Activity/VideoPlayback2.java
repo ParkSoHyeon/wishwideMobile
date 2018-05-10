@@ -220,11 +220,11 @@ public class VideoPlayback2 extends Activity implements
                                     }
                                 }, 300);
 
-//                                    ImageView image = new ImageView(mContext);
-//                                    image.setLayoutParams(new android.view.ViewGroup.LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.MATCH_PARENT));
-//                                    image.setMaxHeight(60);
-//                                    image.setMaxWidth(55);
-//                                    image.setImageBitmap(BitmapFactory.decodeFile(mCharacterSeq.get(VideoPlaybackRenderer2.mReadyCharacterSeq)));
+//                                ImageView image = new ImageView(mContext);
+//                                image.setLayoutParams(new android.view.ViewGroup.LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.MATCH_PARENT));
+//                                image.setMaxHeight(60);
+//                                image.setMaxWidth(55);
+//                                image.setImageBitmap(BitmapFactory.decodeFile(mCharacterSeq.get(VideoPlaybackRenderer2.mReadyCharacterSeq)));
 
 
                                 // Adds the view to the layout
@@ -417,7 +417,7 @@ public class VideoPlayback2 extends Activity implements
                 mBtnCase1.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        setResult(1, intent);
+                        setResult(22, intent);
 
                         finish();
                     }
@@ -427,7 +427,7 @@ public class VideoPlayback2 extends Activity implements
                 mBtnCase2.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        setResult(1, intent);
+                        setResult(22, intent);
 
                         finish();
                     }
